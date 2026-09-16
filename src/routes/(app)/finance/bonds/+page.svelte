@@ -82,9 +82,9 @@
 		<div class="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500 mb-1">
 			<span>AI Bond Copilot</span><span>/</span><span>Bond Data</span>
 		</div>
-		<div class="flex items-center justify-between">
+		<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
 			<div>
-				<h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Bond Data Explorer</h1>
+				<h1 class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">Bond Data Explorer</h1>
 				<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Normalized bond records with source traceability and validation status</p>
 			</div>
 		</div>
@@ -96,7 +96,7 @@
 		<div class="flex-1 overflow-y-auto">
 			<div class="px-4 sm:px-6 lg:px-8 py-6 space-y-4">
 				<!-- KPI Row -->
-				<div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+				<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 					<div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
 						<div class="text-[10px] font-medium uppercase tracking-wider text-gray-400 mb-1">Total Bonds</div>
 						<div class="text-2xl font-semibold text-gray-900 dark:text-white font-mono">{filtered.length}</div>
@@ -121,7 +121,7 @@
 						<svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
 						<input type="text" bind:value={searchQuery} placeholder="Search bonds..." class="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400" />
 					</div>
-					<div class="flex items-center gap-1.5">
+					<div class="flex items-center gap-1.5 flex-wrap">
 						{#each ['', 'ACTIVE', 'MATURED', 'SOLD'] as s}
 							<button
 								class="px-3 py-1.5 text-xs rounded-lg border transition-colors {statusFilter === s ? 'bg-indigo-600 text-white border-indigo-600' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'}"

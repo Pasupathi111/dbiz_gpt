@@ -313,7 +313,7 @@
 		<div class="flex-1 overflow-y-auto">
 			<div class="px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 				<!-- Summary Cards -->
-				<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+				<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
 					{#each summaryCards as card}
 						<button
 							class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm text-left transition-all hover:shadow-md
@@ -365,7 +365,7 @@
 						<div class="w-px h-6 bg-gray-200 dark:bg-gray-700 hidden sm:block"></div>
 
 						<!-- Search -->
-						<div class="relative flex-1 min-w-[200px]">
+						<div class="relative flex-1 min-w-0 sm:min-w-[200px]">
 							<svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
 								<path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
 							</svg>
@@ -573,7 +573,7 @@
 					</div>
 
 					<!-- Table Footer -->
-					<div class="px-4 py-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
+					<div class="px-4 py-3 border-t border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
 						<div class="text-xs text-gray-400 dark:text-gray-500">
 							Showing <span class="font-medium text-gray-600 dark:text-gray-400">{filteredMovements.length}</span> of <span class="font-medium text-gray-600 dark:text-gray-400">{movements.length}</span> movements
 						</div>

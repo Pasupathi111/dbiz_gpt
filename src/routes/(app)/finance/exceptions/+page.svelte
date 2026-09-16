@@ -114,7 +114,7 @@
 				</div>
 
 				<!-- Filters -->
-				<div class="flex items-center gap-1.5">
+				<div class="flex flex-wrap items-center gap-1.5">
 					{#each ['', 'OPEN', 'IN_PROGRESS', 'RESOLVED'] as s}
 						<button
 							class="px-3 py-1.5 text-xs rounded-lg border transition-colors {filterStatus === s ? 'bg-indigo-600 text-white border-indigo-600' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'}"
@@ -130,7 +130,7 @@
 					{#each filtered as exc}
 						<div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm {exc.status === 'OPEN' && exc.severity === 'HIGH' ? 'border-l-4 border-l-red-500' : ''}">
 							<div class="px-5 py-4">
-								<div class="flex items-center gap-2 mb-2">
+								<div class="flex flex-wrap items-center gap-2 mb-2">
 									<span class="text-xs font-mono text-gray-400">{exc.id}</span>
 									<span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium {typeBadge(exc.type)}">{exc.type.replace(/_/g, ' ')}</span>
 									<span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium {severityBadge(exc.severity)}">{exc.severity}</span>
@@ -139,7 +139,7 @@
 								<h3 class="text-sm font-medium text-gray-900 dark:text-white mb-1">{exc.title}</h3>
 								<p class="text-xs text-gray-600 dark:text-gray-400 mb-3">{exc.description}</p>
 
-								<div class="grid grid-cols-2 gap-4 text-xs">
+								<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
 									{#if exc.root_cause}
 										<div>
 											<div class="text-[10px] font-medium uppercase tracking-wider text-gray-400 mb-0.5">Root Cause</div>
@@ -160,7 +160,7 @@
 									{/if}
 								</div>
 
-								<div class="flex items-center gap-3 mt-3 pt-3 border-t border-gray-100 dark:border-gray-800 text-[10px] text-gray-400">
+								<div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-3 pt-3 border-t border-gray-100 dark:border-gray-800 text-[10px] text-gray-400">
 									<span>Created {new Date(exc.created_at).toLocaleString('en-SG')}</span>
 									{#if exc.assigned_to}<span>Assigned to {exc.assigned_to}</span>{/if}
 									{#if exc.resolved_by}<span class="text-emerald-500">Resolved by {exc.resolved_by}</span>{/if}
