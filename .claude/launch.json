@@ -6,6 +6,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "port": 5173
+    },
+    {
+      "name": "backend",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "cd backend && source venv/bin/activate && export WEBUI_SECRET_KEY=dev-local-secret-key-not-for-prod && bash dev.sh"],
+      "port": 8080
     }
   ]
 }

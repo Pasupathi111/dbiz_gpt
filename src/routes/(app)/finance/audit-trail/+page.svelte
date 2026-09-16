@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount, getContext } from 'svelte';
+	import { get } from 'svelte/store';
 	import { user } from '$lib/stores';
 	import { getAuditTrail } from '$lib/apis/finance';
 	import Spinner from '$lib/components/common/Spinner.svelte';
@@ -11,20 +12,24 @@
 	let filterAction = '';
 	let searchQuery = '';
 
-	const sampleLogs = [
-		{ id: '1', timestamp: '2026-09-16T14:32:00', user_name: 'S. Lim', action: 'DOCUMENT_UPLOADED', object_type: 'Document', object_id: 'UBS_Sep2026_Bonds.xlsx', details: 'UBS Excel report uploaded for September 2026', source: 'Web UI' },
-		{ id: '2', timestamp: '2026-09-16T14:33:15', user_name: 'System', action: 'DOCUMENT_PROCESSED', object_type: 'Document', object_id: 'UBS_Sep2026_Bonds.xlsx', details: '82 bond records extracted from UBS report', source: 'Extraction Engine' },
-		{ id: '3', timestamp: '2026-09-16T14:34:00', user_name: 'System', action: 'DATA_EXTRACTED', object_type: 'BondRecord', object_id: '82 records', details: 'Extraction complete. 82 bonds normalized. Average confidence: 97.3%', source: 'Extraction Engine' },
-		{ id: '4', timestamp: '2026-09-16T14:35:30', user_name: 'S. Lim', action: 'DOCUMENT_UPLOADED', object_type: 'Document', object_id: 'LGI_Report_Sep2026.pdf', details: 'LGI PDF report uploaded for September 2026', source: 'Web UI' },
-		{ id: '5', timestamp: '2026-09-16T14:40:00', user_name: 'System', action: 'RECONCILIATION_EXECUTED', object_type: 'ReconciliationRun', object_id: 'RUN-001', details: 'Reconciliation complete: 78 matched, 3 variances, 1 missing', source: 'Reconciliation Engine' },
-		{ id: '6', timestamp: '2026-09-16T14:41:00', user_name: 'System', action: 'EXCEPTION_CREATED', object_type: 'Exception', object_id: 'EXC-001', details: 'Market value variance SGD 5,200 on BOND-006 (Mapletree)', source: 'Reconciliation Engine' },
-		{ id: '7', timestamp: '2026-09-16T14:45:00', user_name: 'System', action: 'MOVEMENT_DETECTED', object_type: 'BondMovement', object_id: '15 movements', details: '4 new, 2 sold, 3 matured, 1 transferred, 3 value changes, 2 unchanged', source: 'Movement Engine' },
-		{ id: '8', timestamp: '2026-09-16T14:50:00', user_name: 'System', action: 'SCHEDULE_GENERATED', object_type: 'BondSchedule', object_id: 'SCH-Sep-2026', details: 'Monthly bond schedule generated with 82 line items', source: 'Schedule Generator' },
-		{ id: '9', timestamp: '2026-09-16T14:55:00', user_name: 'System', action: 'JOURNAL_GENERATED', object_type: 'Journal', object_id: '4 journals', details: 'AI generated 4 draft journals: purchases, maturity, accrued interest, fair value', source: 'Journal Engine' },
-		{ id: '10', timestamp: '2026-09-16T15:00:00', user_name: 'A. Tan', action: 'JOURNAL_APPROVED', object_type: 'Journal', object_id: 'JV-2026-09-002', details: 'Finance Manager approved maturity journal for BOND-008', source: 'Web UI' },
-		{ id: '11', timestamp: '2026-09-16T15:05:00', user_name: 'S. Lim', action: 'DATA_EDITED', object_type: 'BondRecord', object_id: 'BOND-006', details: 'Market value corrected from SGD 795,000 to SGD 800,200 per LGI confirmation', source: 'Web UI' },
-		{ id: '12', timestamp: '2026-09-16T15:10:00', user_name: 'System', action: 'COMMENTARY_GENERATED', object_type: 'Commentary', object_id: 'CMT-Sep-2026', details: 'AI generated month-end commentary covering movements, variances and observations', source: 'AI Commentary' }
-	];
+	function toAuditLog(row: any) {
+		return {
+			id: row.id,
+			timestamp: row.timestamp,
+			user_name: (() => {
+				const currentUser = get(user);
+				const uid = row.user_id;
+				if (uid === 'system' || uid === 'finance_service') return 'System';
+				if (currentUser && uid === currentUser.id) return currentUser.name;
+				return uid;
+			})(),
+			action: row.action,
+			object_type: row.entity_type,
+			object_id: row.entity_id,
+			details: row.details,
+			source: row.source || 'System'
+		};
+	}
 
 	const actionColors: Record<string, string> = {
 		DOCUMENT_UPLOADED: 'bg-blue-500',
@@ -45,9 +50,9 @@
 	onMount(async () => {
 		try {
 			const data = await getAuditTrail(localStorage.token);
-			auditLogs = Array.isArray(data) ? data : sampleLogs;
+			auditLogs = Array.isArray(data) ? data.map(toAuditLog) : [];
 		} catch {
-			auditLogs = sampleLogs;
+			auditLogs = [];
 		}
 		loading = false;
 	});

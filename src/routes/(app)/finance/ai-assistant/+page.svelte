@@ -26,10 +26,13 @@
 	let selectedPeriodId = '';
 
 	const quickActions = [
-		{ label: 'Generate Month-End Commentary', icon: 'doc', query: 'Generate month-end commentary for the current period' },
-		{ label: 'Run Reconciliation Analysis', icon: 'recon', query: 'Run reconciliation analysis and show me the current status' },
+		{ label: 'Run Reconciliation', icon: 'recon', query: 'Run reconciliation for this period' },
+		{ label: 'Analyze Movements', icon: 'recon', query: 'Analyze movements for this period' },
+		{ label: 'Generate Bond Schedule', icon: 'doc', query: 'Generate the bond schedule for this period' },
+		{ label: 'Generate Draft Journals', icon: 'journal', query: 'Generate journals for this period' },
+		{ label: 'Generate Audit Schedule', icon: 'audit', query: 'Generate the audit schedule for this period' },
+		{ label: 'Generate Month-End Commentary', icon: 'doc', query: 'Generate commentary for this period' },
 		{ label: 'Review Exception Summary', icon: 'exception', query: 'Show me a summary of all open exceptions' },
-		{ label: 'Generate Journal Entries', icon: 'journal', query: 'Show me the draft journal entries for the current period' },
 		{ label: 'Check Review Queue', icon: 'audit', query: 'What reviews are pending?' }
 	];
 
@@ -177,6 +180,53 @@
 		return m[type] || 'bg-gray-400';
 	}
 
+	function parseToolData(result: string): any {
+		try {
+			return JSON.parse(result);
+		} catch {
+			return null;
+		}
+	}
+
+	function fmt(v: any): string {
+		if (v === null || v === undefined || v === '') return '—';
+		if (typeof v === 'number') return v.toLocaleString('en-SG');
+		return String(v);
+	}
+
+	function fmtMoney(v: any): string {
+		if (v === null || v === undefined) return '—';
+		const n = Number(v);
+		if (Number.isNaN(n)) return String(v);
+		return new Intl.NumberFormat('en-SG', { style: 'currency', currency: 'SGD', minimumFractionDigits: 0 }).format(n);
+	}
+
+	function movementBadgeClass(t: string): string {
+		const m: Record<string, string> = {
+			PURCHASE: 'bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400',
+			NEW: 'bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400',
+			SALE: 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-400',
+			SOLD: 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-400',
+			MATURITY: 'bg-gray-200 text-gray-700 dark:bg-gray-600/30 dark:text-gray-400',
+			MATURED: 'bg-gray-200 text-gray-700 dark:bg-gray-600/30 dark:text-gray-400',
+			TRANSFER: 'bg-purple-100 text-purple-700 dark:bg-purple-500/15 dark:text-purple-400',
+			TRANSFERRED: 'bg-purple-100 text-purple-700 dark:bg-purple-500/15 dark:text-purple-400',
+			VALUE_CHANGE: 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400',
+			ACCRUAL: 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400'
+		};
+		return m[(t || '').toUpperCase()] || 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400';
+	}
+
+	function severityBadgeClass(s: string): string {
+		const m: Record<string, string> = {
+			HIGH: 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-400',
+			CRITICAL: 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-400',
+			MEDIUM: 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400',
+			LOW: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+		};
+		return m[(s || '').toUpperCase()] || 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400';
+	}
+
 	function actionIcon(icon: string): string {
 		const m: Record<string, string> = {
 			doc: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
@@ -280,14 +330,200 @@
 
 									{#if msg.toolCalls && msg.toolCalls.length > 0}
 										{#each msg.toolCalls as tool}
-											<div class="mt-2 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+											{@const data = parseToolData(tool.result)}
+											<div class="mt-2 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden bg-white dark:bg-gray-900">
 												<div class="px-3 py-1.5 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center gap-1.5">
-													<svg class="w-3 h-3 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+													<svg class="w-3 h-3 text-indigo-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
 														<path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17l-5.658 3.163 1.078-6.29L1.34 6.82l6.328-.92L11.42.956l2.752 5.944 6.328.92-4.5 5.223 1.078 6.29z" />
 													</svg>
 													<span class="text-[10px] font-mono font-medium text-gray-500 dark:text-gray-400">{tool.name}</span>
 												</div>
-												<pre class="px-3 py-2.5 text-[11px] font-mono text-gray-600 dark:text-gray-400 overflow-x-auto max-h-64 bg-white dark:bg-gray-900">{tool.result}</pre>
+
+												<div class="p-3">
+													{#if !data}
+														<p class="text-xs text-gray-500 dark:text-gray-400">No structured data returned.</p>
+
+													{:else if tool.name === 'run_reconciliation'}
+														<div class="grid grid-cols-4 gap-2 mb-3">
+															<div class="rounded-lg bg-gray-50 dark:bg-gray-800 p-2 text-center">
+																<div class="text-lg font-semibold font-mono text-gray-900 dark:text-white">{fmt(data.total_bonds)}</div>
+																<div class="text-[9px] uppercase tracking-wider text-gray-400">Total</div>
+															</div>
+															<div class="rounded-lg bg-emerald-50 dark:bg-emerald-500/10 p-2 text-center">
+																<div class="text-lg font-semibold font-mono text-emerald-600 dark:text-emerald-400">{fmt(data.matched)}</div>
+																<div class="text-[9px] uppercase tracking-wider text-emerald-600/70 dark:text-emerald-400/70">Matched</div>
+															</div>
+															<div class="rounded-lg bg-amber-50 dark:bg-amber-500/10 p-2 text-center">
+																<div class="text-lg font-semibold font-mono text-amber-600 dark:text-amber-400">{fmt(data.variances)}</div>
+																<div class="text-[9px] uppercase tracking-wider text-amber-600/70 dark:text-amber-400/70">Variances</div>
+															</div>
+															<div class="rounded-lg bg-red-50 dark:bg-red-500/10 p-2 text-center">
+																<div class="text-lg font-semibold font-mono text-red-600 dark:text-red-400">{fmt(data.missing)}</div>
+																<div class="text-[9px] uppercase tracking-wider text-red-600/70 dark:text-red-400/70">Missing</div>
+															</div>
+														</div>
+														<div class="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2">
+															<div class="h-2 rounded-full {data.match_rate >= 95 ? 'bg-emerald-500' : data.match_rate >= 80 ? 'bg-amber-500' : 'bg-red-500'}" style="width: {Math.min(data.match_rate ?? 0, 100)}%"></div>
+														</div>
+														<div class="text-[10px] text-gray-400 mt-1 text-right">{fmt(data.match_rate)}% match rate</div>
+
+													{:else if tool.name === 'analyze_movements'}
+														<div class="text-xs text-gray-600 dark:text-gray-400 mb-2"><span class="font-semibold text-gray-900 dark:text-white">{fmt(data.movements_created)}</span> movement(s) created</div>
+														{#if Array.isArray(data.movements)}
+															<div class="space-y-1.5 max-h-48 overflow-y-auto">
+																{#each data.movements as m}
+																	<div class="flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg bg-gray-50 dark:bg-gray-800">
+																		<span class="font-mono text-[11px] text-gray-700 dark:text-gray-300 truncate">{m.bond_id}</span>
+																		<span class="inline-flex px-1.5 py-0.5 rounded-full text-[9px] font-medium flex-shrink-0 {movementBadgeClass(m.movement_type)}">{m.movement_type}</span>
+																		<span class="text-[11px] font-mono text-gray-500 dark:text-gray-400 flex-shrink-0">{fmtMoney(m.variance)}</span>
+																	</div>
+																{/each}
+															</div>
+														{/if}
+
+													{:else if tool.name === 'generate_schedule'}
+														<div class="rounded-lg bg-indigo-50 dark:bg-indigo-500/10 p-3 text-center">
+															<div class="text-2xl font-semibold font-mono text-indigo-600 dark:text-indigo-400">{fmt(data.lines_generated)}</div>
+															<div class="text-[10px] uppercase tracking-wider text-indigo-600/70 dark:text-indigo-400/70">Schedule Lines Generated</div>
+														</div>
+
+													{:else if tool.name === 'generate_audit_schedule'}
+														<div class="rounded-lg bg-indigo-50 dark:bg-indigo-500/10 p-3 text-center">
+															<div class="text-2xl font-semibold font-mono text-indigo-600 dark:text-indigo-400">{fmt(data.entries_created)}</div>
+															<div class="text-[10px] uppercase tracking-wider text-indigo-600/70 dark:text-indigo-400/70">Audit Entries Created</div>
+														</div>
+
+													{:else if tool.name === 'generate_journals'}
+														{#if Array.isArray(data.journals) && data.journals.length}
+															<div class="space-y-2">
+																{#each data.journals as j}
+																	{@const jr = j.journal || j}
+																	<div class="rounded-lg border border-gray-200 dark:border-gray-700 p-2.5">
+																		<div class="flex items-center justify-between mb-1">
+																			<span class="font-mono text-xs font-semibold text-gray-900 dark:text-white">{jr.journal_number}</span>
+																			<span class="text-[10px] font-medium {jr.total_debit === jr.total_credit ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}">
+																				{jr.total_debit === jr.total_credit ? '✓ Balanced' : '✕ Unbalanced'}
+																			</span>
+																		</div>
+																		<div class="text-[11px] text-gray-500 dark:text-gray-400 truncate">{jr.description}</div>
+																		<div class="flex items-center gap-3 mt-1.5 text-[11px] font-mono">
+																			<span class="text-gray-600 dark:text-gray-300">Dr {fmtMoney(jr.total_debit)}</span>
+																			<span class="text-gray-600 dark:text-gray-300">Cr {fmtMoney(jr.total_credit)}</span>
+																		</div>
+																	</div>
+																{/each}
+															</div>
+														{:else}
+															<div class="rounded-lg bg-indigo-50 dark:bg-indigo-500/10 p-3 text-center">
+																<div class="text-2xl font-semibold font-mono text-indigo-600 dark:text-indigo-400">{fmt(data.journals_created)}</div>
+																<div class="text-[10px] uppercase tracking-wider text-indigo-600/70 dark:text-indigo-400/70">Journal(s) Created</div>
+															</div>
+														{/if}
+
+													{:else if tool.name === 'generate_commentary'}
+														<div class="flex flex-wrap gap-1.5">
+															{#each (data.sections || []) as s}
+																<span class="inline-flex px-2 py-1 rounded-full text-[10px] font-medium bg-violet-100 text-violet-700 dark:bg-violet-500/10 dark:text-violet-400">{String(s).replace(/_/g, ' ')}</span>
+															{/each}
+														</div>
+														{#if data.message}<div class="text-[11px] text-gray-400 mt-2">{data.message}</div>{/if}
+
+													{:else if tool.name === 'get_open_exceptions'}
+														<div class="flex items-center gap-3 mb-2 text-xs">
+															<span><span class="font-semibold text-gray-900 dark:text-white">{fmt(data.open_count)}</span> open</span>
+															<span><span class="font-semibold text-gray-900 dark:text-white">{fmt(data.resolved_count)}</span> resolved</span>
+														</div>
+														{#if Array.isArray(data.exceptions) && data.exceptions.length}
+															<div class="space-y-1.5 max-h-48 overflow-y-auto">
+																{#each data.exceptions as e}
+																	<div class="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-gray-50 dark:bg-gray-800">
+																		<span class="inline-flex px-1.5 py-0.5 rounded-full text-[9px] font-medium flex-shrink-0 {severityBadgeClass(e.severity)}">{e.severity}</span>
+																		<span class="text-[11px] text-gray-700 dark:text-gray-300 truncate">{e.title || e.description}</span>
+																	</div>
+																{/each}
+															</div>
+														{/if}
+
+													{:else if tool.name === 'get_reconciliation_summary'}
+														<div class="grid grid-cols-2 gap-2">
+															<div class="rounded-lg bg-gray-50 dark:bg-gray-800 p-2"><div class="text-[9px] uppercase text-gray-400">Total Bonds</div><div class="font-mono font-semibold text-gray-900 dark:text-white">{fmt(data.total_bonds)}</div></div>
+															<div class="rounded-lg bg-gray-50 dark:bg-gray-800 p-2"><div class="text-[9px] uppercase text-gray-400">Matched</div><div class="font-mono font-semibold text-emerald-600 dark:text-emerald-400">{fmt(data.matched)}</div></div>
+															<div class="rounded-lg bg-gray-50 dark:bg-gray-800 p-2"><div class="text-[9px] uppercase text-gray-400">Exceptions</div><div class="font-mono font-semibold text-amber-600 dark:text-amber-400">{fmt(data.exceptions)}</div></div>
+															<div class="rounded-lg bg-gray-50 dark:bg-gray-800 p-2"><div class="text-[9px] uppercase text-gray-400">Match Rate</div><div class="font-mono font-semibold text-gray-900 dark:text-white">{data.match_rate != null ? data.match_rate + '%' : '—'}</div></div>
+														</div>
+
+													{:else if tool.name === 'get_pending_reviews'}
+														<div class="text-xs text-gray-600 dark:text-gray-400 mb-2"><span class="font-semibold text-gray-900 dark:text-white">{fmt(data.pending_count)}</span> pending</div>
+														{#if Array.isArray(data.items) && data.items.length}
+															<div class="space-y-1.5 max-h-48 overflow-y-auto">
+																{#each data.items as r}
+																	<div class="px-2 py-1.5 rounded-lg bg-gray-50 dark:bg-gray-800">
+																		<div class="flex items-center gap-2">
+																			<span class="inline-flex px-1.5 py-0.5 rounded-full text-[9px] font-medium bg-indigo-100 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400">{(r.output_type || '').toUpperCase()}</span>
+																			<span class="text-[11px] text-gray-700 dark:text-gray-300 truncate">{r.title || r.output_id}</span>
+																		</div>
+																	</div>
+																{/each}
+															</div>
+														{/if}
+
+													{:else if tool.name === 'get_commentary'}
+														<div class="grid grid-cols-2 gap-2 mb-2">
+															<div class="rounded-lg bg-gray-50 dark:bg-gray-800 p-2"><div class="text-[9px] uppercase text-gray-400">Sections</div><div class="font-mono font-semibold text-gray-900 dark:text-white">{fmt(data.section_count)}</div></div>
+															<div class="rounded-lg bg-gray-50 dark:bg-gray-800 p-2"><div class="text-[9px] uppercase text-gray-400">Words</div><div class="font-mono font-semibold text-gray-900 dark:text-white">{fmt(data.total_words)}</div></div>
+														</div>
+														<div class="flex flex-wrap gap-1.5">
+															{#each (data.sections || []) as s}
+																<span class="inline-flex px-2 py-1 rounded-full text-[10px] font-medium bg-violet-100 text-violet-700 dark:bg-violet-500/10 dark:text-violet-400">{String(s).replace(/_/g, ' ')}</span>
+															{/each}
+														</div>
+
+													{:else if tool.name === 'get_journal_summary'}
+														<div class="grid grid-cols-2 gap-2">
+															<div class="rounded-lg bg-gray-50 dark:bg-gray-800 p-2"><div class="text-[9px] uppercase text-gray-400">Journals</div><div class="font-mono font-semibold text-gray-900 dark:text-white">{fmt(data.total_journals)}</div></div>
+															<div class="rounded-lg bg-gray-50 dark:bg-gray-800 p-2"><div class="text-[9px] uppercase text-gray-400">Balanced</div><div class="font-mono font-semibold {data.balanced ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}">{data.balanced ? 'Yes' : 'No'}</div></div>
+															<div class="rounded-lg bg-gray-50 dark:bg-gray-800 p-2"><div class="text-[9px] uppercase text-gray-400">Debits</div><div class="font-mono font-semibold text-gray-900 dark:text-white">{fmtMoney(data.total_debits)}</div></div>
+															<div class="rounded-lg bg-gray-50 dark:bg-gray-800 p-2"><div class="text-[9px] uppercase text-gray-400">Credits</div><div class="font-mono font-semibold text-gray-900 dark:text-white">{fmtMoney(data.total_credits)}</div></div>
+														</div>
+
+													{:else if tool.name === 'get_audit_schedule'}
+														<div class="rounded-lg bg-indigo-50 dark:bg-indigo-500/10 p-3 text-center">
+															<div class="text-2xl font-semibold font-mono text-indigo-600 dark:text-indigo-400">{fmt(data.line_count)}</div>
+															<div class="text-[10px] uppercase tracking-wider text-indigo-600/70 dark:text-indigo-400/70">Bond Line Items</div>
+														</div>
+
+													{:else if tool.name === 'get_portfolio_summary'}
+														{@const kpis = data.kpis || data}
+														<div class="grid grid-cols-2 gap-2">
+															<div class="rounded-lg bg-gray-50 dark:bg-gray-800 p-2"><div class="text-[9px] uppercase text-gray-400">Bonds</div><div class="font-mono font-semibold text-gray-900 dark:text-white">{fmt(kpis.total_bonds)}</div></div>
+															<div class="rounded-lg bg-gray-50 dark:bg-gray-800 p-2"><div class="text-[9px] uppercase text-gray-400">Market Value</div><div class="font-mono font-semibold text-gray-900 dark:text-white">{fmt(kpis.total_market_value)}</div></div>
+															<div class="rounded-lg bg-gray-50 dark:bg-gray-800 p-2"><div class="text-[9px] uppercase text-gray-400">Open Exceptions</div><div class="font-mono font-semibold text-amber-600 dark:text-amber-400">{fmt(kpis.exceptions_open)}</div></div>
+															<div class="rounded-lg bg-gray-50 dark:bg-gray-800 p-2"><div class="text-[9px] uppercase text-gray-400">Match Rate</div><div class="font-mono font-semibold text-gray-900 dark:text-white">{fmt(kpis.recon_rate)}</div></div>
+														</div>
+														{#if Array.isArray(data.top_holdings) && data.top_holdings.length}
+															<div class="mt-2 space-y-1">
+																{#each data.top_holdings as h}
+																	<div class="flex items-center justify-between px-2 py-1 rounded bg-gray-50 dark:bg-gray-800 text-[11px]">
+																		<span class="text-gray-700 dark:text-gray-300 truncate">{h.name}</span>
+																		<span class="font-mono text-gray-500 dark:text-gray-400 flex-shrink-0">{fmtMoney(h.value)}</span>
+																	</div>
+																{/each}
+															</div>
+														{/if}
+
+													{:else}
+														<div class="space-y-1">
+															{#each Object.entries(data).slice(0, 8) as [k, v]}
+																{#if typeof v !== 'object'}
+																	<div class="flex items-center justify-between text-[11px]">
+																		<span class="text-gray-400 capitalize">{k.replace(/_/g, ' ')}</span>
+																		<span class="font-mono text-gray-700 dark:text-gray-300">{fmt(v)}</span>
+																	</div>
+																{/if}
+															{/each}
+														</div>
+													{/if}
+												</div>
 											</div>
 										{/each}
 									{/if}
