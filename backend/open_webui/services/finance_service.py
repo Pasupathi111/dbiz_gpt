@@ -924,17 +924,33 @@ async def analyze_movements(user_id: str, period_id: str) -> dict:
                 created_movements.append(_to_dict(mv))
         else:  # prev but no current
             assert prev is not None
+            prev_status = (prev.status or "").upper()
+            # Prefer the bond's own recorded status (set via bond review/HITL,
+            # e.g. PUT /bonds/{id}) to tell a sale/transfer apart from a
+            # genuine maturity when a bond drops out of the current period.
+            if prev_status == "SOLD":
+                movement_type = "SALE"
+                current_status = "SOLD"
+                explanation = "bond marked SOLD in prior period and no longer present, interpreted as sale"
+            elif prev_status == "TRANSFERRED":
+                movement_type = "TRANSFER"
+                current_status = "TRANSFERRED"
+                explanation = "bond marked TRANSFERRED in prior period and no longer present, interpreted as transfer"
+            else:
+                movement_type = "MATURITY"
+                current_status = "RETIRED"
+                explanation = "bond removed in current period, interpreted as maturity/sale"
             form = BondMovementForm(
                 reporting_period_id=period_id,
                 bond_id=prev.bond_id or prev.id,
                 isin=prev.isin,
-                movement_type="MATURITY",
+                movement_type=movement_type,
                 previous_value=float(prev.face_value or 0),
                 current_value=0.0,
                 variance=-1 * float(prev.face_value or 0),
                 previous_status=prev.status or "DRAFT",
-                current_status="RETIRED",
-                ai_explanation="bond removed in current period, interpreted as maturity/sale",
+                current_status=current_status,
+                ai_explanation=explanation,
                 explanation_confidence=0.6,
             )
             mv = await BondMovements.insert(form)

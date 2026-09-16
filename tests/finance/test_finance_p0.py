@@ -686,3 +686,40 @@ async def test_18_reconciliation_matches_ubs_vs_lgi_after_ingestion(_session_eng
     assert by_bond["US912828U816"]["status"] == "MATCHED"
     assert by_bond["XS1234567890"]["status"] == "VARIANCE"
     assert by_bond["XS9999999999"]["status"] == "MISSING_SOURCE"
+
+
+@pytest.mark.asyncio
+async def test_19_movement_analysis_classifies_sale_and_transfer(_session_engine, user_id):
+    """analyze_movements must tell a sold/transferred bond apart from a
+    genuine maturity when it drops out of the current period, using the
+    bond's own recorded status — not collapse everything into MATURITY."""
+    from open_webui.models.finance import BondRecords, BondRecordForm, ReportingPeriods, ReportingPeriodForm
+    from open_webui.services import finance_service as svc
+
+    prev_period = await ReportingPeriods.insert(user_id, ReportingPeriodForm(
+        name="Aug 2026", year=2026, month=8, status="FINALIZED",
+    ))
+    curr_period = await ReportingPeriods.insert(user_id, ReportingPeriodForm(
+        name="Sep 2026 MV Test", year=2026, month=9, status="OPEN",
+        previous_period_id=prev_period.id,
+    ))
+
+    async def mk(bond_id, status, period_id):
+        return await BondRecords.insert(BondRecordForm(
+            reporting_period_id=period_id, bond_id=bond_id, isin=bond_id,
+            face_value=100000.0, market_value=100000.0, status=status,
+        ))
+
+    await mk("SOLD-BOND", "SOLD", prev_period.id)
+    await mk("XFER-BOND", "TRANSFERRED", prev_period.id)
+    await mk("MATURED-BOND", "ACTIVE", prev_period.id)
+    # None of these three bonds appear in curr_period -> each drops out.
+
+    result = await svc.analyze_movements(user_id, curr_period.id)
+    assert result["movements_created"] == 3, result
+
+    movements = await svc.get_movements(user_id, curr_period.id)
+    by_bond = {m["bond_id"]: m for m in movements}
+    assert by_bond["SOLD-BOND"]["movement_type"] == "SALE"
+    assert by_bond["XFER-BOND"]["movement_type"] == "TRANSFER"
+    assert by_bond["MATURED-BOND"]["movement_type"] == "MATURITY"
