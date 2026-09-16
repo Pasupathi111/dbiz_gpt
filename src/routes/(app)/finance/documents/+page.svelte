@@ -287,9 +287,9 @@
 			<span>/</span>
 			<span>Upload Documents</span>
 		</div>
-		<div class="flex items-center justify-between">
+		<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
 			<div>
-				<h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Document Management</h1>
+				<h1 class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">Document Management</h1>
 				<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
 					Upload and manage UBS, LGI and schedule documents for bond processing
 				</p>
@@ -320,12 +320,12 @@
 			<div class="px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 				<!-- Upload Area Card -->
 				<div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm">
-					<div class="flex items-center justify-between mb-4">
+					<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
 						<div class="text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">
 							Upload Documents
 						</div>
 						<div class="flex items-center gap-3">
-							<label class="text-xs text-gray-500 dark:text-gray-400">Document Type:</label>
+							<label class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">Document Type:</label>
 							<select
 								class="text-sm border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300"
 								bind:value={selectedDocType}

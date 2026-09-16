@@ -180,8 +180,8 @@
 						{@const badge = getStatusBadge(journal.status)}
 						<div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
 							<!-- Journal Header -->
-							<div class="px-5 py-4 flex items-center justify-between border-b border-gray-100 dark:border-gray-800">
-								<div class="flex items-center gap-3">
+							<div class="px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-gray-100 dark:border-gray-800">
+								<div class="flex items-center gap-3 flex-wrap">
 									<div class="text-sm font-mono font-semibold text-gray-900 dark:text-white">{journal.journal_number}</div>
 									<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium {badge.class}">{badge.label}</span>
 									{#if journal.is_balanced}
@@ -197,6 +197,7 @@
 								<div class="text-sm text-gray-700 dark:text-gray-300 mb-3">{journal.description}</div>
 
 								<!-- Journal Lines Table -->
+								<div class="overflow-x-auto">
 								<table class="w-full text-sm">
 									<thead>
 										<tr class="border-b border-gray-100 dark:border-gray-800">
@@ -236,6 +237,7 @@
 										</tr>
 									</tfoot>
 								</table>
+								</div>
 							</div>
 
 							<!-- AI Rationale -->

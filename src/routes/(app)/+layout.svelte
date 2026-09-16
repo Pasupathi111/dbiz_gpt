@@ -382,7 +382,7 @@
 		};
 		setupKeyboardShortcuts();
 
-		if ($user?.role === 'admin' && ($settings?.showChangelog ?? true)) {
+		if (false) {
 			showChangelog.set($settings?.version !== $config.version);
 		}
 
@@ -530,7 +530,9 @@
 					</div>
 				{/if}
 
-				<Sidebar />
+				{#if !$page.url.pathname.startsWith('/finance')}
+					<Sidebar />
+				{/if}
 
 				{#if loaded}
 					<main id="main-content" class="contents">

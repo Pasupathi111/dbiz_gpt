@@ -197,12 +197,12 @@
 		<div class="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500 mb-1">
 			<span>AI Bond Copilot</span><span>/</span><span>Commentary</span>
 		</div>
-		<div class="flex items-center justify-between">
+		<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
 			<div>
 				<h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Month-End Commentary</h1>
 				<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">AI-generated month-end narrative with human review and approval</p>
 			</div>
-			<div class="flex items-center gap-2">
+			<div class="flex flex-wrap items-center gap-2">
 				<select
 					class="text-sm border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300"
 					bind:value={selectedPeriodId}
@@ -252,8 +252,8 @@
 		<div class="flex-1 overflow-y-auto">
 			<div class="px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 				<!-- Meta bar -->
-				<div class="flex items-center justify-between bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
-					<div class="flex items-center gap-6">
+				<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
+					<div class="flex flex-wrap items-center gap-4 sm:gap-6">
 						<div>
 							<div class="text-[10px] font-medium uppercase tracking-wider text-gray-400 mb-0.5">Period</div>
 							<div class="text-sm font-medium text-gray-900 dark:text-white">{commentary.period}</div>
@@ -318,24 +318,24 @@
 				<!-- Approval Actions -->
 				<div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm p-6">
 					<h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Approval</h3>
-					<div class="flex items-center gap-3">
+					<div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
 						<textarea
 							bind:value={reviewComment}
 							placeholder="Add review comments..."
 							class="flex-1 text-sm border border-gray-200 dark:border-gray-700 rounded-lg p-3 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 resize-none h-[72px]"
 						></textarea>
-						<div class="flex flex-col gap-2">
+						<div class="flex flex-row sm:flex-col gap-2">
 							<button
 								on:click={handleApprove}
 								disabled={approving || commentary.status === 'APPROVED'}
-								class="px-6 py-2 text-sm font-medium bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50"
+								class="flex-1 sm:flex-none px-6 py-2 text-sm font-medium bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50"
 							>
 								{approving ? 'Approving…' : 'Approve'}
 							</button>
 							<button
 								on:click={handleReturn}
 								disabled={returning}
-								class="px-6 py-2 text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+								class="flex-1 sm:flex-none px-6 py-2 text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
 							>
 								{returning ? 'Returning…' : 'Return'}
 							</button>
