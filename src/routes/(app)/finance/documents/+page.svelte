@@ -11,6 +11,7 @@
 	} from '$lib/apis/finance';
 	import { toast } from 'svelte-sonner';
 	import Spinner from '$lib/components/common/Spinner.svelte';
+	import { registerAssistantContext } from '$lib/assistant/context';
 
 	const i18n = getContext('i18n');
 
@@ -19,6 +20,15 @@
 	let periods: any[] = [];
 	let selectedPeriodId = '';
 	let documents: any[] = [];
+
+	$: registerAssistantContext({
+		page: 'documents',
+		pageTitle: 'Upload Documents',
+		module: 'Bond Reporting',
+		periodId: selectedPeriodId || undefined,
+		availableActions: ['audit_trail.list', 'reconciliation.summary'],
+		pageData: { documentCount: documents?.length ?? 0 }
+	});
 	let dragOver = false;
 	let selectedDocType = 'UBS_EXCEL';
 	let uploadQueue: UploadItem[] = [];
@@ -271,7 +281,7 @@
 
 <div class="flex flex-col h-full overflow-y-auto">
 	<!-- Header -->
-	<div class="px-8 pt-6 pb-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+	<div class="px-4 sm:px-6 lg:px-8 pt-6 pb-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
 		<div class="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500 mb-1">
 			<span>AI Bond Copilot</span>
 			<span>/</span>
@@ -307,7 +317,7 @@
 		</div>
 	{:else}
 		<div class="flex-1 overflow-y-auto">
-			<div class="px-8 py-6 space-y-6">
+			<div class="px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 				<!-- Upload Area Card -->
 				<div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm">
 					<div class="flex items-center justify-between mb-4">

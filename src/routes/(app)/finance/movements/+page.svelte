@@ -4,6 +4,7 @@
 	import { user } from '$lib/stores';
 	import { getMovements, analyzeMovements, updateMovement, getReportingPeriods } from '$lib/apis/finance';
 	import Spinner from '$lib/components/common/Spinner.svelte';
+	import { registerAssistantContext } from '$lib/assistant/context';
 
 	const i18n = getContext('i18n');
 
@@ -37,6 +38,15 @@
 	let showOnlyUnapproved = false;
 	let periods: any[] = [];
 	let selectedPeriodId = '';
+
+	$: registerAssistantContext({
+		page: 'movements',
+		pageTitle: 'Movements',
+		module: 'Bond Reporting',
+		periodId: selectedPeriodId || undefined,
+		availableActions: ['movements.analyze', 'movements.list', 'commentary.generate_with_movements'],
+		pageData: { movementCount: movements.length }
+	});
 
 	// Backend rows use is_approved/current_status/explanation_confidence (0-1)
 	// and don't carry source_documents/currency/variance_pct — reshape them.
@@ -247,20 +257,20 @@
 
 <div class="flex flex-col h-full overflow-y-auto">
 	<!-- Header -->
-	<div class="px-8 pt-6 pb-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+	<div class="px-4 sm:px-6 lg:px-8 pt-6 pb-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
 		<div class="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500 mb-1">
 			<span>AI Bond Copilot</span>
 			<span>/</span>
 			<span>Movements</span>
 		</div>
-		<div class="flex items-center justify-between">
+		<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 			<div>
-				<h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Bond Movement Analysis</h1>
+				<h1 class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">Bond Movement Analysis</h1>
 				<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
 					Identify new, sold, matured, and transferred bonds with AI-powered explanations
 				</p>
 			</div>
-			<div class="flex items-center gap-3">
+			<div class="flex flex-wrap items-center gap-3">
 				<select
 					class="text-sm border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300"
 					bind:value={selectedPeriodId}
@@ -301,7 +311,7 @@
 		</div>
 	{:else}
 		<div class="flex-1 overflow-y-auto">
-			<div class="px-8 py-6 space-y-6">
+			<div class="px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 				<!-- Summary Cards -->
 				<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
 					{#each summaryCards as card}

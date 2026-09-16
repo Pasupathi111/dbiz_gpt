@@ -11,6 +11,7 @@
 	} from '$lib/apis/finance';
 	import { toast } from 'svelte-sonner';
 	import Spinner from '$lib/components/common/Spinner.svelte';
+	import { registerAssistantContext } from '$lib/assistant/context';
 
 	const i18n = getContext('i18n');
 
@@ -20,6 +21,15 @@
 	let editedContent: Record<string, string> = {};
 	let periods: any[] = [];
 	let selectedPeriodId = '';
+
+	$: registerAssistantContext({
+		page: 'commentary',
+		pageTitle: 'Commentary',
+		module: 'Bond Reporting',
+		periodId: selectedPeriodId || undefined,
+		availableActions: ['commentary.generate', 'commentary.generate_with_movements'],
+		pageData: { hasCommentary: !!commentary, sectionCount: commentary?.sections?.length ?? 0 }
+	});
 	let regenerating = false;
 	let approving = false;
 	let returning = false;
@@ -183,7 +193,7 @@
 </script>
 
 <div class="flex flex-col h-full overflow-y-auto">
-	<div class="px-8 pt-6 pb-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+	<div class="px-4 sm:px-6 lg:px-8 pt-6 pb-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
 		<div class="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500 mb-1">
 			<span>AI Bond Copilot</span><span>/</span><span>Commentary</span>
 		</div>
@@ -240,7 +250,7 @@
 		</div>
 	{:else}
 		<div class="flex-1 overflow-y-auto">
-			<div class="px-8 py-6 space-y-6">
+			<div class="px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 				<!-- Meta bar -->
 				<div class="flex items-center justify-between bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
 					<div class="flex items-center gap-6">

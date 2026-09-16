@@ -20,6 +20,12 @@ from fastapi import (
 from open_webui.constants import ERROR_MESSAGES
 from open_webui.models.config import Config
 from open_webui.services import finance_service
+from open_webui.services.agent_tools import (
+    AgentToolError,
+    HIGH_RISK_WRITE,
+    NEXT_SUGGESTIONS,
+    get_tool,
+)
 from open_webui.storage.provider import Storage
 from open_webui.utils.access_control import has_permission
 from open_webui.utils.auth import get_verified_user
@@ -1341,3 +1347,102 @@ async def copilot_chat(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=ERROR_MESSAGES.DEFAULT('Error processing copilot query'),
         )
+
+
+############################
+# Global Agentic Assistant
+############################
+
+
+class AgentExecuteRequest(BaseModel):
+    action: str
+    context: dict = Field(default_factory=dict)
+    userMessage: Optional[str] = None
+    confirmed: bool = False
+
+
+@router.post('/agent/execute')
+async def agent_execute(
+    payload: AgentExecuteRequest,
+    user=Depends(get_verified_user),
+):
+    tool = get_tool(payload.action)
+    if tool is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Unknown agent action '{payload.action}'",
+        )
+
+    # Permission check happens before confirmation so a 403 never leaks
+    # behind a confirmation prompt the user isn't authorised to act on.
+    if tool.permission:
+        await _require_finance_approve(user)
+
+    if tool.risk == HIGH_RISK_WRITE and not payload.confirmed:
+        return {
+            "success": False,
+            "action": tool.name,
+            "status": "confirmation_required",
+            "message": tool.confirm_message(payload.context),
+            "result": None,
+            "nextSuggestions": [],
+        }
+
+    period_id = payload.context.get("periodId") or payload.context.get("period_id")
+    try:
+        result = await tool.execute(user, payload.context)
+    except AgentToolError as e:
+        return {
+            "success": False,
+            "action": tool.name,
+            "status": "failed",
+            "message": str(e),
+            "result": None,
+            "nextSuggestions": [],
+        }
+    except PermissionError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
+    except Exception as e:
+        log.exception(e)
+        return {
+            "success": False,
+            "action": tool.name,
+            "status": "failed",
+            "message": f"'{tool.description}' could not be completed: {e}",
+            "result": None,
+            "nextSuggestions": [],
+        }
+
+    execution_id = await finance_service.log_audit_trail(
+        user_id=user.id,
+        action=tool.name,
+        entity_type="agent_action",
+        entity_id=payload.context.get("entityId") or period_id or tool.name,
+        period_id=period_id,
+        details=payload.userMessage or f"Agentic assistant executed {tool.name}",
+        source="agentic_assistant",
+    )
+
+    return {
+        "success": True,
+        "action": tool.name,
+        "status": "completed",
+        "message": None,
+        "result": result,
+        "executionId": execution_id,
+        "nextSuggestions": NEXT_SUGGESTIONS.get(tool.name, []),
+    }
+
+
+@router.get('/agent/execution/{execution_id}')
+async def agent_execution_status(
+    execution_id: str,
+    user=Depends(get_verified_user),
+):
+    entry = await finance_service.get_audit_log_entry(execution_id)
+    if not entry:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ERROR_MESSAGES.NOT_FOUND,
+        )
+    return entry

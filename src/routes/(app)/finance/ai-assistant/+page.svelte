@@ -7,6 +7,7 @@
 		getFinanceDashboard,
 		getAuditTrail
 	} from '$lib/apis/finance';
+	import { registerAssistantContext } from '$lib/assistant/context';
 
 	const i18n = getContext('i18n');
 
@@ -40,6 +41,14 @@
 	// replaces the previously hardcoded "Recent Insights" / "Data Context" panels.
 	let recentActivity: any[] = [];
 	let dataContext: { name: string; count: number | null; description: string }[] = [];
+
+	$: registerAssistantContext({
+		page: 'ai-assistant',
+		pageTitle: 'AI Assistant',
+		module: 'Bond Reporting',
+		periodId: selectedPeriodId || undefined,
+		availableActions: ['portfolio.summary', 'exceptions.analyze', 'reconciliation.summary']
+	});
 
 	function activityType(action: string): string {
 		const a = (action || '').toLowerCase();
@@ -242,7 +251,7 @@
 
 <div class="flex flex-col h-full overflow-hidden">
 	<!-- Header -->
-	<div class="px-8 pt-6 pb-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex-shrink-0">
+	<div class="px-4 sm:px-6 lg:px-8 pt-6 pb-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex-shrink-0">
 		<div class="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500 mb-1">
 			<span>AI Bond Copilot</span><span>/</span><span>AI Assistant</span>
 		</div>
@@ -292,7 +301,7 @@
 			<!-- Messages -->
 			<div class="flex-1 overflow-y-auto px-6 py-5 space-y-4" bind:this={messagesContainer}>
 				{#if messages.length === 0}
-					<div class="flex flex-col items-center justify-center h-full text-center px-8">
+					<div class="flex flex-col items-center justify-center h-full text-center px-4 sm:px-6 lg:px-8">
 						<div class="w-16 h-16 rounded-2xl bg-indigo-100 dark:bg-indigo-500/10 flex items-center justify-center mb-5">
 							<svg class="w-8 h-8 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
 								<path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
