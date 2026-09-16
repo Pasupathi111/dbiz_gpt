@@ -110,11 +110,10 @@ async def _llm_chat(
 ) -> Optional[str]:
     """Best-effort LLM chat completion for finance commentary.
 
-    Supports any OpenAI-compatible provider (OpenAI API keys, or local Ollama
-    `/v1/chat/completions` endpoint).  Returns ``None`` if the environment is
-    not configured, the HTTP call fails, or the response body cannot be parsed
-    — in those cases the caller falls back to the structured DB-aggregate text
-    so the UI is never left with empty or broken content.
+    Supports any OpenAI-compatible provider.  Returns ``None`` if the
+    environment is not configured, the HTTP call fails, or the response body
+    cannot be parsed — in those cases the caller falls back to the structured
+    DB-aggregate text so the UI is never left with empty or broken content.
     """
     try:
         import httpx  # noqa: F401 — already used by MCP client; imported lazily to reduce module import cost
@@ -122,7 +121,7 @@ async def _llm_chat(
         return None
 
     # Resolve provider configuration the same way the rest of Open WebUI does.
-    from open_webui.config import OPENAI_API_BASE_URL, OPENAI_API_KEY, OLLAMA_BASE_URLS, Config
+    from open_webui.config import OPENAI_API_BASE_URL, OPENAI_API_KEY, Config
 
     api_base = None
     api_key = None
@@ -145,14 +144,6 @@ async def _llm_chat(
     except Exception:
         cfg_model = ""
     model = cfg_model or "gpt-4o-mini"
-
-    # 2. Ollama fallback: /v1 emulation endpoint if no OpenAI key configured
-    if not api_base and OLLAMA_BASE_URLS:
-        first = OLLAMA_BASE_URLS[0] if isinstance(OLLAMA_BASE_URLS, list) else str(OLLAMA_BASE_URLS)
-        api_base = f"{first.rstrip('/')}/v1"
-        api_key = api_key or "ollama"
-        if not cfg_model:
-            model = "llama3.1:8b"
 
     if not api_base:
         return None
