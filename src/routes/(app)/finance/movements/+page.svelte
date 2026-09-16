@@ -2,7 +2,7 @@
 	import { onMount, getContext } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { user } from '$lib/stores';
-	import { getMovements, analyzeMovements, updateMovement } from '$lib/apis/finance';
+	import { getMovements, analyzeMovements, updateMovement, getReportingPeriods } from '$lib/apis/finance';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 
 	const i18n = getContext('i18n');
@@ -31,124 +31,55 @@
 	let loading = true;
 	let analyzing = false;
 	let movements: Movement[] = [];
-	let dataLoaded = false; // true once a real (possibly empty) fetch has succeeded
 	let expandedRow: string | null = null;
 	let searchQuery = '';
 	let activeTypeFilter: MovementType | 'ALL' = 'ALL';
 	let showOnlyUnapproved = false;
-	let selectedPeriod = 'September 2026';
+	let periods: any[] = [];
+	let selectedPeriodId = '';
 
-	// --- Sample Data ---
-	const sampleMovements: Movement[] = [
-		{
-			id: 'MOV-001', bond_id: 'BOND-005', isin: 'SG7M18000003', movement_type: 'NEW',
-			previous_value: null, current_value: 500_000, variance: 500_000, variance_pct: null,
-			ai_explanation: 'Bond BOND-005 (ISIN SG7M18000003) was not present in the August schedule and appears in the September UBS report with face value SGD 500,000. Classified as a new investment. The bond is a Singapore government 10-year note with a coupon rate of 3.25%, maturing 2034-06-01.',
-			source_documents: ['UBS_Portfolio_Sep2026.xlsx', 'Bloomberg_Feed_20260915.csv'],
-			confidence: 96, approved: false, status: 'pending', currency: 'SGD'
-		},
-		{
-			id: 'MOV-002', bond_id: 'BOND-012', isin: 'SG7R29000007', movement_type: 'NEW',
-			previous_value: null, current_value: 1_200_000, variance: 1_200_000, variance_pct: null,
-			ai_explanation: 'Bond BOND-012 (ISIN SG7R29000007) is a new SGD 1,200,000 face value position not found in prior period. Sourced from DBS corporate bond issuance dated 2026-09-02. AI cross-referenced with Bloomberg terminal data confirming the acquisition.',
-			source_documents: ['DBS_Confirm_20260902.pdf', 'UBS_Portfolio_Sep2026.xlsx'],
-			confidence: 94, approved: false, status: 'pending', currency: 'SGD'
-		},
-		{
-			id: 'MOV-003', bond_id: 'BOND-019', isin: 'SG7M22000004', movement_type: 'NEW',
-			previous_value: null, current_value: 750_000, variance: 750_000, variance_pct: null,
-			ai_explanation: 'New position in BOND-019, a quasi-government infrastructure bond with face value SGD 750,000. Confirmed via custodian statement. No corresponding entry in August schedule.',
-			source_documents: ['UBS_Portfolio_Sep2026.xlsx'],
-			confidence: 91, approved: true, status: 'approved', currency: 'SGD'
-		},
-		{
-			id: 'MOV-004', bond_id: 'BOND-025', isin: 'SG7L15000001', movement_type: 'NEW',
-			previous_value: null, current_value: 2_000_000, variance: 2_000_000, variance_pct: null,
-			ai_explanation: 'BOND-025 is a new SGD 2,000,000 position in a Temasek Holdings senior unsecured note. First appearance in the September custodian report. Trade date confirmed as 2026-09-05 via Bloomberg.',
-			source_documents: ['UBS_Portfolio_Sep2026.xlsx', 'Bloomberg_Feed_20260915.csv', 'Temasek_Confirm_20260905.pdf'],
-			confidence: 98, approved: false, status: 'pending', currency: 'SGD'
-		},
-		{
-			id: 'MOV-005', bond_id: 'BOND-003', isin: 'SG7A14000009', movement_type: 'SOLD',
-			previous_value: 800_000, current_value: null, variance: -800_000, variance_pct: -100,
-			ai_explanation: 'Bond BOND-003 (ISIN SG7A14000009) with face value SGD 800,000 was present in August but absent from September UBS report. Trade confirmation shows sale executed on 2026-09-10 at 101.25 clean price.',
-			source_documents: ['UBS_Portfolio_Aug2026.xlsx', 'Trade_Confirm_20260910.pdf'],
-			confidence: 97, approved: false, status: 'pending', currency: 'SGD'
-		},
-		{
-			id: 'MOV-006', bond_id: 'BOND-008', isin: 'SG7B16000005', movement_type: 'SOLD',
-			previous_value: 1_500_000, current_value: null, variance: -1_500_000, variance_pct: -100,
-			ai_explanation: 'BOND-008 SGD 1,500,000 face value no longer in portfolio. Disposal confirmed by broker note dated 2026-09-08. Proceeds of SGD 1,523,750 credited to settlement account.',
-			source_documents: ['UBS_Portfolio_Aug2026.xlsx', 'Broker_Note_20260908.pdf'],
-			confidence: 95, approved: true, status: 'approved', currency: 'SGD'
-		},
-		{
-			id: 'MOV-007', bond_id: 'BOND-001', isin: 'SG7C10000002', movement_type: 'MATURED',
-			previous_value: 1_000_000, current_value: null, variance: -1_000_000, variance_pct: -100,
-			ai_explanation: 'BOND-001 (ISIN SG7C10000002) matured on 2026-09-01. Face value SGD 1,000,000 redeemed at par plus final coupon of SGD 16,250. Maturity confirmed via custodian settlement advice.',
-			source_documents: ['UBS_Portfolio_Aug2026.xlsx', 'Maturity_Advice_20260901.pdf'],
-			confidence: 99, approved: true, status: 'approved', currency: 'SGD'
-		},
-		{
-			id: 'MOV-008', bond_id: 'BOND-004', isin: 'SG7D11000008', movement_type: 'MATURED',
-			previous_value: 600_000, current_value: null, variance: -600_000, variance_pct: -100,
-			ai_explanation: 'Bond BOND-004 matured on 2026-09-15 per Bloomberg schedule. SGD 600,000 face value redeemed. Final coupon payment of SGD 9,000 processed. Custodian confirms full settlement.',
-			source_documents: ['Bloomberg_Feed_20260915.csv', 'Custodian_Settle_20260915.pdf'],
-			confidence: 98, approved: false, status: 'pending', currency: 'SGD'
-		},
-		{
-			id: 'MOV-009', bond_id: 'BOND-009', isin: 'SG7E13000006', movement_type: 'MATURED',
-			previous_value: 400_000, current_value: null, variance: -400_000, variance_pct: -100,
-			ai_explanation: 'BOND-009 (SGD 400,000) reached contractual maturity on 2026-09-12. Issuer redeemed at par. No call or early redemption provisions triggered. Standard maturity event.',
-			source_documents: ['UBS_Portfolio_Aug2026.xlsx', 'Issuer_Notice_20260912.pdf'],
-			confidence: 97, approved: false, status: 'pending', currency: 'SGD'
-		},
-		{
-			id: 'MOV-010', bond_id: 'BOND-015', isin: 'SG7F20000010', movement_type: 'TRANSFERRED',
-			previous_value: 900_000, current_value: 900_000, variance: 0, variance_pct: 0,
-			ai_explanation: 'Bond BOND-015 (SGD 900,000) transferred from Sub-account A to Sub-account B within the same UBS custody arrangement. Face value and market value unchanged. Transfer effective 2026-09-03 per internal instruction.',
-			source_documents: ['UBS_Transfer_20260903.pdf', 'Internal_Memo_20260903.pdf'],
-			confidence: 92, approved: false, status: 'pending', currency: 'SGD'
-		},
-		{
-			id: 'MOV-011', bond_id: 'BOND-002', isin: 'SG7G12000001', movement_type: 'VALUE_CHANGE',
-			previous_value: 1_000_000, current_value: 1_015_000, variance: 15_000, variance_pct: 1.5,
-			ai_explanation: 'Bond BOND-002 face value unchanged at SGD 1,000,000 but market value increased from SGD 1,000,000 to SGD 1,015,000 (+1.5%). Likely due to yield curve shift. Bloomberg mid-price confirms valuation as of 2026-09-14.',
-			source_documents: ['UBS_Portfolio_Sep2026.xlsx', 'Bloomberg_Feed_20260915.csv'],
-			confidence: 88, approved: false, status: 'pending', currency: 'SGD'
-		},
-		{
-			id: 'MOV-012', bond_id: 'BOND-006', isin: 'SG7H17000004', movement_type: 'VALUE_CHANGE',
-			previous_value: 2_500_000, current_value: 2_462_500, variance: -37_500, variance_pct: -1.5,
-			ai_explanation: 'Market value decline of SGD 37,500 (-1.5%) on BOND-006. Face value remains SGD 2,500,000. Variance attributed to credit spread widening on the issuer (DBS Group). AI flagged this as within normal tolerance.',
-			source_documents: ['UBS_Portfolio_Sep2026.xlsx', 'UBS_Portfolio_Aug2026.xlsx'],
-			confidence: 85, approved: false, status: 'pending', currency: 'SGD'
-		},
-		{
-			id: 'MOV-013', bond_id: 'BOND-010', isin: 'SG7J14000003', movement_type: 'VALUE_CHANGE',
-			previous_value: 750_000, current_value: 756_750, variance: 6_750, variance_pct: 0.9,
-			ai_explanation: 'Minor market value increase of SGD 6,750 (+0.9%) on BOND-010. Consistent with general SGD government bond rally in early September. No structural change to the position.',
-			source_documents: ['UBS_Portfolio_Sep2026.xlsx'],
-			confidence: 82, approved: false, status: 'pending', currency: 'SGD'
-		},
-		{
-			id: 'MOV-014', bond_id: 'BOND-007', isin: 'SG7K19000005', movement_type: 'UNCHANGED',
-			previous_value: 500_000, current_value: 500_000, variance: 0, variance_pct: 0,
-			ai_explanation: 'Bond BOND-007 (SGD 500,000) unchanged between periods. Face value, market value, and accrued interest consistent with expectations. No action required.',
-			source_documents: ['UBS_Portfolio_Sep2026.xlsx', 'UBS_Portfolio_Aug2026.xlsx'],
-			confidence: 99, approved: true, status: 'approved', currency: 'SGD'
-		},
-		{
-			id: 'MOV-015', bond_id: 'BOND-011', isin: 'SG7L21000007', movement_type: 'UNCHANGED',
-			previous_value: 1_800_000, current_value: 1_800_000, variance: 0, variance_pct: 0,
-			ai_explanation: 'No movement detected for BOND-011. Position of SGD 1,800,000 carried forward from August. Valuations consistent across all source documents.',
-			source_documents: ['UBS_Portfolio_Sep2026.xlsx'],
-			confidence: 99, approved: true, status: 'approved', currency: 'SGD'
-		}
-	];
+	// Backend rows use is_approved/current_status/explanation_confidence (0-1)
+	// and don't carry source_documents/currency/variance_pct — reshape them.
+	// Backend uses accounting-style movement types (PURCHASE/SALE/MATURITY/
+	// TRANSFER/ACCRUAL); map them onto this page's display vocabulary.
+	const BACKEND_TYPE_MAP: Record<string, MovementType> = {
+		PURCHASE: 'NEW',
+		SALE: 'SOLD',
+		MATURITY: 'MATURED',
+		TRANSFER: 'TRANSFERRED',
+		ACCRUAL: 'VALUE_CHANGE',
+		NEW: 'NEW',
+		SOLD: 'SOLD',
+		MATURED: 'MATURED',
+		TRANSFERRED: 'TRANSFERRED',
+		VALUE_CHANGE: 'VALUE_CHANGE',
+		UNCHANGED: 'UNCHANGED'
+	};
+
+	function toMovement(row: any): Movement {
+		const prev = row.previous_value ?? null;
+		const curr = row.current_value ?? null;
+		const variance = row.variance ?? (prev != null && curr != null ? curr - prev : null);
+		return {
+			id: row.id,
+			bond_id: row.bond_id,
+			isin: row.isin,
+			movement_type: BACKEND_TYPE_MAP[row.movement_type] || 'OTHER',
+			previous_value: prev,
+			current_value: curr,
+			variance,
+			variance_pct: prev ? Math.round(((variance ?? 0) / prev) * 1000) / 10 : null,
+			ai_explanation: row.ai_explanation || 'No explanation available.',
+			source_documents: [],
+			confidence: Math.round((row.explanation_confidence ?? 0) * 100),
+			approved: !!row.is_approved,
+			status: row.current_status || (row.is_approved ? 'approved' : 'pending'),
+			currency: row.currency || 'SGD'
+		};
+	}
 
 	// --- Summary counts ---
-	$: summary = computeSummary(dataLoaded ? movements : sampleMovements);
+	$: summary = computeSummary(movements);
 
 	function computeSummary(data: Movement[]) {
 		const counts: Record<string, number> = {
@@ -164,7 +95,7 @@
 	}
 
 	// --- Filtering ---
-	$: filteredMovements = filterMovements(dataLoaded ? movements : sampleMovements, activeTypeFilter, searchQuery, showOnlyUnapproved);
+	$: filteredMovements = filterMovements(movements, activeTypeFilter, searchQuery, showOnlyUnapproved);
 
 	function filterMovements(data: Movement[], typeFilter: MovementType | 'ALL', search: string, unapprovedOnly: boolean): Movement[] {
 		let result = data;
@@ -256,18 +187,31 @@
 		expandedRow = expandedRow === id ? null : id;
 	}
 
+	async function loadMovements() {
+		try {
+			const result = await getMovements(
+				localStorage.token,
+				selectedPeriodId ? { period_id: selectedPeriodId } : undefined
+			);
+			movements = Array.isArray(result) ? result.map(toMovement) : [];
+		} catch (e: any) {
+			movements = [];
+			toast.error(e?.message || 'Failed to load movements');
+		}
+	}
+
 	async function handleAnalyze() {
+		if (!selectedPeriodId) {
+			toast.error('Select a reporting period first');
+			return;
+		}
 		analyzing = true;
 		try {
-			await analyzeMovements(localStorage.token, 'current');
-			const result = await getMovements(localStorage.token);
-			if (Array.isArray(result)) {
-				movements = result;
-				dataLoaded = true;
-			}
+			await analyzeMovements(localStorage.token, selectedPeriodId);
+			await loadMovements();
 			toast.success('Movement analysis completed');
-		} catch {
-			toast.error('Analysis failed. Showing sample data.');
+		} catch (e: any) {
+			toast.error(e?.message || 'Movement analysis failed');
 		}
 		analyzing = false;
 	}
@@ -275,23 +219,10 @@
 	async function handleApprove(movement: Movement) {
 		try {
 			await updateMovement(localStorage.token, movement.id, { approved: true, status: 'approved' });
-			const data = dataLoaded ? movements : sampleMovements;
-			const idx = data.findIndex(m => m.id === movement.id);
-			if (idx !== -1) {
-				data[idx] = { ...data[idx], approved: true, status: 'approved' };
-				if (dataLoaded) {
-					movements = [...movements];
-				}
-			}
 			toast.success(`Movement ${movement.id} approved`);
-		} catch {
-			// Optimistic update for sample data
-			const data = dataLoaded ? movements : sampleMovements;
-			const idx = data.findIndex(m => m.id === movement.id);
-			if (idx !== -1) {
-				data[idx] = { ...data[idx], approved: true, status: 'approved' };
-			}
-			toast.success(`Movement ${movement.id} approved`);
+			await loadMovements();
+		} catch (e: any) {
+			toast.error(e?.message || `Failed to approve movement ${movement.id}`);
 		}
 	}
 
@@ -299,22 +230,17 @@
 		try {
 			await updateMovement(localStorage.token, movement.id, { approved: false, status: 'rejected' });
 			toast.info(`Movement ${movement.id} rejected`);
-		} catch {
-			toast.info(`Movement ${movement.id} rejected`);
+			await loadMovements();
+		} catch (e: any) {
+			toast.error(e?.message || `Failed to reject movement ${movement.id}`);
 		}
 	}
 
 	// --- Mount ---
 	onMount(async () => {
-		try {
-			const result = await getMovements(localStorage.token);
-			if (Array.isArray(result)) {
-				movements = result;
-				dataLoaded = true;
-			}
-		} catch {
-			// Use sample data
-		}
+		periods = (await getReportingPeriods(localStorage.token).catch(() => [])) ?? [];
+		if (!selectedPeriodId && periods.length) selectedPeriodId = periods[0].id;
+		await loadMovements();
 		loading = false;
 	});
 </script>
@@ -337,11 +263,15 @@
 			<div class="flex items-center gap-3">
 				<select
 					class="text-sm border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300"
-					bind:value={selectedPeriod}
+					bind:value={selectedPeriodId}
+					on:change={loadMovements}
 				>
-					<option value="September 2026">September 2026</option>
-					<option value="August 2026">August 2026</option>
-					<option value="July 2026">July 2026</option>
+					{#if periods.length === 0}
+						<option value="">No periods</option>
+					{/if}
+					{#each periods as p}
+						<option value={p.id}>{p.name}</option>
+					{/each}
 				</select>
 				<button
 					class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -635,7 +565,7 @@
 					<!-- Table Footer -->
 					<div class="px-4 py-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
 						<div class="text-xs text-gray-400 dark:text-gray-500">
-							Showing <span class="font-medium text-gray-600 dark:text-gray-400">{filteredMovements.length}</span> of <span class="font-medium text-gray-600 dark:text-gray-400">{(dataLoaded ? movements : sampleMovements).length}</span> movements
+							Showing <span class="font-medium text-gray-600 dark:text-gray-400">{filteredMovements.length}</span> of <span class="font-medium text-gray-600 dark:text-gray-400">{movements.length}</span> movements
 						</div>
 						<div class="flex items-center gap-2">
 							<span class="inline-flex items-center gap-1 text-[10px] text-gray-400 dark:text-gray-500">

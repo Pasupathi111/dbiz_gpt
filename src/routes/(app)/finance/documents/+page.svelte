@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount, getContext } from 'svelte';
+	import { get } from 'svelte/store';
 	import { user } from '$lib/stores';
 	import {
 		uploadFinanceDocument,
@@ -40,70 +41,23 @@
 
 	const acceptedExtensions = ['.xlsx', '.xls', '.pdf'];
 
-	const sampleDocuments = [
-		{
-			id: 'doc-1',
-			document_type: 'UBS_EXCEL',
-			filename: 'UBS_Sep2026_Bonds.xlsx',
-			reporting_period: 'September 2026',
-			uploaded_by: 'S. Lim',
-			uploaded_at: '2026-09-15T10:23:00Z',
-			file_size: 2_457_600,
-			status: 'VALIDATED'
-		},
-		{
-			id: 'doc-2',
-			document_type: 'LGI_PDF',
-			filename: 'LGI_Report_Sep2026.pdf',
-			reporting_period: 'September 2026',
-			uploaded_by: 'A. Chen',
-			uploaded_at: '2026-09-14T14:45:00Z',
-			file_size: 1_843_200,
-			status: 'PROCESSED'
-		},
-		{
-			id: 'doc-3',
-			document_type: 'PREVIOUS_SCHEDULE',
-			filename: 'Bond_Schedule_Aug2026.xlsx',
-			reporting_period: 'August 2026',
-			uploaded_by: 'S. Lim',
-			uploaded_at: '2026-09-12T09:10:00Z',
-			file_size: 3_145_728,
-			status: 'VALIDATED'
-		},
-		{
-			id: 'doc-4',
-			document_type: 'TEMPLATE',
-			filename: 'Finance_Template_v3.xlsx',
-			reporting_period: 'September 2026',
-			uploaded_by: 'M. Tan',
-			uploaded_at: '2026-09-10T16:30:00Z',
-			file_size: 524_288,
-			status: 'UPLOADED'
-		},
-		{
-			id: 'doc-5',
-			document_type: 'UBS_EXCEL',
-			filename: 'UBS_Aug2026_Bonds.xlsx',
-			reporting_period: 'August 2026',
-			uploaded_by: 'S. Lim',
-			uploaded_at: '2026-08-15T11:00:00Z',
-			file_size: 2_301_952,
-			status: 'VALIDATED'
-		}
-	];
-
 	// --- Mount ---
 	onMount(async () => {
-		try {
-			periods = await getReportingPeriods(localStorage.token).catch(() => []);
-			const fetched = await getFinanceDocuments(localStorage.token, selectedPeriodId).catch(() => null);
-			documents = fetched && Array.isArray(fetched) ? fetched : sampleDocuments;
-		} catch {
-			documents = sampleDocuments;
-		}
+		periods = (await getReportingPeriods(localStorage.token).catch(() => [])) ?? [];
+		if (!selectedPeriodId && periods.length) selectedPeriodId = periods[0].id;
+		await refreshDocuments();
 		loading = false;
 	});
+
+	function periodName(periodId: string): string {
+		return periods.find((p) => p.id === periodId)?.name || periodId || '—';
+	}
+
+	function uploaderName(uploadedBy: string): string {
+		const currentUser = get(user);
+		if (currentUser && uploadedBy === currentUser.id) return currentUser.name;
+		return uploadedBy || '—';
+	}
 
 	// --- Helpers ---
 	function getDocTypeBadge(type: string) {
@@ -161,8 +115,9 @@
 		return `${bytes} B`;
 	}
 
-	function formatDate(iso: string): string {
-		const d = new Date(iso);
+	function formatDate(epochSeconds: number): string {
+		if (!epochSeconds) return '—';
+		const d = new Date(epochSeconds * 1000);
 		return d.toLocaleDateString('en-SG', { day: '2-digit', month: 'short', year: 'numeric' }) +
 			' ' +
 			d.toLocaleTimeString('en-SG', { hour: '2-digit', minute: '2-digit', hour12: false });
@@ -273,11 +228,9 @@
 	async function refreshDocuments() {
 		try {
 			const fetched = await getFinanceDocuments(localStorage.token, selectedPeriodId);
-			if (fetched && Array.isArray(fetched)) {
-				documents = fetched;
-			}
-		} catch {
-			// Keep current documents on error
+			documents = Array.isArray(fetched) ? fetched : [];
+		} catch (e: any) {
+			toast.error(e?.message || 'Failed to load documents');
 		}
 	}
 
@@ -335,8 +288,11 @@
 				<select
 					class="text-sm border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300"
 					bind:value={selectedPeriodId}
+					on:change={refreshDocuments}
 				>
-					<option value="">September 2026</option>
+					{#if periods.length === 0}
+						<option value="">No periods</option>
+					{/if}
 					{#each periods as period}
 						<option value={period.id}>{period.name}</option>
 					{/each}
@@ -527,14 +483,14 @@
 							<table class="w-full text-sm">
 								<thead>
 									<tr class="border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
-										<th class="text-left px-6 py-3 text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">Document Type</th>
-										<th class="text-left px-6 py-3 text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">Filename</th>
-										<th class="text-left px-6 py-3 text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">Period</th>
-										<th class="text-left px-6 py-3 text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">Uploaded By</th>
-										<th class="text-left px-6 py-3 text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">Uploaded At</th>
-										<th class="text-left px-6 py-3 text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">Size</th>
-										<th class="text-left px-6 py-3 text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">Status</th>
-										<th class="text-right px-6 py-3 text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">Actions</th>
+										<th class="text-left px-6 py-3 text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 whitespace-nowrap">Document Type</th>
+										<th class="text-left px-6 py-3 text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 whitespace-nowrap">Filename</th>
+										<th class="text-left px-6 py-3 text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 whitespace-nowrap">Period</th>
+										<th class="text-left px-6 py-3 text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 whitespace-nowrap">Uploaded By</th>
+										<th class="text-left px-6 py-3 text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 whitespace-nowrap">Uploaded At</th>
+										<th class="text-left px-6 py-3 text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 whitespace-nowrap">Size</th>
+										<th class="text-left px-6 py-3 text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 whitespace-nowrap">Status</th>
+										<th class="text-right px-6 py-3 text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 whitespace-nowrap">Actions</th>
 									</tr>
 								</thead>
 								<tbody class="divide-y divide-gray-100 dark:divide-gray-800">
@@ -569,11 +525,11 @@
 												</div>
 											</td>
 											<!-- Period -->
-											<td class="px-6 py-3.5 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">{doc.reporting_period}</td>
+											<td class="px-6 py-3.5 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">{periodName(doc.reporting_period_id)}</td>
 											<!-- Uploaded By -->
-											<td class="px-6 py-3.5 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">{doc.uploaded_by}</td>
+											<td class="px-6 py-3.5 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">{uploaderName(doc.uploaded_by)}</td>
 											<!-- Uploaded At -->
-											<td class="px-6 py-3.5 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">{formatDate(doc.uploaded_at)}</td>
+											<td class="px-6 py-3.5 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">{formatDate(doc.created_at)}</td>
 											<!-- Size -->
 											<td class="px-6 py-3.5 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">{formatFileSize(doc.file_size)}</td>
 											<!-- Status -->

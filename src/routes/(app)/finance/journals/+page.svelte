@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount, getContext } from 'svelte';
 	import { user } from '$lib/stores';
-	import { getJournals, generateJournals, approveJournal, rejectJournal } from '$lib/apis/finance';
+	import { getJournals, generateJournals, approveJournal, rejectJournal, getReportingPeriods } from '$lib/apis/finance';
 	import { toast } from 'svelte-sonner';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 
@@ -13,54 +13,23 @@
 	let selectedJournal: any = null;
 	let showDetail = false;
 	let approvalComment = '';
+	let periods: any[] = [];
+	let selectedPeriodId = '';
 
-	const sampleJournals = [
-		{
-			id: 'J001', journal_number: 'JV-2026-09-001', description: 'New Bond Purchases - September 2026',
-			total_debit: 1250000, total_credit: 1250000, is_balanced: true, status: 'AI_GENERATED',
-			ai_rationale: 'Journal entries for 2 new bond acquisitions identified during September movement analysis. Bond BOND-003 (Temasek Holdings) and BOND-005 (CapitaLand Investment) were purchased during the period.',
-			lines: [
-				{ line_number: 1, account_code: '1210', account_description: 'Investment Securities - Bonds', debit: 1250000, credit: 0, currency: 'SGD', bond_id: 'BOND-003, BOND-005', description: 'Bond portfolio additions' },
-				{ line_number: 2, account_code: '1110', account_description: 'Cash at Bank - SGD', debit: 0, credit: 1250000, currency: 'SGD', bond_id: null, description: 'Settlement payment' }
-			]
-		},
-		{
-			id: 'J002', journal_number: 'JV-2026-09-002', description: 'Bond Maturity - BOND-008 Singapore Airlines',
-			total_debit: 600000, total_credit: 600000, is_balanced: true, status: 'PENDING_REVIEW',
-			ai_rationale: 'Bond BOND-008 (Singapore Airlines, ISIN SG3L58000008) matured on 31 August 2026. Face value SGD 600,000 returned to cash. Book value adjustment of SGD 2,000 recognized.',
-			lines: [
-				{ line_number: 1, account_code: '1110', account_description: 'Cash at Bank - SGD', debit: 600000, credit: 0, currency: 'SGD', bond_id: 'BOND-008', description: 'Maturity proceeds received' },
-				{ line_number: 2, account_code: '1210', account_description: 'Investment Securities - Bonds', debit: 0, credit: 598000, currency: 'SGD', bond_id: 'BOND-008', description: 'Derecognition at book value' },
-				{ line_number: 3, account_code: '4110', account_description: 'Gain on Investment Securities', debit: 0, credit: 2000, currency: 'SGD', bond_id: 'BOND-008', description: 'Gain on maturity' }
-			]
-		},
-		{
-			id: 'J003', journal_number: 'JV-2026-09-003', description: 'Accrued Interest - September 2026',
-			total_debit: 67824, total_credit: 67824, is_balanced: true, status: 'DRAFT',
-			ai_rationale: 'Monthly accrued interest calculation across 7 active bond positions for September 2026. Total accrued interest of SGD 67,824 based on individual coupon rates and day-count conventions.',
-			lines: [
-				{ line_number: 1, account_code: '1220', account_description: 'Accrued Interest Receivable', debit: 67824, credit: 0, currency: 'SGD', bond_id: null, description: 'September interest accrual' },
-				{ line_number: 2, account_code: '4200', account_description: 'Interest Income - Bonds', debit: 0, credit: 67824, currency: 'SGD', bond_id: null, description: 'Interest income recognition' }
-			]
-		},
-		{
-			id: 'J004', journal_number: 'JV-2026-09-004', description: 'Fair Value Adjustment - September 2026',
-			total_debit: 9800, total_credit: 9800, is_balanced: true, status: 'AI_GENERATED',
-			ai_rationale: 'Net fair value gain of SGD 9,800 recognized on FVOCI portfolio. This represents the change in market value versus book value across 7 active bonds.',
-			lines: [
-				{ line_number: 1, account_code: '1210', account_description: 'Investment Securities - Bonds', debit: 9800, credit: 0, currency: 'SGD', bond_id: null, description: 'Fair value uplift' },
-				{ line_number: 2, account_code: '3210', account_description: 'OCI - Fair Value Reserve', debit: 0, credit: 9800, currency: 'SGD', bond_id: null, description: 'FV through OCI' }
-			]
+	async function loadJournals() {
+		try {
+			const data = await getJournals(localStorage.token, selectedPeriodId ? { period_id: selectedPeriodId } : undefined);
+			journals = Array.isArray(data) ? data : [];
+		} catch (e: any) {
+			journals = [];
+			toast.error(e?.message || 'Failed to load journals');
 		}
-	];
+	}
 
 	onMount(async () => {
-		try {
-			const data = await getJournals(localStorage.token);
-			journals = Array.isArray(data) ? data : sampleJournals;
-		} catch {
-			journals = sampleJournals;
-		}
+		periods = (await getReportingPeriods(localStorage.token).catch(() => [])) ?? [];
+		if (!selectedPeriodId && periods.length) selectedPeriodId = periods[0].id;
+		await loadJournals();
 		loading = false;
 	});
 
@@ -90,12 +59,12 @@
 		try {
 			await approveJournal(localStorage.token, selectedJournal.id, approvalComment);
 			toast.success('Journal approved');
-		} catch {
-			toast.success('Journal approved');
+			showDetail = false;
+			approvalComment = '';
+			await loadJournals();
+		} catch (e: any) {
+			toast.error(e?.message || 'Failed to approve journal');
 		}
-		selectedJournal.status = 'APPROVED';
-		showDetail = false;
-		approvalComment = '';
 	}
 
 	async function handleReject() {
@@ -106,21 +75,26 @@
 		try {
 			await rejectJournal(localStorage.token, selectedJournal.id, approvalComment);
 			toast.info('Journal rejected');
-		} catch {
-			toast.info('Journal rejected');
+			showDetail = false;
+			approvalComment = '';
+			await loadJournals();
+		} catch (e: any) {
+			toast.error(e?.message || 'Failed to reject journal');
 		}
-		selectedJournal.status = 'REJECTED';
-		showDetail = false;
-		approvalComment = '';
 	}
 
 	async function handleGenerate() {
+		if (!selectedPeriodId) {
+			toast.error('Select a reporting period first');
+			return;
+		}
 		generating = true;
 		try {
-			await generateJournals(localStorage.token, '');
+			await generateJournals(localStorage.token, selectedPeriodId);
 			toast.success('Draft journals generated');
-		} catch {
-			toast.success('Draft journals generated');
+			await loadJournals();
+		} catch (e: any) {
+			toast.error(e?.message || 'Failed to generate journals');
 		}
 		generating = false;
 	}
@@ -141,6 +115,18 @@
 				<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">AI-generated journal entries for finance review and approval</p>
 			</div>
 			<div class="flex items-center gap-2">
+				<select
+					class="text-sm border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+					bind:value={selectedPeriodId}
+					on:change={loadJournals}
+				>
+					{#if periods.length === 0}
+						<option value="">No periods</option>
+					{/if}
+					{#each periods as p}
+						<option value={p.id}>{p.name}</option>
+					{/each}
+				</select>
 				<button on:click={handleGenerate} disabled={generating} class="px-4 py-1.5 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors flex items-center gap-2">
 					{#if generating}<Spinner className="size-3.5" />{/if}
 					Generate Journals
