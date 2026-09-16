@@ -126,7 +126,17 @@ export const assistantCapabilities: Record<string, PageCapability> = {
 			{ id: 'j1', label: 'Generate draft journals', action: 'journals.generate' },
 			{ id: 'j2', label: 'Review journal entries', action: 'review.pending' },
 			{ id: 'j3', label: 'Prepare journal summary', action: 'review.pending' }
-		]
+		],
+		dynamic: (ctx) => {
+			// Approve/reject only make sense once a specific journal is
+			// selected on the page — surface them contextually instead of
+			// as always-on suggestions with no target.
+			if (!ctx.entityId) return [];
+			return [
+				{ id: 'j-dyn-approve', label: 'Approve the selected journal', action: 'journals.approve' },
+				{ id: 'j-dyn-reject', label: 'Reject the selected journal', action: 'journals.reject' }
+			];
+		}
 	},
 
 	'audit-schedule': {
@@ -155,7 +165,14 @@ export const assistantCapabilities: Record<string, PageCapability> = {
 		suggestions: [
 			{ id: 'rv1', label: 'Summarize items awaiting review', action: 'review.pending' },
 			{ id: 'rv2', label: 'Explain pending approvals', action: 'review.pending' }
-		]
+		],
+		dynamic: (ctx) => {
+			if (!ctx.entityId) return [];
+			return [
+				{ id: 'rv-dyn-approve', label: 'Approve the selected item', action: 'review.approve' },
+				{ id: 'rv-dyn-reject', label: 'Reject the selected item', action: 'review.reject' }
+			];
+		}
 	},
 
 	exceptions: {

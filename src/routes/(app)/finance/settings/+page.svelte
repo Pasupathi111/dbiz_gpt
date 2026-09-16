@@ -23,7 +23,7 @@
 </script>
 
 <div class="flex flex-col h-full overflow-y-auto">
-	<div class="px-8 pt-6 pb-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+	<div class="px-4 sm:px-6 lg:px-8 pt-6 pb-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
 		<div class="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500 mb-1">
 			<span>AI Bond Copilot</span><span>/</span><span>Settings</span>
 		</div>
@@ -32,7 +32,7 @@
 	</div>
 
 	<div class="flex-1 overflow-y-auto">
-		<div class="px-8 py-6 space-y-6 max-w-3xl">
+		<div class="px-4 sm:px-6 lg:px-8 py-6 space-y-6 max-w-3xl">
 			<!-- Thresholds -->
 			<div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
 				<div class="px-6 py-4 border-b border-gray-100 dark:border-gray-800">
