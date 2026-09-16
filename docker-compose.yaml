@@ -1,32 +1,57 @@
 services:
-  ollama:
-    volumes:
-      - ollama:/root/.ollama
-    container_name: ollama
-    pull_policy: always
-    tty: true
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: test-gpt-db
     restart: unless-stopped
-    image: ollama/ollama:${OLLAMA_DOCKER_TAG-latest}
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-test_gpt}
+      POSTGRES_USER: ${POSTGRES_USER:-test_gpt}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-test_gpt_secure_pass_2026}
+    ports:
+      - "127.0.0.1:7051:5432"
+    volumes:
+      - test-gpt-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-test_gpt} -d ${POSTGRES_DB:-test_gpt}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   open-webui:
     build:
       context: .
       dockerfile: Dockerfile
     image: ghcr.io/open-webui/open-webui:${WEBUI_DOCKER_TAG-main}
-    container_name: open-webui
+    container_name: test-gpt-webui
     volumes:
-      - open-webui:/app/backend/data
+      - test-gpt-open-webui:/app/backend/data
     depends_on:
-      - ollama
+      db:
+        condition: service_healthy
     ports:
-      - ${OPEN_WEBUI_PORT-3000}:8080
+      - "127.0.0.1:7050:8080"
     environment:
-      - 'OLLAMA_BASE_URL=http://ollama:11434'
-      - 'WEBUI_SECRET_KEY='
+      - ENV=dev
+      - OPENAI_API_BASE_URL=${OPENAI_API_BASE_URL:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - WEBUI_SECRET_KEY=${WEBUI_SECRET_KEY:-}
+      - DATABASE_TYPE=postgres
+      - DATABASE_USER=${POSTGRES_USER:-test_gpt}
+      - DATABASE_PASSWORD=${POSTGRES_PASSWORD:-test_gpt_secure_pass_2026}
+      - DATABASE_HOST=db
+      - DATABASE_PORT=5432
+      - DATABASE_NAME=${POSTGRES_DB:-test_gpt}
+      - PGVECTOR_DB_URL=postgresql://${POSTGRES_USER:-test_gpt}:${POSTGRES_PASSWORD:-test_gpt_secure_pass_2026}@db:5432/${POSTGRES_DB:-test_gpt}
+      - VECTOR_DB=pgvector
+      - CORS_ALLOW_ORIGIN=*
+      - FORWARDED_ALLOW_IPS=*
+      - SCARF_NO_ANALYTICS=true
+      - DO_NOT_TRACK=true
+      - ANONYMIZED_TELEMETRY=false
     extra_hosts:
       - host.docker.internal:host-gateway
     restart: unless-stopped
 
 volumes:
-  ollama: {}
-  open-webui: {}
+  test-gpt-db-data: {}
+  test-gpt-open-webui: {}
