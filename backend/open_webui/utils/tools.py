@@ -100,6 +100,18 @@ from open_webui.tools.builtin import (
     view_skill,
     write_note,
 )
+from open_webui.tools.finance_copilot import (
+    generate_analysis as finance_generate_analysis,
+    get_audit_progress as finance_get_audit_progress,
+    get_journal_status as finance_get_journal_status,
+    get_open_exceptions as finance_get_open_exceptions,
+    get_pending_reviews as finance_get_pending_reviews,
+    get_period_movements as finance_get_period_movements,
+    get_portfolio_summary as finance_get_portfolio_summary,
+    get_reconciliation_status as finance_get_reconciliation_status,
+    lookup_bond as finance_lookup_bond,
+    search_audit_trail as finance_search_audit_trail,
+)
 from open_webui.utils.access_control import has_access, has_connection_access, has_permission
 from open_webui.utils.chat_id import is_saved_chat_id
 from open_webui.utils.headers import (
@@ -762,6 +774,24 @@ async def get_builtin_tools(
         and await has_user_permission('webhooks')
     ):
         builtin_functions.append(notify)
+
+    # Finance Copilot tools - bond portfolio management, reconciliation,
+    # exceptions, movements, journals, audit, and AI commentary
+    if is_builtin_tool_enabled('finance', True):
+        builtin_functions.extend(
+            [
+                finance_get_portfolio_summary,
+                finance_lookup_bond,
+                finance_get_reconciliation_status,
+                finance_get_open_exceptions,
+                finance_get_pending_reviews,
+                finance_get_period_movements,
+                finance_get_journal_status,
+                finance_get_audit_progress,
+                finance_generate_analysis,
+                finance_search_audit_trail,
+            ]
+        )
 
     if getattr(request.state, 'internal', False) is True:
         from open_webui.utils.subagents import MUTATING_MEMORY_TOOLS
