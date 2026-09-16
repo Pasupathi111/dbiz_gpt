@@ -30,7 +30,7 @@
 	onMount(async () => {
 		try {
 			const data = await getBonds(localStorage.token);
-			bonds = data?.items?.length ? data.items : sampleBonds;
+			bonds = Array.isArray(data) ? data : sampleBonds;
 		} catch {
 			bonds = sampleBonds;
 		}

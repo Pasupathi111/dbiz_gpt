@@ -27,7 +27,7 @@
 	onMount(async () => {
 		try {
 			const data = await getAuditSchedule(localStorage.token);
-			entries = data?.items?.length ? data.items : sampleEntries;
+			entries = Array.isArray(data) ? data : sampleEntries;
 		} catch {
 			entries = sampleEntries;
 		}

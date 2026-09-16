@@ -21,7 +21,7 @@
 	onMount(async () => {
 		try {
 			const data = await getExceptions(localStorage.token);
-			exceptions = data?.items?.length ? data.items : sampleExceptions;
+			exceptions = Array.isArray(data) ? data : sampleExceptions;
 		} catch {
 			exceptions = sampleExceptions;
 		}

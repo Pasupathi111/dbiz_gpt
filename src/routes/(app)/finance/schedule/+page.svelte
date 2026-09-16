@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount, getContext } from 'svelte';
 	import { user } from '$lib/stores';
-	import { getSchedule, generateSchedule, validateSchedule } from '$lib/apis/finance';
+	import { getSchedule, generateSchedule, validateSchedule, getReportingPeriods } from '$lib/apis/finance';
 	import { toast } from 'svelte-sonner';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 
@@ -14,6 +14,8 @@
 	let searchQuery = '';
 	let sortColumn = 'bond_id';
 	let sortDirection = 'asc';
+	let periods: any[] = [];
+	let selectedPeriodId = '';
 
 	const sampleSchedule = [
 		{ id: '1', bond_id: 'BOND-001', isin: 'SG7M18000001', issuer: 'DBS Group Holdings', currency: 'SGD', face_value: 1000000, book_value: 998500, market_value: 1012000, coupon_rate: 3.25, maturity_date: '2028-03-15', accrued_interest: 8125, movement_type: 'UNCHANGED', variance: 0, source: 'UBS', validation_status: 'VALID' },
@@ -26,14 +28,21 @@
 		{ id: '8', bond_id: 'BOND-008', isin: 'SG3L58000008', issuer: 'Singapore Airlines', currency: 'SGD', face_value: 600000, book_value: 598000, market_value: 0, coupon_rate: 2.90, maturity_date: '2026-08-31', accrued_interest: 0, movement_type: 'MATURED', variance: -598000, source: 'Schedule', validation_status: 'VALID' }
 	];
 
-	onMount(async () => {
+	async function loadSchedule() {
+		loading = true;
 		try {
-			const data = await getSchedule(localStorage.token, { period_id: '' });
-			scheduleData = data?.items?.length ? data.items : sampleSchedule;
+			const data = await getSchedule(localStorage.token, { period_id: selectedPeriodId });
+			scheduleData = Array.isArray(data) ? data : sampleSchedule;
 		} catch {
 			scheduleData = sampleSchedule;
 		}
 		loading = false;
+	}
+
+	onMount(async () => {
+		periods = (await getReportingPeriods(localStorage.token).catch(() => [])) ?? [];
+		if (!selectedPeriodId && periods.length) selectedPeriodId = periods[0].id;
+		await loadSchedule();
 	});
 
 	$: filteredData = scheduleData.filter(item => {
@@ -71,8 +80,9 @@
 	async function handleGenerate() {
 		generating = true;
 		try {
-			await generateSchedule(localStorage.token, '');
+			await generateSchedule(localStorage.token, selectedPeriodId);
 			toast.success('Schedule generated successfully');
+			await loadSchedule();
 		} catch (e: any) {
 			toast.error(e.message || 'Failed to generate schedule');
 		}
@@ -81,7 +91,7 @@
 
 	async function handleValidate() {
 		try {
-			validationResult = await validateSchedule(localStorage.token, '');
+			validationResult = await validateSchedule(localStorage.token, selectedPeriodId);
 			toast.success('Validation complete');
 		} catch {
 			validationResult = { passed: 76, warnings: 2, errors: 0 };
@@ -105,6 +115,18 @@
 				<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Generated bond schedule with movement tracking and validation</p>
 			</div>
 			<div class="flex items-center gap-2">
+				<select
+					class="text-sm border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+					bind:value={selectedPeriodId}
+					on:change={loadSchedule}
+				>
+					{#if periods.length === 0}
+						<option value="">Current period</option>
+					{/if}
+					{#each periods as p}
+						<option value={p.id}>{p.name}</option>
+					{/each}
+				</select>
 				<button on:click={handleValidate} class="px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
 					Validate
 				</button>

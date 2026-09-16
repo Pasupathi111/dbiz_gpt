@@ -19,6 +19,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from open_webui.internal.db import get_async_db_context
+from open_webui.services import finance_ingestion
 from open_webui.models.finance import (
     AuditScheduleEntries,
     AuditScheduleEntryForm,
@@ -86,14 +87,12 @@ def _require_approve(user=None) -> None:
     short-circuit.  This second-layer check exists so that anyone calling the
     service functions directly (e.g. tests, internal tooling, future imports)
     cannot bypass the Human-in-the-Loop approval constraint.  Only callers
-    that explicitly pass a user with `role == 'admin'` are authorised.  If
-    the caller omits `user` entirely we also allow transit because the
-    router-level gate will already have run before reaching this call in
-    normal request flow.
+    that explicitly pass a user with `role == 'admin'` are authorised.  The
+    router always passes `user`, so an omitted `user` means this is being
+    called from somewhere that bypassed the router-level gate — deny by
+    default rather than assume that gate already ran.
     """
-    if user is None:
-        return
-    role = getattr(user, "role", None)
+    role = getattr(user, "role", None) if user is not None else None
     if role != "admin":
         raise PermissionError(
             f"Finance approval rejected for user role={role!r}: "
@@ -248,6 +247,7 @@ async def get_dashboard(user_id: str, period_id: Optional[str] = None) -> dict:
 
     schedule_entries = await AuditScheduleEntries.get_by_period(resolved_id) if resolved_id else []
     commentary_entries = await Commentaries.get_by_period(resolved_id) if resolved_id else []
+    movements = await BondMovements.get_by_period(resolved_id) if resolved_id else []
 
     approvals = await FinanceApprovals.get_by_period(resolved_id) if resolved_id else []
     if approvals:
@@ -278,6 +278,7 @@ async def get_dashboard(user_id: str, period_id: Optional[str] = None) -> dict:
             "documents_pending": docs_pending,
             "schedule_generated": len(schedule_entries) > 0,
             "commentary_generated": len(commentary_entries) > 0,
+            "movements_count": len(movements),
             "review_status": review_status,
         },
         "generated_at": _utc_now(),
@@ -381,15 +382,17 @@ async def upload_document(
     file_size: int,
     document_type: str,
     reporting_period_id: str,
+    file_path: str,
+    file_hash: Optional[str] = None,
 ) -> dict:
     form = FinanceDocumentForm(
         reporting_period_id=reporting_period_id,
         document_type=document_type,
         filename=filename,
         original_filename=filename,
-        file_path=f"uploads/{reporting_period_id}/{_new_id()}-{filename}",
+        file_path=file_path,
         file_size=file_size,
-        file_hash=None,
+        file_hash=file_hash,
         mime_type=content_type,
         status="UPLOADED",
     )
@@ -425,28 +428,171 @@ async def get_document(user_id: str, doc_id: str) -> Optional[dict]:
     return _to_dict(doc) if doc else None
 
 
+_EXTRACTION_TYPE_BY_DOCUMENT_TYPE = {
+    "UBS_EXCEL": "EXCEL",
+    "LGI_PDF": "PDF",
+}
+
+
 async def process_document(user_id: str, doc_id: str) -> dict:
-    """Kick off extraction by inserting an ExtractionJob record."""
+    """Run extraction for a document: parse the stored file (UBS Excel /
+    LGI PDF) and persist BondRecord + BondSourceRecord rows from it.
+    """
     doc = await FinanceDocuments.get_by_id(doc_id)
     if doc is None:
         raise ValueError(f"document {doc_id} not found")
 
+    extraction_type = _EXTRACTION_TYPE_BY_DOCUMENT_TYPE.get(doc.document_type, "GENERIC")
     job_form = ExtractionJobForm(
         document_id=doc.id,
-        status="QUEUED",
-        extraction_type=doc.document_type or "GENERIC",
+        status="RUNNING",
+        extraction_type=extraction_type,
     )
     job = await ExtractionJobs.insert(job_form)
-    # Flip document to QUEUED as well
-    await FinanceDocuments.update_by_id(doc.id, {"status": "QUEUED"})
+    job_id = job.id if job else _new_id()
+    await ExtractionJobs.update_by_id(job_id, {"started_at": _now_ms()})
+    await FinanceDocuments.update_by_id(doc.id, {"status": "PROCESSING"})
     log.info("Processing document %s triggered by user %s", doc_id, user_id)
-    return {
-        "task_id": job.id if job else _new_id(),
-        "document_id": doc_id,
-        "status": (job.status if job else "QUEUED"),
-        "message": "Document processing has been queued",
-        "started_at": _utc_now(),
-    }
+
+    if doc.document_type not in _EXTRACTION_TYPE_BY_DOCUMENT_TYPE:
+        errors = [f"Unsupported document_type for extraction: {doc.document_type}"]
+        await ExtractionJobs.update_by_id(
+            job_id, {"status": "FAILED", "errors": errors, "completed_at": _now_ms()}
+        )
+        await FinanceDocuments.update_by_id(
+            doc.id,
+            {"status": "FAILED", "validation_status": "ERROR", "validation_messages": errors},
+        )
+        return {
+            "task_id": job_id,
+            "document_id": doc_id,
+            "status": "FAILED",
+            "message": errors[0],
+            "started_at": _utc_now(),
+        }
+
+    try:
+        # Imported lazily (like the config import above) to keep this heavy,
+        # multi-cloud-SDK-backed module out of finance_service's import cost.
+        from open_webui.storage.provider import Storage
+
+        local_path = Storage.get_file(doc.file_path)
+        with open(local_path, "rb") as f:
+            contents = f.read()
+        rows = finance_ingestion.parse_document(doc.document_type, contents)
+        records_created, source_type = await _persist_extracted_bond_rows(
+            doc, rows
+        )
+
+        await ExtractionJobs.update_by_id(
+            job_id,
+            {
+                "status": "COMPLETED",
+                "records_extracted": len(rows),
+                "completed_at": _now_ms(),
+            },
+        )
+        validation_status = "VALID" if rows else "WARNING"
+        validation_messages = None if rows else ["No bond records could be parsed from this file"]
+        await FinanceDocuments.update_by_id(
+            doc.id,
+            {
+                "status": "EXTRACTED",
+                "validation_status": validation_status,
+                "validation_messages": validation_messages,
+                "processed_at": _now_ms(),
+            },
+        )
+        log.info(
+            "Extracted %s bond record(s) from document %s (source=%s)",
+            len(rows), doc_id, source_type,
+        )
+        return {
+            "task_id": job_id,
+            "document_id": doc_id,
+            "status": "COMPLETED",
+            "message": f"Extracted {len(rows)} bond record(s)",
+            "records_extracted": len(rows),
+            "started_at": _utc_now(),
+        }
+    except Exception as e:
+        log.exception("Extraction failed for document %s: %s", doc_id, e)
+        errors = [str(e)]
+        await ExtractionJobs.update_by_id(
+            job_id, {"status": "FAILED", "errors": errors, "completed_at": _now_ms()}
+        )
+        await FinanceDocuments.update_by_id(
+            doc.id,
+            {"status": "FAILED", "validation_status": "ERROR", "validation_messages": errors},
+        )
+        return {
+            "task_id": job_id,
+            "document_id": doc_id,
+            "status": "FAILED",
+            "message": f"Extraction failed: {e}",
+            "started_at": _utc_now(),
+        }
+
+
+async def _persist_extracted_bond_rows(doc, rows: list[dict]) -> tuple[int, str]:
+    source_type = "UBS" if doc.document_type == "UBS_EXCEL" else "LGI"
+    created = 0
+    for row in rows:
+        bond_id = row.get("bond_id")
+        if not bond_id:
+            continue
+
+        existing = await BondRecords.get_by_bond_id(bond_id, doc.reporting_period_id)
+        existing_same_source = next(
+            (r for r in existing if r.source_type == source_type), None
+        )
+
+        bond_fields = {
+            "reporting_period_id": doc.reporting_period_id,
+            "bond_id": bond_id,
+            "isin": row.get("isin"),
+            "description": row.get("description"),
+            "issuer": row.get("issuer"),
+            "currency": row.get("currency"),
+            "face_value": row.get("face_value"),
+            "book_value": row.get("book_value"),
+            "market_value": row.get("market_value"),
+            "coupon_rate": row.get("coupon_rate"),
+            "accrued_interest": row.get("accrued_interest"),
+            "maturity_date": row.get("maturity_date"),
+            "purchase_date": row.get("purchase_date"),
+            "settlement_date": row.get("settlement_date"),
+            "quantity": row.get("quantity"),
+            "source_document_id": doc.id,
+            "source_type": source_type,
+            "extraction_confidence": row.get("_confidence"),
+        }
+
+        if existing_same_source:
+            bond_record_id = existing_same_source.id
+            await BondRecords.update_by_id(bond_record_id, bond_fields)
+        else:
+            form = BondRecordForm(**bond_fields)
+            inserted = await BondRecords.insert(form)
+            if inserted is None:
+                continue
+            bond_record_id = inserted.id
+            created += 1
+
+        source_form = BondSourceRecordForm(
+            bond_record_id=bond_record_id,
+            document_id=doc.id,
+            source_type=source_type,
+            raw_data=row.get("_raw_data") or {},
+            sheet_name=row.get("_sheet_name"),
+            row_number=row.get("_row_number"),
+            page_number=row.get("_page_number"),
+            cell_references=row.get("_cell_references"),
+            extraction_confidence=row.get("_confidence"),
+        )
+        await BondSourceRecords.insert(source_form)
+
+    return created, source_type
 
 
 async def delete_document(user_id: str, doc_id: str) -> bool:
@@ -531,12 +677,35 @@ async def get_bond_sources(user_id: str, bond_id: str) -> list[dict]:
 # ---------------------------------------------------------------------------
 
 
+_RECON_SOURCE_ALIASES = {
+    "UBS": {"ubs", "ubs_excel", "bloomberg"},
+    "LGI": {"lgi", "lgi_pdf", "custodian"},
+    "SCHEDULE": {"schedule", "previous_schedule"},
+}
+
+
 async def run_reconciliation(user_id: str, period_id: str) -> dict:
     bonds = await BondRecords.get_by_period(period_id)
+
+    # Ingestion persists one BondRecord *per source* per bond_id (a UBS-sourced
+    # row and an LGI-sourced row are separate rows, each source_type-tagged —
+    # see _persist_extracted_bond_rows). So the 3-way reconciliation groups by
+    # bond_id across those rows rather than treating each BondRecord as a
+    # single bond with multiple attached BondSourceRecords.
+    by_bond_id: dict[str, dict[str, Any]] = {}
+    for b in bonds:
+        key = b.bond_id or b.id
+        group = by_bond_id.setdefault(key, {"isin": b.isin})
+        source_type = (b.source_type or "").lower()
+        for canonical, aliases in _RECON_SOURCE_ALIASES.items():
+            if source_type in aliases and canonical not in group:
+                group[canonical] = b
+        group["isin"] = group.get("isin") or b.isin
+
     form = ReconciliationRunForm(
         reporting_period_id=period_id,
         status="RUNNING",
-        total_bonds=len(bonds),
+        total_bonds=len(by_bond_id),
         matched=0,
         variances=0,
         missing=0,
@@ -549,40 +718,33 @@ async def run_reconciliation(user_id: str, period_id: str) -> dict:
     if run is None:
         raise RuntimeError("Failed to create reconciliation run")
 
-    sources_by_bond: dict[str, list] = {}
-    for b in bonds:
-        sources_by_bond[b.id] = await BondSourceRecords.get_by_bond_record(b.id)
-
     matched = 0
     variances = 0
     missing = 0
     items_to_insert: list[ReconciliationItemForm] = []
 
-    for b in bonds:
-        srcs = sources_by_bond.get(b.id, [])
-        bloomberg = next((s for s in srcs if (s.source_type or "").lower() in {"bloomberg", "ubs_excel"}), None)
-        custodian = next((s for s in srcs if (s.source_type or "").lower() in {"custodian", "lgi_pdf", "lgi"}), None)
+    for bond_id, group in by_bond_id.items():
+        ubs: Optional[Any] = group.get("UBS")
+        lgi: Optional[Any] = group.get("LGI")
+        schedule: Optional[Any] = group.get("SCHEDULE")
 
-        def _fv(s):
-            return (s.raw_data or {}).get("face_value") if isinstance(s.raw_data, dict) and s else None
+        ubs_value = ubs.market_value if ubs else None
+        lgi_value = lgi.market_value if lgi else None
+        schedule_value = schedule.market_value if schedule else None
 
-        def _mv(s):
-            return (s.raw_data or {}).get("market_value") if isinstance(s.raw_data, dict) and s else None
-
-        ubs_value = _fv(bloomberg) or b.face_value
-        lgi_value = _fv(custodian) or b.book_value
-        try:
+        is_missing = ubs is None or lgi is None
+        variance_amount = 0.0
+        variance_percent = 0.0
+        if not is_missing:
             variance_amount = float(ubs_value or 0) - float(lgi_value or 0)
-            variance_percent = (variance_amount / float(ubs_value) * 100.0) if abs(float(ubs_value or 0)) > 1e-9 else 0.0
-        except (TypeError, ValueError):
-            variance_amount = 0.0
-            variance_percent = 0.0
+            variance_percent = (
+                (variance_amount / float(ubs_value) * 100.0) if abs(float(ubs_value or 0)) > 1e-9 else 0.0
+            )
 
-        is_missing = not bloomberg or not custodian
         if is_missing:
             missing += 1
             status = "MISSING_SOURCE"
-        elif abs(variance_amount) < 0.01 and abs((_mv(bloomberg) or 0) - (_mv(custodian) or 0)) < 0.01:
+        elif abs(variance_amount) < 0.01:
             matched += 1
             status = "MATCHED"
         else:
@@ -591,17 +753,17 @@ async def run_reconciliation(user_id: str, period_id: str) -> dict:
 
         items_to_insert.append(ReconciliationItemForm(
             reconciliation_run_id=run.id,
-            bond_id=b.bond_id or b.id,
-            isin=b.isin,
+            bond_id=bond_id,
+            isin=group.get("isin"),
             status=status,
-            ubs_value=float(ubs_value or 0),
-            lgi_value=float(lgi_value or 0),
-            schedule_value=float(b.book_value or 0),
-            previous_value=float(b.market_value or 0),
+            ubs_value=float(ubs_value) if ubs_value is not None else None,
+            lgi_value=float(lgi_value) if lgi_value is not None else None,
+            schedule_value=float(schedule_value) if schedule_value is not None else None,
+            previous_value=None,
             variance_amount=float(variance_amount),
             variance_percentage=float(variance_percent),
-            field_name="face_value",
-            reason="reconciliation diff",
+            field_name="market_value",
+            reason="Missing UBS or LGI source" if is_missing else "reconciliation diff",
             ai_explanation=None,
         ))
 
@@ -626,7 +788,7 @@ async def run_reconciliation(user_id: str, period_id: str) -> dict:
         "task_id": run.id,
         "period_id": period_id,
         "status": completed.status if completed else "COMPLETED",
-        "total_bonds": len(bonds),
+        "total_bonds": len(by_bond_id),
         "matched": matched,
         "variances": variances,
         "missing": missing,
@@ -762,17 +924,33 @@ async def analyze_movements(user_id: str, period_id: str) -> dict:
                 created_movements.append(_to_dict(mv))
         else:  # prev but no current
             assert prev is not None
+            prev_status = (prev.status or "").upper()
+            # Prefer the bond's own recorded status (set via bond review/HITL,
+            # e.g. PUT /bonds/{id}) to tell a sale/transfer apart from a
+            # genuine maturity when a bond drops out of the current period.
+            if prev_status == "SOLD":
+                movement_type = "SALE"
+                current_status = "SOLD"
+                explanation = "bond marked SOLD in prior period and no longer present, interpreted as sale"
+            elif prev_status == "TRANSFERRED":
+                movement_type = "TRANSFER"
+                current_status = "TRANSFERRED"
+                explanation = "bond marked TRANSFERRED in prior period and no longer present, interpreted as transfer"
+            else:
+                movement_type = "MATURITY"
+                current_status = "RETIRED"
+                explanation = "bond removed in current period, interpreted as maturity/sale"
             form = BondMovementForm(
                 reporting_period_id=period_id,
                 bond_id=prev.bond_id or prev.id,
                 isin=prev.isin,
-                movement_type="MATURITY",
+                movement_type=movement_type,
                 previous_value=float(prev.face_value or 0),
                 current_value=0.0,
                 variance=-1 * float(prev.face_value or 0),
                 previous_status=prev.status or "DRAFT",
-                current_status="RETIRED",
-                ai_explanation="bond removed in current period, interpreted as maturity/sale",
+                current_status=current_status,
+                ai_explanation=explanation,
                 explanation_confidence=0.6,
             )
             mv = await BondMovements.insert(form)
@@ -816,13 +994,39 @@ async def update_movement(user_id: str, movement_id: str, data: dict) -> Optiona
 
 
 async def generate_schedule(user_id: str, period_id: str) -> dict:
-    """Populate BondScheduleLines table from current period bond records."""
+    """Populate BondScheduleLines table from current period bond records.
+
+    movement_type/variance are derived against the previous period's bond
+    (by bond_id) so validate_schedule's roll-forward check — which
+    reconstructs previous_value as market_value - variance — has a real
+    variance to check rather than always seeing 0.
+    """
     bonds = await BondRecords.get_by_period(period_id)
+
+    current_period = await ReportingPeriods.get_by_id(period_id)
+    prev_bonds_by_id: dict[str, Any] = {}
+    if current_period and current_period.previous_period_id:
+        prev_bonds_by_id = {
+            (b.bond_id or b.id): b
+            for b in await BondRecords.get_by_period(current_period.previous_period_id)
+        }
+
     created_count = 0
     for b in bonds:
+        bond_key = b.bond_id or b.id
+        prev = prev_bonds_by_id.get(bond_key)
+        current_value = float(b.market_value or 0)
+        if prev is None:
+            movement_type = "NEW"
+            variance = current_value
+        else:
+            previous_value = float(prev.market_value or 0)
+            variance = round(current_value - previous_value, 2)
+            movement_type = "UNCHANGED" if abs(variance) < 0.01 else "VALUE_CHANGE"
+
         form = BondScheduleLineForm(
             reporting_period_id=period_id,
-            bond_id=b.bond_id or b.id,
+            bond_id=bond_key,
             isin=b.isin,
             issuer=b.issuer,
             currency=b.currency,
@@ -832,8 +1036,8 @@ async def generate_schedule(user_id: str, period_id: str) -> dict:
             coupon_rate=float(b.coupon_rate or 0),
             maturity_date=b.maturity_date or "",
             accrued_interest=float(b.accrued_interest or 0),
-            movement_type="HOLD",
-            variance=0.0,
+            movement_type=movement_type,
+            variance=variance,
             source_document_id=b.source_document_id,
             validation_status="VALID",
             validation_messages=[],
@@ -1769,14 +1973,15 @@ async def copilot_chat(
 
     if q in ("", "hi", "hello", "hey", "help"):
         dashboard = await get_dashboard(user_id, period_id)
-        stats = dashboard.get("stats") or {}
+        stats = dashboard.get("kpis") or {}
+        pending_reviews = len(await get_pending_reviews(user_id))
         content = (
             f"Hello! I'm the AI Bond Copilot.\n\n"
-            f"Current reporting period: **{dashboard.get('current_period', {}).get('name', 'N/A')}**\n\n"
+            f"Current reporting period: **{dashboard.get('period_name', 'N/A')}**\n\n"
             f"- **{stats.get('total_bonds', 0)} bonds** in active portfolio\n"
             f"- **Portfolio market value:** {stats.get('total_market_value', 'N/A')}\n"
-            f"- **{stats.get('open_exceptions', 0)} open exceptions**\n"
-            f"- **{stats.get('pending_reviews', 0)} pending reviews**\n\n"
+            f"- **{stats.get('exceptions_open', 0)} open exceptions**\n"
+            f"- **{pending_reviews} pending reviews**\n\n"
             f"I can help with portfolio analysis, reconciliation, journals, commentary, and approvals.  What would you like to know?"
         )
         tool_calls = [{
@@ -1787,19 +1992,20 @@ async def copilot_chat(
     elif "portfolio" in q or "bond" in q or "summary" in q or "holding" in q:
         dashboard = await get_dashboard(user_id, period_id)
         bonds = await list_bonds(user_id, period_id=period_id)
-        stats = dashboard.get("stats") or {}
+        stats = dashboard.get("kpis") or {}
+        currencies = sorted(set(b.get("currency") or "UNKNOWN" for b in bonds))
         top = sorted(
             bonds,
             key=lambda b: float(b.get("market_value") or b.get("face_value") or 0),
             reverse=True,
         )[:5]
         content = (
-            f"Here is your current portfolio summary for **{dashboard.get('current_period', {}).get('name', 'this period')}**.\n\n"
+            f"Here is your current portfolio summary for **{dashboard.get('period_name', 'this period')}**.\n\n"
             f"- Total bonds: **{stats.get('total_bonds', 0)}**\n"
             f"- Total market value: **{stats.get('total_market_value', 'N/A')}**\n"
             f"- Total face value: **{stats.get('total_face_value', 'N/A')}**\n"
-            f"- Reconciliation match rate: **{stats.get('reconciliation_match_rate', 'N/A')}**\n"
-            f"- Currency breakdown: **{len(set(b.get('currency') or 'UNKNOWN' for b in bonds))} currencies**"
+            f"- Reconciliation match rate: **{stats.get('recon_rate', 'N/A')}**\n"
+            f"- Currency breakdown: **{len(currencies)} currencies**"
         )
         tool_calls = [{
             "name": "get_portfolio_summary",
@@ -1807,8 +2013,8 @@ async def copilot_chat(
                 "total_bonds": stats.get("total_bonds", 0),
                 "total_market_value": stats.get("total_market_value"),
                 "total_face_value": stats.get("total_face_value"),
-                "reconciliation_rate": stats.get("reconciliation_match_rate"),
-                "currency": stats.get("currency"),
+                "reconciliation_rate": stats.get("recon_rate"),
+                "currencies": currencies,
                 "top_holdings": [
                     {
                         "name": b.get("issuer_name") or b.get("isin") or b.get("bond_id"),
@@ -1955,15 +2161,16 @@ async def copilot_chat(
 
     else:
         dashboard = await get_dashboard(user_id, period_id)
-        stats = dashboard.get("stats") or {}
+        stats = dashboard.get("kpis") or {}
+        pending_reviews = len(await get_pending_reviews(user_id))
         content = (
             f"I understood your question about **{query[:120]}**.\n\n"
             f"Current period snapshot:\n"
             f"- Bonds: **{stats.get('total_bonds', 0)}**\n"
             f"- Market value: **{stats.get('total_market_value', 'N/A')}**\n"
-            f"- Open exceptions: **{stats.get('open_exceptions', 0)}**\n"
-            f"- Pending reviews: **{stats.get('pending_reviews', 0)}**\n"
-            f"- Match rate: **{stats.get('reconciliation_match_rate', 'N/A')}**\n\n"
+            f"- Open exceptions: **{stats.get('exceptions_open', 0)}**\n"
+            f"- Pending reviews: **{pending_reviews}**\n"
+            f"- Match rate: **{stats.get('recon_rate', 'N/A')}**\n\n"
             f"Try asking about 'portfolio', 'exceptions', 'reconciliation', 'journals', 'commentary', or 'reviews'."
         )
         tool_calls = [{

@@ -39,6 +39,15 @@ import pytest
 TMP_DB = tempfile.mktemp(suffix=".sqlite")
 os.environ.setdefault("DATABASE_URL", f"sqlite+aiosqlite:///{TMP_DB}")
 os.environ.setdefault("WEBUI_SECRET_KEY", "pytest-finance-p0-12345-12345-12345-p0")
+# The _session_engine fixture below builds the schema directly via
+# Base.metadata.create_all, so alembic migrations aren't needed here. Skip
+# them: open_webui.config runs migrations synchronously (engine_from_config,
+# a *sync* SQLAlchemy engine) against DATABASE_URL, which is an async
+# "sqlite+aiosqlite://" URL in this test suite — that combination only
+# works if it happens to run nested inside an already-active SQLAlchemy
+# async greenlet, and raises sqlalchemy.exc.MissingGreenlet otherwise
+# (pre-existing bootstrap fragility, unrelated to any test in this file).
+os.environ.setdefault("ENABLE_DB_MIGRATIONS", "False")
 
 BACKEND = str(Path(__file__).resolve().parents[2] / "backend")
 if BACKEND not in sys.path:
@@ -502,3 +511,313 @@ async def test_r2_router_with_perm_200(_session_engine, period):
     # Already verified via test_08/09/10 passing admin user.
     # Router-level integration runs under full App bootstrap in CI.
     return
+
+
+# -------- Document ingestion (UBS Excel / LGI PDF) --------
+
+@pytest.mark.asyncio
+async def test_15_ubs_excel_ingestion_creates_bond_records(_session_engine, user_id, period, tmp_path):
+    """UBS Excel upload → process creates real BondRecord + BondSourceRecord rows."""
+    import openpyxl
+    from open_webui.models.finance import BondRecords, BondSourceRecords
+    from open_webui.services import finance_service as svc
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Holdings"
+    ws.append(["ISIN", "Description", "Currency", "Quantity", "Market Value", "Coupon Rate", "Maturity Date"])
+    ws.append(["US912828U816", "US TREASURY N/B", "USD", 100000, 101250.50, 2.375, "2028-05-15"])
+    ws.append(["XS1234567890", "APPLE INC BOND", "USD", 50000, 51000.00, 3.25, "2030-01-15"])
+    xlsx_path = tmp_path / "ubs_holdings.xlsx"
+    wb.save(xlsx_path)
+
+    doc = await svc.upload_document(
+        user_id=user_id,
+        filename="ubs_holdings.xlsx",
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        file_size=xlsx_path.stat().st_size,
+        document_type="UBS_EXCEL",
+        reporting_period_id=period.id,
+        file_path=str(xlsx_path),
+        file_hash="deadbeef",
+    )
+    assert doc["status"] == "UPLOADED"
+
+    result = await svc.process_document(user_id, doc["id"])
+    assert result["status"] == "COMPLETED", result
+    assert result["records_extracted"] == 2
+
+    bonds = await BondRecords.get_by_period(period.id)
+    assert len(bonds) == 2
+    isins = {b.isin for b in bonds}
+    assert isins == {"US912828U816", "XS1234567890"}
+    for b in bonds:
+        assert b.source_type == "UBS"
+        assert b.source_document_id == doc["id"]
+        assert b.extraction_confidence is not None
+
+    sources = await BondSourceRecords.get_by_document(doc["id"])
+    assert len(sources) == 2
+    assert all(s.sheet_name == "Holdings" for s in sources)
+
+    processed_doc = await svc.get_document(user_id, doc["id"])
+    assert processed_doc["status"] == "EXTRACTED"
+
+
+@pytest.mark.asyncio
+async def test_16_lgi_pdf_ingestion_creates_bond_records(_session_engine, user_id, period, tmp_path):
+    """LGI PDF upload → process creates BondRecord rows tagged with page_number provenance."""
+    pytest.importorskip("fpdf")
+    from fpdf import FPDF
+    from open_webui.models.finance import BondRecords
+    from open_webui.services import finance_service as svc
+
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Helvetica", size=10)
+    pdf.cell(0, 10, "LGI Custody Statement")
+    pdf.ln()
+    pdf.cell(0, 10, "US TREASURY N/B US912828U816 USD 100000 101250.50 2500.00")
+    pdf.ln()
+    pdf.cell(0, 10, "APPLE INC BOND XS1234567890 USD 50000 51000.00 1200.00")
+    pdf.ln()
+    pdf_path = tmp_path / "lgi_statement.pdf"
+    pdf.output(str(pdf_path))
+
+    doc = await svc.upload_document(
+        user_id=user_id,
+        filename="lgi_statement.pdf",
+        content_type="application/pdf",
+        file_size=pdf_path.stat().st_size,
+        document_type="LGI_PDF",
+        reporting_period_id=period.id,
+        file_path=str(pdf_path),
+        file_hash="cafebabe",
+    )
+
+    result = await svc.process_document(user_id, doc["id"])
+    assert result["status"] == "COMPLETED", result
+    assert result["records_extracted"] == 2
+
+    bonds = await BondRecords.get_by_period(period.id)
+    assert {b.isin for b in bonds} == {"US912828U816", "XS1234567890"}
+    assert all(b.source_type == "LGI" for b in bonds)
+
+
+@pytest.mark.asyncio
+async def test_17_process_document_unsupported_type_fails_cleanly(_session_engine, user_id, period, tmp_path):
+    """A TEMPLATE/PREVIOUS_SCHEDULE document has no parser yet → FAILED, not a silent no-op."""
+    from open_webui.services import finance_service as svc
+
+    dummy_path = tmp_path / "template.xlsx"
+    dummy_path.write_bytes(b"not-a-real-file")
+
+    doc = await svc.upload_document(
+        user_id=user_id,
+        filename="template.xlsx",
+        content_type="application/octet-stream",
+        file_size=dummy_path.stat().st_size,
+        document_type="TEMPLATE",
+        reporting_period_id=period.id,
+        file_path=str(dummy_path),
+        file_hash="badf00d",
+    )
+
+    result = await svc.process_document(user_id, doc["id"])
+    assert result["status"] == "FAILED"
+
+    processed_doc = await svc.get_document(user_id, doc["id"])
+    assert processed_doc["status"] == "FAILED"
+    assert processed_doc["validation_status"] == "ERROR"
+
+
+@pytest.mark.asyncio
+async def test_18_reconciliation_matches_ubs_vs_lgi_after_ingestion(_session_engine, user_id, period, tmp_path):
+    """3-way recon: a bond present in both UBS and LGI ingested files must be
+    seen as MATCHED/VARIANCE (not MISSING_SOURCE) once both are ingested —
+    covers the BondRecord-per-source grouping in run_reconciliation."""
+    import openpyxl
+    from fpdf import FPDF
+    from open_webui.services import finance_service as svc
+
+    # UBS_EXCEL: two bonds — one will match LGI exactly, one will vary.
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.append(["ISIN", "Description", "Currency", "Quantity", "Market Value"])
+    ws.append(["US912828U816", "US TREASURY N/B", "USD", 100000, 100000.00])
+    ws.append(["XS1234567890", "APPLE INC BOND", "USD", 50000, 51000.00])
+    ws.append(["XS9999999999", "UBS ONLY BOND", "USD", 10000, 10000.00])
+    xlsx_path = tmp_path / "ubs.xlsx"
+    wb.save(xlsx_path)
+    ubs_doc = await svc.upload_document(
+        user_id=user_id, filename="ubs.xlsx", content_type="application/octet-stream",
+        file_size=xlsx_path.stat().st_size, document_type="UBS_EXCEL",
+        reporting_period_id=period.id, file_path=str(xlsx_path), file_hash="h1",
+    )
+    ubs_result = await svc.process_document(user_id, ubs_doc["id"])
+    assert ubs_result["status"] == "COMPLETED", ubs_result
+
+    # LGI_PDF: same two ISINs, one with an identical market value (MATCHED),
+    # one with a different market value (VARIANCE). No entry for the UBS-only bond.
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Helvetica", size=10)
+    pdf.cell(0, 10, "US TREASURY N/B US912828U816 USD 100000 100000.00")
+    pdf.ln()
+    pdf.cell(0, 10, "APPLE INC BOND XS1234567890 USD 50000 48000.00")
+    pdf.ln()
+    pdf_path = tmp_path / "lgi.pdf"
+    pdf.output(str(pdf_path))
+    lgi_doc = await svc.upload_document(
+        user_id=user_id, filename="lgi.pdf", content_type="application/pdf",
+        file_size=pdf_path.stat().st_size, document_type="LGI_PDF",
+        reporting_period_id=period.id, file_path=str(pdf_path), file_hash="h2",
+    )
+    lgi_result = await svc.process_document(user_id, lgi_doc["id"])
+    assert lgi_result["status"] == "COMPLETED", lgi_result
+
+    recon = await svc.run_reconciliation(user_id, period.id)
+    assert recon["matched"] == 1, recon
+    assert recon["variances"] == 1, recon
+    assert recon["missing"] == 1, recon
+
+    items = await svc.get_reconciliation_results(user_id, period.id)
+    by_bond = {i["bond_id"]: i for i in items}
+    assert by_bond["US912828U816"]["status"] == "MATCHED"
+    assert by_bond["XS1234567890"]["status"] == "VARIANCE"
+    assert by_bond["XS9999999999"]["status"] == "MISSING_SOURCE"
+
+
+@pytest.mark.asyncio
+async def test_19_movement_analysis_classifies_sale_and_transfer(_session_engine, user_id):
+    """analyze_movements must tell a sold/transferred bond apart from a
+    genuine maturity when it drops out of the current period, using the
+    bond's own recorded status — not collapse everything into MATURITY."""
+    from open_webui.models.finance import BondRecords, BondRecordForm, ReportingPeriods, ReportingPeriodForm
+    from open_webui.services import finance_service as svc
+
+    prev_period = await ReportingPeriods.insert(user_id, ReportingPeriodForm(
+        name="Aug 2026", year=2026, month=8, status="FINALIZED",
+    ))
+    curr_period = await ReportingPeriods.insert(user_id, ReportingPeriodForm(
+        name="Sep 2026 MV Test", year=2026, month=9, status="OPEN",
+        previous_period_id=prev_period.id,
+    ))
+
+    async def mk(bond_id, status, period_id):
+        return await BondRecords.insert(BondRecordForm(
+            reporting_period_id=period_id, bond_id=bond_id, isin=bond_id,
+            face_value=100000.0, market_value=100000.0, status=status,
+        ))
+
+    await mk("SOLD-BOND", "SOLD", prev_period.id)
+    await mk("XFER-BOND", "TRANSFERRED", prev_period.id)
+    await mk("MATURED-BOND", "ACTIVE", prev_period.id)
+    # None of these three bonds appear in curr_period -> each drops out.
+
+    result = await svc.analyze_movements(user_id, curr_period.id)
+    assert result["movements_created"] == 3, result
+
+    movements = await svc.get_movements(user_id, curr_period.id)
+    by_bond = {m["bond_id"]: m for m in movements}
+    assert by_bond["SOLD-BOND"]["movement_type"] == "SALE"
+    assert by_bond["XFER-BOND"]["movement_type"] == "TRANSFER"
+    assert by_bond["MATURED-BOND"]["movement_type"] == "MATURITY"
+
+
+@pytest.mark.asyncio
+async def test_20_schedule_variance_reflects_real_rollforward(_session_engine, user_id):
+    """generate_schedule must compute a real variance against the previous
+    period (not always 0), so validate_schedule's roll-forward check —
+    which reconstructs previous_value as market_value - variance — can
+    actually catch a mismatch instead of trivially passing every time."""
+    from open_webui.models.finance import BondRecords, BondRecordForm, ReportingPeriods, ReportingPeriodForm
+    from open_webui.services import finance_service as svc
+
+    prev_period = await ReportingPeriods.insert(user_id, ReportingPeriodForm(
+        name="Aug 2026 Sched", year=2026, month=8, status="FINALIZED",
+    ))
+    curr_period = await ReportingPeriods.insert(user_id, ReportingPeriodForm(
+        name="Sep 2026 Sched", year=2026, month=9, status="OPEN",
+        previous_period_id=prev_period.id,
+    ))
+
+    await BondRecords.insert(BondRecordForm(
+        reporting_period_id=prev_period.id, bond_id="ROLL-BOND", isin="ROLL-BOND",
+        face_value=100000.0, market_value=100000.0, status="ACTIVE",
+    ))
+    await BondRecords.insert(BondRecordForm(
+        reporting_period_id=curr_period.id, bond_id="ROLL-BOND", isin="ROLL-BOND",
+        face_value=100000.0, market_value=105000.0, status="ACTIVE",
+    ))
+    await BondRecords.insert(BondRecordForm(
+        reporting_period_id=curr_period.id, bond_id="NEW-BOND", isin="NEW-BOND",
+        face_value=50000.0, market_value=50000.0, status="ACTIVE",
+    ))
+
+    gen = await svc.generate_schedule(user_id, curr_period.id)
+    assert gen["lines_generated"] == 2, gen
+
+    lines = await svc.get_schedule(user_id, curr_period.id)
+    by_bond = {l["bond_id"]: l for l in lines}
+    assert by_bond["ROLL-BOND"]["movement_type"] == "VALUE_CHANGE"
+    assert by_bond["ROLL-BOND"]["variance"] == pytest.approx(5000.0)
+    assert by_bond["NEW-BOND"]["movement_type"] == "NEW"
+
+    validation = await svc.validate_schedule(user_id, curr_period.id)
+    rollforward_check = next(c for c in validation["checks"] if c["check"] == "rollforward")
+    assert rollforward_check["status"] == "passed", rollforward_check
+
+
+def test_21_require_approve_denies_when_user_omitted():
+    """_require_approve must deny by default when no user is passed, not
+    silently allow — the router always passes user, so an omission means
+    some other caller bypassed the router-level gate."""
+    from open_webui.services.finance_service import _require_approve
+
+    with pytest.raises(PermissionError):
+        _require_approve()
+    with pytest.raises(PermissionError):
+        _require_approve(None)
+
+
+@pytest.mark.asyncio
+async def test_22_dashboard_reports_real_movements_count(_session_engine, user_id, period):
+    """get_dashboard's kpis must include a real movements_count so the
+    router's dashboard-steps/work-distribution logic (which reads
+    kpis['movements_count']) doesn't always see it as absent -> 0."""
+    from open_webui.models.finance import BondMovements, BondMovementForm
+    from open_webui.services import finance_service as svc
+
+    await BondMovements.insert(BondMovementForm(
+        reporting_period_id=period.id, bond_id="MV-BOND", isin="MV-BOND",
+        movement_type="PURCHASE", previous_value=0.0, current_value=1000.0, variance=1000.0,
+    ))
+
+    dash = await svc.get_dashboard(user_id, period.id)
+    assert "movements_count" in dash["kpis"]
+    assert dash["kpis"]["movements_count"] == 1
+
+
+@pytest.mark.asyncio
+async def test_23_copilot_chat_reads_real_dashboard_kpis(_session_engine, user_id, period):
+    """copilot_chat must read dashboard['kpis']/['period_name'] (the real
+    get_dashboard shape), not the nonexistent 'stats'/'current_period' keys
+    — otherwise every response shows 0 bonds regardless of real data."""
+    from open_webui.models.finance import BondRecords, BondRecordForm
+    from open_webui.services import finance_service as svc
+
+    await BondRecords.insert(BondRecordForm(
+        reporting_period_id=period.id, bond_id="CHAT-BOND", isin="CHAT-BOND",
+        face_value=100000.0, market_value=100000.0, status="ACTIVE",
+    ))
+
+    for query, expect_period_name in (
+        ("hello", True),
+        ("give me the portfolio summary", True),
+        ("what is the weather like today", False),
+    ):
+        r = await svc.copilot_chat(user_id, query, reporting_period_id=period.id)
+        assert "1" in r["content"], f"query={query!r} content={r['content']!r}"
+        if expect_period_name:
+            assert period.name in r["content"], f"query={query!r} content={r['content']!r}"

@@ -1,6 +1,12 @@
 <script lang="ts">
 	import { onMount, getContext } from 'svelte';
 	import { user } from '$lib/stores';
+	import {
+		copilotChat,
+		getReportingPeriods,
+		getFinanceDashboard,
+		getAuditTrail
+	} from '$lib/apis/finance';
 
 	const i18n = getContext('i18n');
 
@@ -16,235 +22,68 @@
 	let inputValue = '';
 	let isTyping = false;
 	let messagesContainer: HTMLDivElement;
+	let periods: any[] = [];
+	let selectedPeriodId = '';
 
 	const quickActions = [
-		{ label: 'Generate Month-End Commentary', icon: 'doc', query: 'Generate month-end commentary for September 2026' },
+		{ label: 'Generate Month-End Commentary', icon: 'doc', query: 'Generate month-end commentary for the current period' },
 		{ label: 'Run Reconciliation Analysis', icon: 'recon', query: 'Run reconciliation analysis and show me the current status' },
-		{ label: 'Analyze Portfolio Risk', icon: 'risk', query: 'Analyze portfolio risk for the current bond holdings' },
 		{ label: 'Review Exception Summary', icon: 'exception', query: 'Show me a summary of all open exceptions' },
-		{ label: 'Generate Journal Entries', icon: 'journal', query: 'Show me the draft journal entries for September 2026' },
-		{ label: 'Check Audit Progress', icon: 'audit', query: 'Check audit schedule progress for September 2026' }
+		{ label: 'Generate Journal Entries', icon: 'journal', query: 'Show me the draft journal entries for the current period' },
+		{ label: 'Check Review Queue', icon: 'audit', query: 'What reviews are pending?' }
 	];
 
-	const recentInsights = [
-		{
-			title: 'Reconciliation Rate Improved',
-			description: 'Match rate increased from 96.1% to 98.7% after resolving 3 exceptions in the September reporting cycle.',
-			type: 'positive',
-			time: '2 hours ago'
-		},
-		{
-			title: 'Market Value Variance Detected',
-			description: 'Mapletree Logistics Trust (BOND-006) shows SGD 5,200 variance between UBS and LGI reports.',
-			type: 'warning',
-			time: '3 hours ago'
-		},
-		{
-			title: 'Journal Auto-Balance Applied',
-			description: 'Fair value adjustment journal had SGD 0.50 rounding difference. System applied auto-balance using GL 9990.',
-			type: 'info',
-			time: '4 hours ago'
-		},
-		{
-			title: 'New Bond Detected',
-			description: 'Ascendas REIT 3.15% 2029 (BOND-011) added to portfolio. Pending UBS settlement confirmation.',
-			type: 'neutral',
-			time: '5 hours ago'
-		}
-	];
+	// Real recent finance actions (from the audit trail) and live period KPIs —
+	// replaces the previously hardcoded "Recent Insights" / "Data Context" panels.
+	let recentActivity: any[] = [];
+	let dataContext: { name: string; count: number | null; description: string }[] = [];
 
-	const dataContext = [
-		{ name: 'Bond Portfolio', count: 82, description: 'Active bond line items' },
-		{ name: 'Reporting Period', count: null, description: 'September 2026' },
-		{ name: 'Source Documents', count: 4, description: 'UBS Excel, LGI PDF, prior schedules' },
-		{ name: 'Journal Entries', count: 12, description: 'AI-generated draft journals' },
-		{ name: 'Exceptions', count: 5, description: '2 open, 3 resolved' }
-	];
+	function activityType(action: string): string {
+		const a = (action || '').toLowerCase();
+		if (a.includes('approve')) return 'positive';
+		if (a.includes('reject') || a.includes('exception')) return 'warning';
+		if (a.includes('upload') || a.includes('generate') || a.includes('process')) return 'info';
+		return 'neutral';
+	}
 
-	// --- Mock chat handler (same logic as floating panel) ---
-	function generateMockResponse(query: string): { content: string; toolCalls?: { name: string; result: string }[] } {
-		const q = query.toLowerCase();
+	function relativeTime(iso: string): string {
+		const diffMs = Date.now() - new Date(iso).getTime();
+		const mins = Math.floor(diffMs / 60000);
+		if (mins < 1) return 'just now';
+		if (mins < 60) return `${mins} min${mins === 1 ? '' : 's'} ago`;
+		const hours = Math.floor(mins / 60);
+		if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+		return `${Math.floor(hours / 24)} day${Math.floor(hours / 24) === 1 ? '' : 's'} ago`;
+	}
 
-		if (q.includes('portfolio') || q.includes('bond') || q.includes('summary') || q.includes('holding')) {
-			return {
-				content: 'Here is your current portfolio summary for September 2026.',
-				toolCalls: [
-					{
-						name: 'get_portfolio_summary',
-						result: JSON.stringify({
-							total_bonds: 82,
-							total_market_value: 'SGD 45,200,000',
-							total_face_value: 'SGD 42,800,000',
-							reconciliation_rate: '98.7%',
-							currency: 'SGD',
-							classification_breakdown: {
-								'Amortised Cost': { count: 45, value: 'SGD 24,100,000' },
-								'FVOCI': { count: 28, value: 'SGD 15,800,000' },
-								'FVTPL': { count: 9, value: 'SGD 5,300,000' }
-							},
-							top_holdings: [
-								{ name: 'Singapore Govt 3.375% 2033', value: 'SGD 4,250,000', classification: 'Amortised Cost' },
-								{ name: 'Temasek 4.125% 2034', value: 'SGD 5,420,000', classification: 'FVOCI' },
-								{ name: 'HDB 2.750% 2029', value: 'SGD 3,180,000', classification: 'Amortised Cost' },
-								{ name: 'DBS 3.250% 2028', value: 'SGD 2,500,000', classification: 'Amortised Cost' },
-								{ name: 'CapitaLand 3.65% 2030', value: 'SGD 2,100,000', classification: 'FVTPL' }
-							]
-						}, null, 2)
-					}
-				]
-			};
+	async function loadSidebar() {
+		try {
+			const dash = await getFinanceDashboard(localStorage.token, selectedPeriodId || undefined);
+			const kpis = dash?.kpis || {};
+			dataContext = [
+				{ name: 'Bond Portfolio', count: kpis.total_bonds ?? 0, description: 'Active bond line items' },
+				{ name: 'Reporting Period', count: null, description: dash?.period_name || 'Not set' },
+				{ name: 'Source Documents', count: kpis.documents_uploaded ?? 0, description: 'Uploaded UBS/LGI documents' },
+				{ name: 'Journal Entries', count: kpis.journal_count ?? 0, description: 'AI-generated draft journals' },
+				{
+					name: 'Exceptions',
+					count: kpis.exceptions_open ?? 0,
+					description: `${kpis.exceptions_open ?? 0} open, ${kpis.exceptions_resolved ?? 0} resolved`
+				}
+			];
+		} catch {
+			dataContext = [];
 		}
 
-		if (q.includes('risk')) {
-			return {
-				content: 'Here is the portfolio risk analysis for September 2026.',
-				toolCalls: [
-					{
-						name: 'analyze_portfolio_risk',
-						result: JSON.stringify({
-							portfolio_duration: 4.2,
-							modified_duration: 3.9,
-							convexity: 18.5,
-							yield_to_maturity: '3.45%',
-							credit_distribution: {
-								'AAA/AA': '42% (SGD 19.0M)',
-								'A': '35% (SGD 15.8M)',
-								'BBB': '18% (SGD 8.1M)',
-								'Unrated': '5% (SGD 2.3M)'
-							},
-							maturity_profile: {
-								'< 1 year': 'SGD 3,200,000',
-								'1-3 years': 'SGD 12,400,000',
-								'3-5 years': 'SGD 18,600,000',
-								'5-10 years': 'SGD 8,200,000',
-								'> 10 years': 'SGD 2,800,000'
-							},
-							risk_flags: [
-								'Concentration risk: Top 5 holdings represent 38.6% of portfolio',
-								'Interest rate sensitivity: 100bps parallel shift = SGD 1.76M impact',
-								'One unrated corporate bond (SGD 2.3M) exceeds 5% threshold'
-							]
-						}, null, 2)
-					}
-				]
-			};
+		try {
+			const logs = await getAuditTrail(
+				localStorage.token,
+				selectedPeriodId ? { period_id: selectedPeriodId } : undefined
+			);
+			recentActivity = Array.isArray(logs) ? logs.slice(0, 5) : [];
+		} catch {
+			recentActivity = [];
 		}
-
-		if (q.includes('exception') || q.includes('issue') || q.includes('problem')) {
-			return {
-				content: 'Here is the current exception summary for September 2026.',
-				toolCalls: [
-					{
-						name: 'get_exception_summary',
-						result: JSON.stringify({
-							total: 5,
-							open: 2,
-							resolved: 3,
-							by_type: {
-								RECONCILIATION: { total: 2, open: 1 },
-								EXTRACTION: { total: 1, open: 1 },
-								DATA_QUALITY: { total: 1, open: 0 },
-								JOURNAL: { total: 1, open: 0 }
-							},
-							open_exceptions: [
-								{ id: 'EXC-001', title: 'Market Value Variance — Mapletree Logistics Trust', severity: 'HIGH', variance: 'SGD 5,200', assigned_to: 'S. Lim' },
-								{ id: 'EXC-004', title: 'Extraction Confidence Below Threshold', severity: 'MEDIUM', bond: 'BOND-006', assigned_to: 'S. Lim' }
-							]
-						}, null, 2)
-					}
-				]
-			};
-		}
-
-		if (q.includes('reconciliation') || q.includes('recon') || q.includes('match')) {
-			return {
-				content: 'Here are the reconciliation results for September 2026.',
-				toolCalls: [
-					{
-						name: 'get_reconciliation_analysis',
-						result: JSON.stringify({
-							period: 'September 2026',
-							total_items: 82,
-							matched: 79,
-							variances: 2,
-							missing: 1,
-							match_rate: '96.3%',
-							sources_compared: ['UBS Custody Statement', 'LGI General Ledger', 'Prior Period Schedule'],
-							variance_details: [
-								{ bond: 'BOND-006 (Mapletree)', ubs: 'SGD 795,000', lgi: 'SGD 800,200', diff: 'SGD 5,200', reason: 'Pricing source timing difference' },
-								{ bond: 'BOND-009 (Keppel)', ubs: 'SGD 1,020,000', lgi: 'SGD 1,020,200', diff: 'SGD 200', reason: 'Accrued interest rounding' }
-							],
-							missing_items: [
-								{ bond: 'BOND-011 (Ascendas REIT)', status: 'In UBS, not in LGI', reason: 'T+1 settlement pending' }
-							]
-						}, null, 2)
-					}
-				]
-			};
-		}
-
-		if (q.includes('commentary') || q.includes('narrative') || q.includes('month-end')) {
-			return {
-				content: 'Here is the AI-generated month-end commentary for September 2026.\n\n---\n\n**Executive Summary**\n\nThe September 2026 bond portfolio reporting cycle has been completed with a 98.7% reconciliation match rate across 82 bond line items. Total portfolio market value stands at SGD 45.2 million against face value of SGD 42.8 million.\n\n**Portfolio Movements**\n\nDuring September, 4 new bond purchases totalling SGD 3.55 million were recorded, alongside 3 bond maturities with face value SGD 1.6 million. One inter-portfolio transfer reclassified BOND-005 (CapitaLand) from FVTPL to Held-to-Maturity.\n\n**Reconciliation**\n\n79 of 82 items fully matched between UBS custody, LGI general ledger, and prior period schedules. Two variances and one timing-related missing item were identified and documented.\n\n**Observations**\n\nOne high-severity exception (EXC-001) relating to Mapletree Logistics Trust market value variance of SGD 5,200 remains under investigation. All other exceptions have been resolved.\n\n---\n\nWould you like me to refine any section or add additional detail?'
-			};
-		}
-
-		if (q.includes('journal') || q.includes('entries') || q.includes('accounting')) {
-			return {
-				content: 'Here are the draft journal entries for September 2026.',
-				toolCalls: [
-					{
-						name: 'get_journal_entries',
-						result: JSON.stringify({
-							total_journals: 12,
-							total_debits: 'SGD 5,796,024',
-							total_credits: 'SGD 5,796,024',
-							balanced: true,
-							journals: [
-								{ ref: 'JV-2026-09-001', type: 'Bond Purchase', entries: 4, amount: 'SGD 3,550,000', status: 'PENDING' },
-								{ ref: 'JV-2026-09-002', type: 'Bond Maturity', entries: 3, amount: 'SGD 1,600,000', status: 'APPROVED' },
-								{ ref: 'JV-2026-09-003', type: 'Accrued Interest', entries: 82, amount: 'SGD 84,024', status: 'PENDING' },
-								{ ref: 'JV-2026-09-004', type: 'Fair Value Adjustment', entries: 1, amount: 'SGD 112,000', status: 'PENDING' }
-							],
-							review_status: '2 approved, 4 pending review, 6 draft'
-						}, null, 2)
-					}
-				]
-			};
-		}
-
-		if (q.includes('audit')) {
-			return {
-				content: 'The audit schedule for September 2026 has been fully generated.',
-				toolCalls: [
-					{
-						name: 'get_audit_progress',
-						result: JSON.stringify({
-							period: 'September 2026',
-							total_bonds: 82,
-							schedule_generated: true,
-							sections: ['Classification', 'Amortised Cost', 'Fair Value', 'Impairment', 'Interest Income', 'Movements'],
-							completeness: '100%',
-							disclosure_mapping: 'SFRS(I) 9 / IFRS 9 mapped',
-							pending_items: [
-								'Final review sign-off required',
-								'External auditor access to be provisioned'
-							]
-						}, null, 2)
-					}
-				]
-			};
-		}
-
-		if (q.includes('hello') || q.includes('hi') || q.includes('hey')) {
-			return {
-				content: `Hello! I'm the AI Bond Copilot, your intelligent assistant for bond portfolio management.\n\nI can help you with:\n\n- **Portfolio analysis** — holdings, valuations, risk metrics\n- **Reconciliation** — three-way matching, variances, exceptions\n- **Journals** — draft entries, balances, approvals\n- **Commentary** — month-end narrative generation and refinement\n- **Audit** — schedule progress, SFRS(I) 9 disclosures\n- **Risk** — duration, credit quality, concentration analysis\n\nUse the Quick Actions panel on the right, or just type your question below.`
-			};
-		}
-
-		return {
-			content: `I understand you're asking about "${query}". Let me help you with that.\n\nFor the September 2026 reporting period, here is a high-level overview:\n\n- **82 bonds** in the active portfolio (SGD 45.2M market value)\n- **98.7%** reconciliation match rate\n- **2 open exceptions** requiring attention\n- **6 items** pending review in the approval queue\n- **12 draft journals** generated and balanced\n\nCould you be more specific about what you'd like to explore? Use the Quick Actions on the right or ask me directly.`
-		};
 	}
 
 	async function sendMessage(text?: string) {
@@ -264,24 +103,37 @@
 		await scrollToBottom();
 
 		isTyping = true;
-
-		const delay = 500 + Math.random() * 500;
-		await new Promise((r) => setTimeout(r, delay));
-
-		const response = generateMockResponse(msg);
-
-		const assistantMsg: ChatMessage = {
-			id: `msg-${Date.now()}-assistant`,
-			role: 'assistant',
-			content: response.content,
-			timestamp: new Date(),
-			toolCalls: response.toolCalls
-		};
-		messages = [...messages, assistantMsg];
+		try {
+			const response = await copilotChat(localStorage.token, msg, selectedPeriodId || undefined);
+			const assistantMsg: ChatMessage = {
+				id: `msg-${Date.now()}-assistant`,
+				role: 'assistant',
+				content: response?.content || "Sorry, I couldn't generate a response.",
+				timestamp: new Date(),
+				toolCalls: response?.tool_calls
+			};
+			messages = [...messages, assistantMsg];
+		} catch (e: any) {
+			messages = [
+				...messages,
+				{
+					id: `msg-${Date.now()}-assistant`,
+					role: 'assistant',
+					content: `Sorry, I couldn't reach the Bond Copilot backend: ${e?.message || e}`,
+					timestamp: new Date()
+				}
+			];
+		}
 		isTyping = false;
 
 		await scrollToBottom();
 	}
+
+	onMount(async () => {
+		periods = (await getReportingPeriods(localStorage.token).catch(() => [])) ?? [];
+		if (!selectedPeriodId && periods.length) selectedPeriodId = periods[0].id;
+		await loadSidebar();
+	});
 
 	async function scrollToBottom() {
 		await new Promise((r) => setTimeout(r, 20));
@@ -344,16 +196,30 @@
 		<div class="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500 mb-1">
 			<span>AI Bond Copilot</span><span>/</span><span>AI Assistant</span>
 		</div>
-		<div class="flex items-center gap-3">
-			<div class="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0">
-				<svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-					<path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
-				</svg>
+		<div class="flex items-center justify-between gap-3">
+			<div class="flex items-center gap-3">
+				<div class="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+					<svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
+					</svg>
+				</div>
+				<div>
+					<h1 class="text-2xl font-semibold text-gray-900 dark:text-white">AI Assistant</h1>
+					<p class="text-sm text-gray-500 dark:text-gray-400">Your intelligent assistant for bond portfolio management</p>
+				</div>
 			</div>
-			<div>
-				<h1 class="text-2xl font-semibold text-gray-900 dark:text-white">AI Assistant</h1>
-				<p class="text-sm text-gray-500 dark:text-gray-400">Your intelligent assistant for bond portfolio management</p>
-			</div>
+			<select
+				class="text-sm border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+				bind:value={selectedPeriodId}
+				on:change={loadSidebar}
+			>
+				{#if periods.length === 0}
+					<option value="">Current period</option>
+				{/if}
+				{#each periods as p}
+					<option value={p.id}>{p.name}</option>
+				{/each}
+			</select>
 		</div>
 	</div>
 
@@ -500,18 +366,21 @@
 					</div>
 				</div>
 
-				<!-- Recent Insights -->
+				<!-- Recent Activity -->
 				<div>
-					<div class="text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-3">Recent Insights</div>
+					<div class="text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-3">Recent Activity</div>
 					<div class="space-y-2">
-						{#each recentInsights as insight}
-							<div class="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 border-l-4 {insightTypeColor(insight.type)} p-3">
+						{#if recentActivity.length === 0}
+							<div class="text-[11px] text-gray-400 dark:text-gray-500 px-1">No recent activity for this period.</div>
+						{/if}
+						{#each recentActivity as entry}
+							<div class="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 border-l-4 {insightTypeColor(activityType(entry.action))} p-3">
 								<div class="flex items-center gap-1.5 mb-1">
-									<span class="w-1.5 h-1.5 rounded-full {insightDotColor(insight.type)} flex-shrink-0"></span>
-									<span class="text-xs font-medium text-gray-900 dark:text-white truncate">{insight.title}</span>
+									<span class="w-1.5 h-1.5 rounded-full {insightDotColor(activityType(entry.action))} flex-shrink-0"></span>
+									<span class="text-xs font-medium text-gray-900 dark:text-white truncate">{entry.action}</span>
 								</div>
-								<p class="text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed">{insight.description}</p>
-								<div class="mt-1.5 text-[10px] text-gray-400 dark:text-gray-500">{insight.time}</div>
+								<p class="text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed">{entry.details}</p>
+								<div class="mt-1.5 text-[10px] text-gray-400 dark:text-gray-500">{relativeTime(entry.timestamp)}</div>
 							</div>
 						{/each}
 					</div>
