@@ -130,18 +130,18 @@ async def _llm_chat(
 
     # 1. OpenAI-compatible (primary path): env vars or Config settings
     try:
-        cfg_key = Config.get("openai.api_key", "") if callable(getattr(Config, "get", None)) else ""
+        cfg_key = await Config.get("openai.api_key", "") if callable(getattr(Config, "get", None)) else ""
     except Exception:
         cfg_key = ""
     try:
-        cfg_base = Config.get("openai.api_base_url", "") if callable(getattr(Config, "get", None)) else ""
+        cfg_base = await Config.get("openai.api_base_url", "") if callable(getattr(Config, "get", None)) else ""
     except Exception:
         cfg_base = ""
 
     api_key = OPENAI_API_KEY or cfg_key or ""
     api_base = OPENAI_API_BASE_URL or cfg_base or ""
     try:
-        cfg_model = Config.get("openai.api_model", "") if callable(getattr(Config, "get", None)) else ""
+        cfg_model = await Config.get("openai.api_model", "") if callable(getattr(Config, "get", None)) else ""
     except Exception:
         cfg_model = ""
     model = cfg_model or "gpt-4o-mini"
@@ -1971,7 +1971,87 @@ async def copilot_chat(
     content = ""
     tool_calls: list[dict[str, str]] = []
 
-    if q in ("", "hi", "hello", "hey", "help"):
+    # --- Action intents: let the user trigger a page's action from chat -----
+    # Checked before the read-only intents below so "generate journals" is
+    # not swallowed by the "journal" reporting branch. Each action reuses the
+    # exact same service function the corresponding page button calls.
+    action_verbs = ("generate", "run", "analyze", "re-run", "rerun", "create", "build", "regenerate", "kick off", "execute")
+    action_topics = (
+        ("audit schedule", "audit_schedule"),
+        ("reconcil", "reconciliation"),
+        ("movement", "movements"),
+        ("commentary", "commentary"),
+        ("journal", "journals"),
+        ("schedule", "schedule"),
+    )
+    has_action_verb = any(v in q for v in action_verbs)
+    matched_topic = next((topic for phrase, topic in action_topics if phrase in q), None) if has_action_verb else None
+
+    if matched_topic and not period_id:
+        content = (
+            "I can do that, but no reporting period is selected. "
+            "Choose a period from the dropdown above and ask me again."
+        )
+        tool_calls = []
+
+    elif matched_topic == "reconciliation":
+        try:
+            result = await run_reconciliation(user_id, period_id)
+            content = (
+                f"Reconciliation run complete for this period: "
+                f"**{result.get('matched', 0)}/{result.get('total_bonds', 0)} matched** "
+                f"({result.get('match_rate', 0)}% match rate), "
+                f"**{result.get('variances', 0)} variances**, **{result.get('missing', 0)} missing**."
+            )
+            tool_calls = [{"name": "run_reconciliation", "result": json.dumps(result, default=str, indent=2)}]
+        except Exception as ex:
+            content = f"Reconciliation run failed: {ex}"
+
+    elif matched_topic == "movements":
+        try:
+            result = await analyze_movements(user_id, period_id)
+            content = f"Movement analysis complete: **{result.get('movements_created', 0)} movements** identified for this period."
+            tool_calls = [{"name": "analyze_movements", "result": json.dumps(result, default=str, indent=2)}]
+        except Exception as ex:
+            content = f"Movement analysis failed: {ex}"
+
+    elif matched_topic == "audit_schedule":
+        try:
+            result = await generate_audit_schedule(user_id, period_id)
+            content = f"Audit schedule generated: **{result.get('entries_created', 0)} bond entries** created."
+            tool_calls = [{"name": "generate_audit_schedule", "result": json.dumps(result, default=str, indent=2)}]
+        except Exception as ex:
+            content = f"Audit schedule generation failed: {ex}"
+
+    elif matched_topic == "schedule":
+        try:
+            result = await generate_schedule(user_id, period_id)
+            content = f"Bond schedule generated: **{result.get('lines_generated', 0)} line items** created."
+            tool_calls = [{"name": "generate_schedule", "result": json.dumps(result, default=str, indent=2)}]
+        except Exception as ex:
+            content = f"Schedule generation failed: {ex}"
+
+    elif matched_topic == "journals":
+        try:
+            result = await generate_journals(user_id, period_id)
+            content = f"Draft journals generated: **{result.get('journals_created', 0)} journal(s)** created."
+            tool_calls = [{"name": "generate_journals", "result": json.dumps(result, default=str, indent=2)}]
+        except Exception as ex:
+            content = f"Journal generation failed: {ex}"
+
+    elif matched_topic == "commentary":
+        try:
+            # force_llm=True: an explicit chat request to (re)generate should
+            # behave like the UI's Regenerate button, not silently skip
+            # sections that already exist for this period.
+            result = await generate_commentary(user_id, period_id, force_llm=True)
+            sections = result.get("sections", [])
+            content = f"Commentary generated for **{len(sections)} section(s)**: {', '.join(sections) or 'none'}."
+            tool_calls = [{"name": "generate_commentary", "result": json.dumps(result, default=str, indent=2)}]
+        except Exception as ex:
+            content = f"Commentary generation failed: {ex}"
+
+    elif q in ("", "hi", "hello", "hey", "help"):
         dashboard = await get_dashboard(user_id, period_id)
         stats = dashboard.get("kpis") or {}
         pending_reviews = len(await get_pending_reviews(user_id))
@@ -2054,14 +2134,11 @@ async def copilot_chat(
     elif "reconciliation" in q or "recon" in q or "match" in q:
         summary = await get_reconciliation_summary(user_id, period_id)
         content = (
-            f"Reconciliation for **{summary.get('reporting_period', {}).get('name', 'this period')}** "
-            f"status: **{summary.get('overall_status', 'N/A')}**.\n\n"
-            f"- Total items: **{summary.get('total_items', 0)}**\n"
-            f"- Matched: **{summary.get('matched_count', 0)}**\n"
-            f"- Variances: **{summary.get('variance_count', 0)}**\n"
-            f"- Missing: **{summary.get('missing_count', 0)}**\n"
-            f"- Match rate: **{summary.get('match_rate', 'N/A')}**\n"
-            f"- Total variance amount: **{summary.get('total_variance_amount', 0)}**"
+            f"Reconciliation status: **{summary.get('run_status', 'NOT_RUN')}**.\n\n"
+            f"- Total bonds: **{summary.get('total_bonds', 0)}**\n"
+            f"- Matched: **{summary.get('matched', 0)}**\n"
+            f"- Exceptions (variances + missing): **{summary.get('exceptions', 0)}**\n"
+            f"- Match rate: **{summary.get('match_rate', 'N/A')}%**"
         )
         tool_calls = [{
             "name": "get_reconciliation_summary",

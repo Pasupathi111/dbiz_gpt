@@ -10,20 +10,29 @@
 	let exceptions: any[] = [];
 	let filterStatus = '';
 
-	const sampleExceptions = [
-		{ id: 'EXC-001', title: 'Market Value Variance — Mapletree Logistics Trust', type: 'RECONCILIATION', severity: 'HIGH', status: 'OPEN', created_at: '2026-09-16T14:41:00', bond_id: 'BOND-006', description: 'Market value differs SGD 5,200 between UBS custodian report (SGD 795,000) and LGI investment ledger (SGD 800,200). Variance exceeds SGD 1,000 materiality threshold.', root_cause: 'Timing difference: UBS uses T-1 closing price while LGI uses T+0 indicative pricing from Bloomberg.', impact: 'SGD 5,200 — Immaterial at portfolio level (0.05% of total market value) but exceeds line-item materiality threshold.', resolution: 'LGI has confirmed updated value of SGD 800,200 will be reflected in October price feed. Manual override applied for September close.', assigned_to: 'S. Lim', escalated_to: 'A. Tan' },
-		{ id: 'EXC-002', title: 'Missing Bond — LGI Record Not in UBS', type: 'RECONCILIATION', severity: 'MEDIUM', status: 'RESOLVED', created_at: '2026-09-15T10:20:00', resolved_at: '2026-09-15T16:45:00', bond_id: 'BOND-011', description: 'LGI contains a record for BOND-011 (Ascendas REIT 3.15% 2029) that does not appear in the UBS custodian report.', root_cause: 'Bond was purchased on 2026-09-14 (T+1 settlement). UBS report generated before settlement completed.', impact: 'No financial impact — timing difference only.', resolution: 'Confirmed with UBS operations. Bond appeared in T+2 report. No action required.', assigned_to: 'S. Lim', resolved_by: 'S. Lim' },
-		{ id: 'EXC-003', title: 'Coupon Rate Mismatch — DBS 3.25% 2028', type: 'DATA_QUALITY', severity: 'LOW', status: 'RESOLVED', created_at: '2026-09-14T09:15:00', resolved_at: '2026-09-14T11:30:00', bond_id: 'BOND-001', description: 'Extracted coupon rate shows 3.250% from UBS but LGI shows 3.252%. Difference of 0.002%.', root_cause: 'LGI stores the effective yield (3.252%) rather than the nominal coupon rate (3.250%).', impact: 'Negligible — SGD 20 per annum difference on SGD 1,000,000 face value.', resolution: 'LGI field confirmed as effective yield. System mapping updated to use nominal rate from UBS as source of truth for coupon rate.', assigned_to: 'A. Tan', resolved_by: 'A. Tan' },
-		{ id: 'EXC-004', title: 'Extraction Confidence Below Threshold', type: 'EXTRACTION', severity: 'MEDIUM', status: 'OPEN', created_at: '2026-09-16T14:33:30', bond_id: 'BOND-006', description: 'AI extraction confidence for Mapletree bond (BOND-006) from LGI PDF is 92%, below the 95% auto-accept threshold.', root_cause: 'LGI PDF has non-standard formatting for this issuer — table rows are split across pages.', impact: 'Manual verification required before data can be accepted into the bond schedule.', resolution: '', assigned_to: 'S. Lim' },
-		{ id: 'EXC-005', title: 'Journal Balance Check Warning', type: 'JOURNAL', severity: 'LOW', status: 'RESOLVED', created_at: '2026-09-16T14:57:00', resolved_at: '2026-09-16T15:05:00', description: 'Fair value adjustment journal initially generated with SGD 0.50 rounding difference between debits and credits.', root_cause: 'Rounding in individual bond fair value calculations accumulated to SGD 0.50 at portfolio level.', impact: 'Immaterial — sub-dollar rounding.', resolution: 'AI re-generated journal with forced balance using rounding adjustment line to GL account 9990 (Rounding Adjustments).', assigned_to: 'System', resolved_by: 'System' }
-	];
+	function toException(row: any) {
+		return {
+			id: row.id,
+			title: `${(row.category || 'EXCEPTION').replace(/_/g, ' ')}${row.bond_id ? ' — ' + row.bond_id : ''}`,
+			type: row.category,
+			severity: row.severity,
+			status: row.status,
+			created_at: row.created_at ? new Date(row.created_at * 1000).toISOString() : null,
+			resolved_at: row.resolved_at ? new Date(row.resolved_at * 1000).toISOString() : null,
+			bond_id: row.bond_id,
+			description: row.description,
+			root_cause: row.ai_recommendation,
+			resolution: row.resolution,
+			resolved_by: row.resolved_by
+		};
+	}
 
 	onMount(async () => {
 		try {
 			const data = await getExceptions(localStorage.token);
-			exceptions = Array.isArray(data) ? data : sampleExceptions;
-		} catch {
-			exceptions = sampleExceptions;
+			exceptions = Array.isArray(data) ? data.map(toException) : [];
+		} catch (e: any) {
+			exceptions = [];
 		}
 		loading = false;
 	});
