@@ -5,20 +5,39 @@ from fastapi import (
     APIRouter,
     Depends,
     File,
-    Form,
     HTTPException,
     Query,
+    Request,
+    Response,
     UploadFile,
     status,
 )
 from open_webui.constants import ERROR_MESSAGES
+from open_webui.models.config import Config
 from open_webui.services import finance_service
+from open_webui.utils.access_control import has_permission
 from open_webui.utils.auth import get_verified_user
 from pydantic import BaseModel, Field
 
 log = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+async def _require_finance_approve(user) -> None:
+    """RBAC gate for approval-scoped endpoints.
+
+    Admins always pass.  Non-admins require explicit `finance.approve`
+    permission in the user permissions config.  Raises HTTP 403 on failure.
+    """
+    if user.role == "admin":
+        return
+    perms = await Config.get("user.permissions")
+    if not await has_permission(user.id, "finance.approve", perms):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
+        )
 
 
 ############################
@@ -152,8 +171,110 @@ async def get_dashboard(
     user=Depends(get_verified_user),
 ):
     try:
-        result = await finance_service.get_dashboard(user.id, period_id)
-        return result
+        raw = await finance_service.get_dashboard(user.id, period_id)
+        kpis = raw.get("kpis") or {}
+
+        period_name = raw.get("period_name") or raw.get("reporting_period") or "N/A"
+        total_bonds = int(kpis.get("total_bonds") or 0)
+        recon_rate = float(kpis.get("recon_rate") or 0.0)
+        open_exc = int(kpis.get("exceptions_open") or 0)
+        journals_total = int(kpis.get("journal_count") or 0)
+        journals_pending_review = int(kpis.get("journals_pending_review") or 0)
+        total_mv = float(kpis.get("total_market_value") or 0.0)
+        total_fv = float(kpis.get("total_face_value") or 0.0)
+        docs_uploaded = int(kpis.get("documents_uploaded") or 0)
+        movements_count = int(kpis.get("movements_count") or 0) if "movements_count" in kpis else 0
+        schedule_entries_count = int(kpis.get("schedule_entries_count") or 0) if "schedule_entries_count" in kpis else (total_bonds if kpis.get("schedule_generated") else 0)
+
+        review_status_raw = str(kpis.get("review_status") or "").lower()
+        if review_status_raw == "completed" or review_status_raw == "approved" or review_status_raw == "finalized":
+            review_label = "Completed"
+        elif review_status_raw == "in_progress" or review_status_raw == "pending" or review_status_raw == "submitted":
+            review_label = "Pending"
+        elif total_bonds > 0:
+            review_label = "In Progress"
+        else:
+            review_label = "Empty"
+
+        steps = [
+            {"name": "Documents", "status": "complete" if docs_uploaded > 0 else "pending", "count": docs_uploaded},
+            {"name": "Extraction", "status": "complete" if total_bonds > 0 else "pending", "count": total_bonds},
+            {"name": "Validation", "status": "complete" if total_bonds > 0 else "pending", "count": total_bonds},
+            {
+                "name": "Reconciliation",
+                "status": "complete" if recon_rate >= 99.99 else ("warning" if total_bonds > 0 else "pending"),
+                "count": total_bonds,
+            },
+            {"name": "Movements", "status": "complete" if movements_count > 0 else "pending", "count": movements_count},
+            {"name": "Schedule", "status": "complete" if schedule_entries_count > 0 else "pending", "count": schedule_entries_count},
+            {"name": "Journals", "status": "draft" if journals_total > 0 else "pending", "count": journals_total},
+            {"name": "Audit Schedule", "status": "complete" if schedule_entries_count > 0 else "pending", "count": schedule_entries_count},
+            {
+                "name": "Finance Review",
+                "status": "complete" if review_label == "Completed" else "pending",
+                "count": 0,
+            },
+            {
+                "name": "Finalization",
+                "status": "complete" if review_label == "Completed" else "pending",
+                "count": 0,
+            },
+        ]
+
+        work_raw = [
+            ("Bond reconciliation", total_bonds or 0),
+            ("Movement analysis", movements_count or 0),
+            ("Schedule generation", schedule_entries_count or 0),
+            ("Journal preparation", journals_total or 0),
+        ]
+        work_total = sum(v for _, v in work_raw) or 1
+        work_distribution = [
+            {"name": name, "runs": count, "pct": round(count / work_total * 100) if count else 0}
+            for name, count in work_raw
+        ]
+
+        recent_activity: list[dict] = []
+        try:
+            audit = await finance_service.get_audit_trail(user.id, period_id=period_id)
+            for row in list(audit or [])[:5]:
+                action_text = str(row.get("action") or row.get("details") or "Finance action")
+                action_text = (action_text[:120] + "…") if len(action_text) > 120 else action_text
+                who = str(row.get("user_name") or row.get("user_id") or "System")[:40]
+                timestamp = str(row.get("timestamp") or "—")[:24]
+                lower = action_text.lower()
+                if "upload" in lower or "document" in lower:
+                    atype = "upload"
+                elif "exception" in lower or "warn" in lower or "variance" in lower or "var" in lower:
+                    atype = "warning"
+                elif "review" in lower or "approve" in lower or "reject" in lower:
+                    atype = "review"
+                else:
+                    atype = "process"
+                recent_activity.append({
+                    "action": action_text,
+                    "user": who,
+                    "time": timestamp,
+                    "type": atype,
+                })
+        except Exception:
+            recent_activity = []
+
+        return {
+            "reporting_period": period_name,
+            "bond_line_items": total_bonds,
+            "reconciliation_rate": recon_rate,
+            "exceptions": open_exc,
+            "draft_journals": journals_pending_review or journals_total,
+            "review_status": review_label,
+            "processing_time": None,
+            "total_market_value": total_mv,
+            "total_face_value": total_fv,
+            "currency": str(kpis.get("currency") or "SGD"),
+            "steps": steps,
+            "work_distribution": work_distribution,
+            "recent_activity": recent_activity,
+            "_raw": raw,
+        }
     except Exception as e:
         log.exception(e)
         raise HTTPException(
@@ -803,7 +924,8 @@ async def approve_journal(
     journal_id: str,
     user=Depends(get_verified_user),
 ):
-    result = await finance_service.approve_journal(user.id, journal_id)
+    await _require_finance_approve(user)
+    result = await finance_service.approve_journal(user.id, journal_id, user=user)
     if not result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -826,7 +948,8 @@ async def reject_journal(
     form_data: JournalRejectForm,
     user=Depends(get_verified_user),
 ):
-    result = await finance_service.reject_journal(user.id, journal_id, form_data.reason)
+    await _require_finance_approve(user)
+    result = await finance_service.reject_journal(user.id, journal_id, form_data.reason, user=user)
     if not result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -982,12 +1105,42 @@ async def update_commentary(
     return result
 
 
+@router.post('/commentary/{commentary_id}/regenerate')
+async def regenerate_commentary(
+    commentary_id: str,
+    user=Depends(get_verified_user),
+):
+    try:
+        result = await finance_service.regenerate_commentary(user.id, commentary_id)
+    except Exception as e:
+        log.exception(e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=ERROR_MESSAGES.DEFAULT('Error regenerating commentary'),
+        )
+    if not result:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ERROR_MESSAGES.NOT_FOUND,
+        )
+    await finance_service.log_audit_trail(
+        user_id=user.id,
+        action='commentary.regenerate',
+        entity_type='commentary',
+        entity_id=commentary_id,
+        period_id=result.get('reporting_period_id'),
+        details=f'Regenerated commentary {commentary_id} (LLM)',
+    )
+    return result
+
+
 @router.post('/commentary/{commentary_id}/approve')
 async def approve_commentary(
     commentary_id: str,
     user=Depends(get_verified_user),
 ):
-    result = await finance_service.approve_commentary(user.id, commentary_id)
+    await _require_finance_approve(user)
+    result = await finance_service.approve_commentary(user.id, commentary_id, user=user)
     if not result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -1038,8 +1191,9 @@ async def approve_review(
     form_data: ReviewApproveForm,
     user=Depends(get_verified_user),
 ):
+    await _require_finance_approve(user)
     try:
-        result = await finance_service.approve_review(user.id, form_data.model_dump())
+        result = await finance_service.approve_review(user.id, form_data.model_dump(), user=user)
         await finance_service.log_audit_trail(
             user_id=user.id,
             action='review.approve',
@@ -1048,6 +1202,11 @@ async def approve_review(
             details=f'Approved review {form_data.review_id}',
         )
         return result
+    except PermissionError:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
+        )
     except Exception as e:
         log.exception(e)
         raise HTTPException(
@@ -1061,8 +1220,9 @@ async def reject_review(
     form_data: ReviewRejectForm,
     user=Depends(get_verified_user),
 ):
+    await _require_finance_approve(user)
     try:
-        result = await finance_service.reject_review(user.id, form_data.model_dump())
+        result = await finance_service.reject_review(user.id, form_data.model_dump(), user=user)
         await finance_service.log_audit_trail(
             user_id=user.id,
             action='review.reject',
@@ -1071,6 +1231,11 @@ async def reject_review(
             details=f'Rejected review {form_data.review_id}: {form_data.reason}',
         )
         return result
+    except PermissionError:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
+        )
     except Exception as e:
         log.exception(e)
         raise HTTPException(
@@ -1121,4 +1286,34 @@ async def get_audit_trail(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=ERROR_MESSAGES.DEFAULT('Error retrieving audit trail'),
+        )
+
+
+############################
+# AI Copilot Chat
+############################
+
+
+class CopilotChatRequest(BaseModel):
+    query: str
+    reporting_period_id: Optional[str] = None
+
+
+@router.post('/copilot/chat')
+async def copilot_chat(
+    payload: CopilotChatRequest,
+    user=Depends(get_verified_user),
+):
+    try:
+        response = await finance_service.copilot_chat(
+            user.id,
+            query=payload.query,
+            reporting_period_id=payload.reporting_period_id,
+        )
+        return response
+    except Exception as e:
+        log.exception(e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=ERROR_MESSAGES.DEFAULT('Error processing copilot query'),
         )

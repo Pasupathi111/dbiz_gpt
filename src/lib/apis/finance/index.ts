@@ -200,3 +200,14 @@ export const getExceptions = (token: string, params?: Record<string, string>) =>
 	const qs = params ? '?' + new URLSearchParams(params).toString() : '';
 	return request(token, `/reconciliation/exceptions${qs}`);
 };
+
+// Copilot chat
+export const copilotChat = (
+	token: string,
+	query: string,
+	reportingPeriodId?: string
+) =>
+	request(token, '/copilot/chat', {
+		method: 'POST',
+		body: JSON.stringify({ query, reporting_period_id: reportingPeriodId })
+	});

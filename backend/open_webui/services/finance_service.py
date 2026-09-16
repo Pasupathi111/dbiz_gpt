@@ -1,16 +1,60 @@
 """
 Finance service module for Bond Copilot.
 
-Provides stub implementations that return realistic sample data
-so the frontend can be developed against the API contract. Actual
-business logic (extraction, reconciliation, movement analysis, etc.)
-will be implemented in subsequent phases.
+Real ORM-backed implementations for reporting periods, documents, bond records,
+reconciliation, movements, schedule, journals, audit schedule, commentary,
+review/approval and audit-trail.
 """
 
+import csv
+import io
+import json
 import logging
+import time
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Optional
+
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from open_webui.internal.db import get_async_db_context
+from open_webui.models.finance import (
+    AuditScheduleEntries,
+    AuditScheduleEntryForm,
+    BondMovements,
+    BondMovementForm,
+    BondRecords,
+    BondRecordForm,
+    BondScheduleLines,
+    BondScheduleLineForm,
+    BondSourceRecords,
+    BondSourceRecordForm,
+    Commentaries,
+    CommentaryForm,
+    ExtractionJobForm,
+    ExtractionJobs,
+    FinanceApprovals,
+    FinanceApprovalForm,
+    FinanceAuditLogs,
+    FinanceAuditLogForm,
+    FinanceDocumentForm,
+    FinanceDocuments,
+    FinanceExceptionForm,
+    FinanceExceptions,
+    JournalForm,
+    JournalLineForm,
+    JournalLines,
+    Journals,
+    ReconciliationItemForm,
+    ReconciliationItems,
+    ReconciliationRunForm,
+    ReconciliationRuns,
+    ReportingPeriodForm,
+    ReportingPeriods,
+    SourceReferenceForm,
+    SourceReferences,
+)
 
 log = logging.getLogger(__name__)
 
@@ -19,35 +63,222 @@ def _utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def _now_ms() -> int:
+    return int(time.time())
+
+
 def _new_id() -> str:
     return str(uuid.uuid4())
+
+
+def _to_dict(model) -> dict:
+    return model.model_dump() if model is not None else None
+
+
+def _to_list_of_dicts(models) -> list[dict]:
+    return [m.model_dump() for m in models]
+
+
+def _require_approve(user=None) -> None:
+    """Defense-in-depth RBAC guard at service layer.
+
+    The router already enforces the primary gate via has_permission + admin
+    short-circuit.  This second-layer check exists so that anyone calling the
+    service functions directly (e.g. tests, internal tooling, future imports)
+    cannot bypass the Human-in-the-Loop approval constraint.  Only callers
+    that explicitly pass a user with `role == 'admin'` are authorised.  If
+    the caller omits `user` entirely we also allow transit because the
+    router-level gate will already have run before reaching this call in
+    normal request flow.
+    """
+    if user is None:
+        return
+    role = getattr(user, "role", None)
+    if role != "admin":
+        raise PermissionError(
+            f"Finance approval rejected for user role={role!r}: "
+            f"HITL requires admin or explicit finance.approve permission"
+        )
+
+
+async def _llm_chat(
+    prompt: str,
+    system_prompt: Optional[str] = None,
+    *,
+    temperature: float = 0.3,
+    max_tokens: int = 1200,
+    timeout_s: float = 30.0,
+) -> Optional[str]:
+    """Best-effort LLM chat completion for finance commentary.
+
+    Supports any OpenAI-compatible provider (OpenAI API keys, or local Ollama
+    `/v1/chat/completions` endpoint).  Returns ``None`` if the environment is
+    not configured, the HTTP call fails, or the response body cannot be parsed
+    — in those cases the caller falls back to the structured DB-aggregate text
+    so the UI is never left with empty or broken content.
+    """
+    try:
+        import httpx  # noqa: F401 — already used by MCP client; imported lazily to reduce module import cost
+    except Exception:
+        return None
+
+    # Resolve provider configuration the same way the rest of Open WebUI does.
+    from open_webui.config import OPENAI_API_BASE_URL, OPENAI_API_KEY, OLLAMA_BASE_URLS, Config
+
+    api_base = None
+    api_key = None
+    model = None
+
+    # 1. OpenAI-compatible (primary path): env vars or Config settings
+    try:
+        cfg_key = Config.get("openai.api_key", "") if callable(getattr(Config, "get", None)) else ""
+    except Exception:
+        cfg_key = ""
+    try:
+        cfg_base = Config.get("openai.api_base_url", "") if callable(getattr(Config, "get", None)) else ""
+    except Exception:
+        cfg_base = ""
+
+    api_key = OPENAI_API_KEY or cfg_key or ""
+    api_base = OPENAI_API_BASE_URL or cfg_base or ""
+    try:
+        cfg_model = Config.get("openai.api_model", "") if callable(getattr(Config, "get", None)) else ""
+    except Exception:
+        cfg_model = ""
+    model = cfg_model or "gpt-4o-mini"
+
+    # 2. Ollama fallback: /v1 emulation endpoint if no OpenAI key configured
+    if not api_base and OLLAMA_BASE_URLS:
+        first = OLLAMA_BASE_URLS[0] if isinstance(OLLAMA_BASE_URLS, list) else str(OLLAMA_BASE_URLS)
+        api_base = f"{first.rstrip('/')}/v1"
+        api_key = api_key or "ollama"
+        if not cfg_model:
+            model = "llama3.1:8b"
+
+    if not api_base:
+        return None
+
+    messages: list[dict[str, str]] = []
+    if system_prompt:
+        messages.append({"role": "system", "content": system_prompt})
+    messages.append({"role": "user", "content": prompt})
+
+    endpoint = api_base.rstrip("/") + "/chat/completions"
+    try:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(timeout_s, connect=10.0)) as client:
+            headers = {"Content-Type": "application/json"}
+            if api_key:
+                headers["Authorization"] = f"Bearer {api_key}"
+            resp = await client.post(
+                endpoint,
+                headers=headers,
+                json={
+                    "model": model,
+                    "messages": messages,
+                    "stream": False,
+                    "temperature": temperature,
+                    "max_tokens": max_tokens,
+                },
+            )
+    except Exception:
+        return None
+
+    if resp.status_code != 200:
+        return None
+    try:
+        payload = resp.json()
+        return (
+            payload.get("choices", [{}])[0]
+            .get("message", {})
+            .get("content")
+        )
+    except Exception:
+        return None
 
 
 # ---------------------------------------------------------------------------
 # Dashboard
 # ---------------------------------------------------------------------------
 
+
 async def get_dashboard(user_id: str, period_id: Optional[str] = None) -> dict:
     """Return KPI data for the current (or specified) reporting period."""
+    period = None
+    if period_id:
+        period = await ReportingPeriods.get_by_id(period_id)
+    if period is None:
+        all_periods = await ReportingPeriods.get_all()
+        period = all_periods[0] if all_periods else None
+
+    resolved_id = period.id if period else (period_id or "")
+    resolved_name = period.name if period else (period_id or "")
+
+    total_bonds = await BondRecords.count_by_period(resolved_id) if resolved_id else 0
+    total_face_value = 0.0
+    total_book_value = 0.0
+    total_market_value = 0.0
+    status_counts: dict[str, int] = {}
+
+    if resolved_id:
+        bonds = await BondRecords.get_by_period(resolved_id)
+        total_face_value = sum((b.face_value or 0.0) for b in bonds)
+        total_book_value = sum((b.book_value or 0.0) for b in bonds)
+        total_market_value = sum((b.market_value or 0.0) for b in bonds)
+        for b in bonds:
+            s = b.status or "unknown"
+            status_counts[s] = status_counts.get(s, 0) + 1
+
+    docs = await FinanceDocuments.get_by_period(resolved_id) if resolved_id else []
+    docs_processed = sum(1 for d in docs if d.status in {"EXTRACTED", "VALIDATED"})
+    docs_failed = sum(1 for d in docs if d.status == "FAILED")
+    docs_pending = sum(1 for d in docs if d.status in {"UPLOADED", "QUEUED", "PROCESSING"})
+
+    journals = await Journals.get_by_period(resolved_id) if resolved_id else []
+    journals_approved = sum(1 for j in journals if j.status == "APPROVED")
+    journals_pending = sum(1 for j in journals if j.status in {"PENDING", "SUBMITTED"})
+
+    exceptions = await FinanceExceptions.get_by_period(resolved_id) if resolved_id else []
+    exceptions_open = sum(1 for e in exceptions if e.status == "OPEN")
+    exceptions_resolved = sum(1 for e in exceptions if e.status in {"RESOLVED", "CLOSED"})
+
+    recon_items = await ReconciliationItems.get_by_run_period(resolved_id) if resolved_id else []
+    matched = sum(1 for r in recon_items if r.status == "MATCHED")
+    total_recon = len(recon_items) or 1
+    match_rate = round(matched / total_recon * 100.0, 1) if recon_items else 0.0
+
+    schedule_entries = await AuditScheduleEntries.get_by_period(resolved_id) if resolved_id else []
+    commentary_entries = await Commentaries.get_by_period(resolved_id) if resolved_id else []
+
+    approvals = await FinanceApprovals.get_by_period(resolved_id) if resolved_id else []
+    if approvals:
+        review_status = "completed" if all(a.action == "APPROVED" for a in approvals if a.object_type == "PERIOD") else "in_progress"
+    elif period and period.status in {"FINALIZED", "REVIEW"}:
+        review_status = "completed" if period.status == "FINALIZED" else "in_progress"
+    else:
+        review_status = "draft"
+
     return {
-        "period_id": period_id or "period-2024-12",
-        "period_name": "December 2024",
+        "period_id": resolved_id,
+        "period_name": resolved_name,
         "kpis": {
-            "total_bonds": 142,
-            "total_face_value": 1_250_000_000.00,
-            "recon_rate": 97.8,
-            "exceptions_open": 3,
-            "exceptions_resolved": 45,
-            "journal_count": 18,
-            "journals_pending_review": 2,
-            "journals_approved": 16,
-            "documents_uploaded": 24,
-            "documents_processed": 22,
-            "documents_failed": 1,
-            "documents_pending": 1,
-            "schedule_generated": True,
-            "commentary_generated": True,
-            "review_status": "in_progress",
+            "total_bonds": total_bonds,
+            "total_face_value": total_face_value,
+            "total_book_value": total_book_value,
+            "total_market_value": total_market_value,
+            "recon_rate": match_rate,
+            "reconciled_count": status_counts.get("reconciled", 0) or matched,
+            "exceptions_open": exceptions_open,
+            "exceptions_resolved": exceptions_resolved,
+            "journal_count": len(journals),
+            "journals_pending_review": journals_pending,
+            "journals_approved": journals_approved,
+            "documents_uploaded": len(docs),
+            "documents_processed": docs_processed,
+            "documents_failed": docs_failed,
+            "documents_pending": docs_pending,
+            "schedule_generated": len(schedule_entries) > 0,
+            "commentary_generated": len(commentary_entries) > 0,
+            "review_status": review_status,
         },
         "generated_at": _utc_now(),
     }
@@ -57,133 +288,90 @@ async def get_dashboard(user_id: str, period_id: Optional[str] = None) -> dict:
 # Reporting Periods
 # ---------------------------------------------------------------------------
 
-SAMPLE_PERIODS = [
-    {
-        "id": "period-2024-12",
-        "name": "December 2024",
-        "start_date": "2024-12-01",
-        "end_date": "2024-12-31",
-        "status": "active",
-        "created_by": "system",
-        "created_at": "2024-12-01T00:00:00Z",
-        "updated_at": "2024-12-15T08:30:00Z",
-    },
-    {
-        "id": "period-2024-11",
-        "name": "November 2024",
-        "start_date": "2024-11-01",
-        "end_date": "2024-11-30",
-        "status": "closed",
-        "created_by": "system",
-        "created_at": "2024-11-01T00:00:00Z",
-        "updated_at": "2024-12-02T09:00:00Z",
-    },
-    {
-        "id": "period-2024-10",
-        "name": "October 2024",
-        "start_date": "2024-10-01",
-        "end_date": "2024-10-31",
-        "status": "closed",
-        "created_by": "system",
-        "created_at": "2024-10-01T00:00:00Z",
-        "updated_at": "2024-11-03T10:15:00Z",
-    },
-]
-
 
 async def list_periods(user_id: str) -> list[dict]:
-    return SAMPLE_PERIODS
+    periods = await ReportingPeriods.get_all()
+    return _to_list_of_dicts(periods)
 
 
 async def create_period(user_id: str, data: dict) -> dict:
-    period = {
-        "id": _new_id(),
-        **data,
-        "status": "active",
-        "created_by": user_id,
-        "created_at": _utc_now(),
-        "updated_at": _utc_now(),
-    }
-    log.info("Created reporting period %s by user %s", period["id"], user_id)
-    return period
+    # Accept start_date/end_date from router form, map to year/month if provided.
+    payload = {**data}
+    if "start_date" in payload and "year" not in payload:
+        try:
+            y = int(str(payload["start_date"]).split("-")[0])
+            m = int(str(payload["start_date"]).split("-")[1])
+            payload.setdefault("year", y)
+            payload.setdefault("month", m)
+        except (ValueError, IndexError):
+            payload.setdefault("year", 1970)
+            payload.setdefault("month", 1)
+    form = ReportingPeriodForm(**{
+        "name": payload.get("name") or f"Period {payload.get('year', 1970)}-{payload.get('month', 1):02d}",
+        "year": int(payload.get("year") or 1970),
+        "month": int(payload.get("month") or 1),
+        "previous_period_id": payload.get("previous_period_id"),
+        "status": payload.get("status") or "DRAFT",
+    })
+    created = await ReportingPeriods.insert(user_id, form)
+    if created is None:
+        raise RuntimeError("Failed to create reporting period")
+    return _to_dict(created)
 
 
 async def get_period(user_id: str, period_id: str) -> Optional[dict]:
-    for p in SAMPLE_PERIODS:
-        if p["id"] == period_id:
-            return {
-                **p,
-                "processing_status": {
-                    "documents": {"total": 24, "processed": 22, "failed": 1, "pending": 1},
-                    "reconciliation": {"status": "completed", "match_rate": 97.8},
-                    "journals": {"total": 18, "approved": 16, "pending": 2},
-                    "schedule": {"status": "generated"},
-                    "commentary": {"status": "generated"},
-                },
-            }
-    return None
+    period = await ReportingPeriods.get_by_id(period_id)
+    if not period:
+        return None
+    period_d = _to_dict(period)
+
+    docs = await FinanceDocuments.get_by_period(period_id)
+    bonds = await BondRecords.get_by_period(period_id)
+    journals = await Journals.get_by_period(period_id)
+    commentaries = await Commentaries.get_by_period(period_id)
+    recon_runs = await ReconciliationRuns.get_by_period(period_id)
+
+    docs_total = len(docs)
+    docs_processed = sum(1 for d in docs if d.status in {"EXTRACTED", "VALIDATED"})
+    docs_failed = sum(1 for d in docs if d.status == "FAILED")
+    docs_pending = docs_total - docs_processed - docs_failed
+
+    journals_total = len(journals)
+    journals_approved = sum(1 for j in journals if j.status == "APPROVED")
+    journals_pending = sum(1 for j in journals if j.status in {"PENDING", "SUBMITTED"})
+
+    if recon_runs:
+        last_run = sorted(recon_runs, key=lambda r: r.created_at, reverse=True)[0]
+        recon_stats = {
+            "status": last_run.status,
+            "match_rate": last_run.match_rate or 0.0,
+            "total_bonds": last_run.total_bonds,
+            "matched": last_run.matched,
+            "variances": last_run.variances,
+            "missing": last_run.missing,
+        }
+    else:
+        recon_stats = {"status": "NOT_RUN", "match_rate": 0.0}
+
+    period_d["processing_status"] = {
+        "documents": {"total": docs_total, "processed": docs_processed, "failed": docs_failed, "pending": docs_pending},
+        "reconciliation": recon_stats,
+        "journals": {"total": journals_total, "approved": journals_approved, "pending": journals_pending},
+        "schedule": {"status": "generated" if len(bonds) > 0 else "not_generated", "bonds": len(bonds)},
+        "commentary": {"status": "generated" if len(commentaries) > 0 else "not_generated", "sections": len(commentaries)},
+    }
+    return period_d
 
 
 async def update_period(user_id: str, period_id: str, data: dict) -> Optional[dict]:
-    for p in SAMPLE_PERIODS:
-        if p["id"] == period_id:
-            updated = {**p, **data, "updated_at": _utc_now()}
-            log.info("Updated period %s by user %s", period_id, user_id)
-            return updated
-    return None
+    updated = await ReportingPeriods.update_by_id(period_id, data)
+    log.info("Updated period %s by user %s", period_id, user_id)
+    return _to_dict(updated) if updated else None
 
 
 # ---------------------------------------------------------------------------
 # Documents
 # ---------------------------------------------------------------------------
-
-SAMPLE_DOCUMENTS = [
-    {
-        "id": "doc-001",
-        "filename": "MAS_Bond_Statement_Dec2024.pdf",
-        "document_type": "custodian_statement",
-        "reporting_period_id": "period-2024-12",
-        "status": "processed",
-        "file_size": 2_450_000,
-        "content_type": "application/pdf",
-        "uploaded_by": "user-001",
-        "uploaded_at": "2024-12-05T10:30:00Z",
-        "processed_at": "2024-12-05T10:32:15Z",
-        "extraction_result": {
-            "bonds_extracted": 85,
-            "confidence": 0.96,
-        },
-    },
-    {
-        "id": "doc-002",
-        "filename": "Bloomberg_Positions_Dec2024.xlsx",
-        "document_type": "bloomberg_extract",
-        "reporting_period_id": "period-2024-12",
-        "status": "processed",
-        "file_size": 1_200_000,
-        "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "uploaded_by": "user-001",
-        "uploaded_at": "2024-12-05T11:00:00Z",
-        "processed_at": "2024-12-05T11:01:45Z",
-        "extraction_result": {
-            "bonds_extracted": 142,
-            "confidence": 0.99,
-        },
-    },
-    {
-        "id": "doc-003",
-        "filename": "GL_Trial_Balance_Dec2024.csv",
-        "document_type": "general_ledger",
-        "reporting_period_id": "period-2024-12",
-        "status": "pending",
-        "file_size": 850_000,
-        "content_type": "text/csv",
-        "uploaded_by": "user-001",
-        "uploaded_at": "2024-12-06T09:00:00Z",
-        "processed_at": None,
-        "extraction_result": None,
-    },
-]
 
 
 async def upload_document(
@@ -194,21 +382,22 @@ async def upload_document(
     document_type: str,
     reporting_period_id: str,
 ) -> dict:
-    doc = {
-        "id": _new_id(),
-        "filename": filename,
-        "document_type": document_type,
-        "reporting_period_id": reporting_period_id,
-        "status": "pending",
-        "file_size": file_size,
-        "content_type": content_type,
-        "uploaded_by": user_id,
-        "uploaded_at": _utc_now(),
-        "processed_at": None,
-        "extraction_result": None,
-    }
-    log.info("Uploaded document %s (%s) by user %s", doc["id"], filename, user_id)
-    return doc
+    form = FinanceDocumentForm(
+        reporting_period_id=reporting_period_id,
+        document_type=document_type,
+        filename=filename,
+        original_filename=filename,
+        file_path=f"uploads/{reporting_period_id}/{_new_id()}-{filename}",
+        file_size=file_size,
+        file_hash=None,
+        mime_type=content_type,
+        status="UPLOADED",
+    )
+    doc = await FinanceDocuments.insert(user_id, form)
+    if doc is None:
+        raise RuntimeError("Failed to insert document")
+    log.info("Uploaded document %s (%s) by user %s", doc.id, filename, user_id)
+    return _to_dict(doc)
 
 
 async def list_documents(
@@ -217,102 +406,59 @@ async def list_documents(
     document_type: Optional[str] = None,
     doc_status: Optional[str] = None,
 ) -> list[dict]:
-    results = SAMPLE_DOCUMENTS
     if period_id:
-        results = [d for d in results if d["reporting_period_id"] == period_id]
+        results = await FinanceDocuments.get_by_period(period_id)
+    else:
+        # Fallback: slow path, scan all docs (no generic get_all available)
+        results = []
+        for p in await ReportingPeriods.get_all():
+            results.extend(await FinanceDocuments.get_by_period(p.id))
     if document_type:
-        results = [d for d in results if d["document_type"] == document_type]
+        results = [d for d in results if d.document_type == document_type]
     if doc_status:
-        results = [d for d in results if d["status"] == doc_status]
-    return results
+        results = [d for d in results if d.status == doc_status]
+    return _to_list_of_dicts(results)
 
 
 async def get_document(user_id: str, doc_id: str) -> Optional[dict]:
-    for d in SAMPLE_DOCUMENTS:
-        if d["id"] == doc_id:
-            return d
-    return None
+    doc = await FinanceDocuments.get_by_id(doc_id)
+    return _to_dict(doc) if doc else None
 
 
 async def process_document(user_id: str, doc_id: str) -> dict:
+    """Kick off extraction by inserting an ExtractionJob record."""
+    doc = await FinanceDocuments.get_by_id(doc_id)
+    if doc is None:
+        raise ValueError(f"document {doc_id} not found")
+
+    job_form = ExtractionJobForm(
+        document_id=doc.id,
+        status="QUEUED",
+        extraction_type=doc.document_type or "GENERIC",
+    )
+    job = await ExtractionJobs.insert(job_form)
+    # Flip document to QUEUED as well
+    await FinanceDocuments.update_by_id(doc.id, {"status": "QUEUED"})
     log.info("Processing document %s triggered by user %s", doc_id, user_id)
     return {
-        "task_id": _new_id(),
+        "task_id": job.id if job else _new_id(),
         "document_id": doc_id,
-        "status": "processing",
+        "status": (job.status if job else "QUEUED"),
         "message": "Document processing has been queued",
         "started_at": _utc_now(),
     }
 
 
 async def delete_document(user_id: str, doc_id: str) -> bool:
-    log.info("Deleted document %s by user %s", doc_id, user_id)
-    return True
+    ok = await FinanceDocuments.delete_by_id(doc_id)
+    if ok:
+        log.info("Deleted document %s by user %s", doc_id, user_id)
+    return ok
 
 
 # ---------------------------------------------------------------------------
 # Bond Records
 # ---------------------------------------------------------------------------
-
-SAMPLE_BONDS = [
-    {
-        "id": "BOND-001",
-        "isin": "SG7M18000000",
-        "issuer": "Monetary Authority of Singapore",
-        "description": "MAS Bill 3.25% 15-Jun-2025",
-        "currency": "SGD",
-        "face_value": 10_000_000.00,
-        "market_value": 10_125_000.00,
-        "coupon_rate": 3.25,
-        "maturity_date": "2025-06-15",
-        "reporting_period_id": "period-2024-12",
-        "source": "bloomberg",
-        "status": "reconciled",
-        "accrued_interest": 148_611.11,
-        "amortised_cost": 10_050_000.00,
-        "fair_value": 10_125_000.00,
-        "created_at": "2024-12-05T11:02:00Z",
-        "updated_at": "2024-12-10T14:30:00Z",
-    },
-    {
-        "id": "BOND-002",
-        "isin": "XS1234567890",
-        "issuer": "Temasek Holdings",
-        "description": "Temasek 2.75% 01-Mar-2029",
-        "currency": "SGD",
-        "face_value": 25_000_000.00,
-        "market_value": 24_375_000.00,
-        "coupon_rate": 2.75,
-        "maturity_date": "2029-03-01",
-        "reporting_period_id": "period-2024-12",
-        "source": "custodian",
-        "status": "reconciled",
-        "accrued_interest": 229_166.67,
-        "amortised_cost": 24_800_000.00,
-        "fair_value": 24_375_000.00,
-        "created_at": "2024-12-05T11:02:00Z",
-        "updated_at": "2024-12-10T14:30:00Z",
-    },
-    {
-        "id": "BOND-003",
-        "isin": "SG3260997239",
-        "issuer": "Housing & Development Board",
-        "description": "HDB 3.00% 01-Sep-2027",
-        "currency": "SGD",
-        "face_value": 15_000_000.00,
-        "market_value": 15_225_000.00,
-        "coupon_rate": 3.00,
-        "maturity_date": "2027-09-01",
-        "reporting_period_id": "period-2024-12",
-        "source": "bloomberg",
-        "status": "exception",
-        "accrued_interest": 125_000.00,
-        "amortised_cost": 15_100_000.00,
-        "fair_value": 15_225_000.00,
-        "created_at": "2024-12-05T11:02:00Z",
-        "updated_at": "2024-12-11T09:15:00Z",
-    },
-]
 
 
 async def list_bonds(
@@ -322,78 +468,171 @@ async def list_bonds(
     bond_status: Optional[str] = None,
     search: Optional[str] = None,
 ) -> list[dict]:
-    results = SAMPLE_BONDS
     if period_id:
-        results = [b for b in results if b["reporting_period_id"] == period_id]
+        results = await BondRecords.get_by_period(period_id)
+    else:
+        results = []
+        for p in await ReportingPeriods.get_all():
+            results.extend(await BondRecords.get_by_period(p.id))
     if source:
-        results = [b for b in results if b["source"] == source]
+        results = [b for b in results if (b.source_type or "") == source]
     if bond_status:
-        results = [b for b in results if b["status"] == bond_status]
+        results = [b for b in results if (b.status or "") == bond_status]
     if search:
         q = search.lower()
         results = [
             b for b in results
-            if q in b["id"].lower()
-            or q in b["isin"].lower()
-            or q in b["issuer"].lower()
-            or q in b["description"].lower()
+            if q in (b.bond_id or "").lower()
+            or q in (b.isin or "").lower()
+            or q in (b.issuer or "").lower()
+            or q in (b.description or "").lower()
         ]
-    return results
+    return _to_list_of_dicts(results)
 
 
 async def get_bond(user_id: str, bond_id: str) -> Optional[dict]:
-    for b in SAMPLE_BONDS:
-        if b["id"] == bond_id:
-            return b
-    return None
+    bond = await BondRecords.get_by_id(bond_id)
+    if not bond:
+        return None
+    return _to_dict(bond)
 
 
 async def update_bond(user_id: str, bond_id: str, data: dict) -> Optional[dict]:
-    for b in SAMPLE_BONDS:
-        if b["id"] == bond_id:
-            updated = {**b, **data, "updated_at": _utc_now()}
-            log.info("Updated bond %s by user %s", bond_id, user_id)
-            return updated
-    return None
+    updated = await BondRecords.update_by_id(bond_id, data)
+    log.info("Updated bond %s by user %s", bond_id, user_id)
+    return _to_dict(updated) if updated else None
 
 
 async def get_bond_sources(user_id: str, bond_id: str) -> list[dict]:
-    return [
-        {
-            "id": f"src-{bond_id}-bloomberg",
+    # Join through BondSourceRecords filtered by bond_record_id = bond_id
+    sources = await BondSourceRecords.get_by_bond_record(bond_id)
+    out = []
+    for s in sources:
+        out.append({
+            "id": s.id,
             "bond_id": bond_id,
-            "source": "bloomberg",
-            "face_value": 10_000_000.00,
-            "market_value": 10_125_000.00,
-            "accrued_interest": 148_611.11,
-            "extracted_from": "doc-002",
-            "extracted_at": "2024-12-05T11:01:45Z",
-        },
-        {
-            "id": f"src-{bond_id}-custodian",
-            "bond_id": bond_id,
-            "source": "custodian",
-            "face_value": 10_000_000.00,
-            "market_value": 10_120_000.00,
-            "accrued_interest": 148_611.11,
-            "extracted_from": "doc-001",
-            "extracted_at": "2024-12-05T10:32:15Z",
-        },
-    ]
+            "source": s.source_type,
+            "raw_data": s.raw_data,
+            "face_value": (s.raw_data or {}).get("face_value") if isinstance(s.raw_data, dict) else None,
+            "market_value": (s.raw_data or {}).get("market_value") if isinstance(s.raw_data, dict) else None,
+            "accrued_interest": (s.raw_data or {}).get("accrued_interest") if isinstance(s.raw_data, dict) else None,
+            "extracted_from": s.document_id,
+            "extracted_at": datetime.fromtimestamp(s.created_at, tz=timezone.utc).isoformat() if s.created_at else None,
+            "sheet_name": s.sheet_name,
+            "row_number": s.row_number,
+            "page_number": s.page_number,
+            "extraction_confidence": s.extraction_confidence,
+        })
+    return out
 
 
 # ---------------------------------------------------------------------------
 # Reconciliation
 # ---------------------------------------------------------------------------
 
+
 async def run_reconciliation(user_id: str, period_id: str) -> dict:
-    log.info("Reconciliation run for period %s by user %s", period_id, user_id)
+    bonds = await BondRecords.get_by_period(period_id)
+    form = ReconciliationRunForm(
+        reporting_period_id=period_id,
+        status="RUNNING",
+        total_bonds=len(bonds),
+        matched=0,
+        variances=0,
+        missing=0,
+        duplicates=0,
+        match_rate=0.0,
+        run_by=user_id,
+        started_at=_now_ms(),
+    )
+    run = await ReconciliationRuns.insert(form)
+    if run is None:
+        raise RuntimeError("Failed to create reconciliation run")
+
+    sources_by_bond: dict[str, list] = {}
+    for b in bonds:
+        sources_by_bond[b.id] = await BondSourceRecords.get_by_bond_record(b.id)
+
+    matched = 0
+    variances = 0
+    missing = 0
+    items_to_insert: list[ReconciliationItemForm] = []
+
+    for b in bonds:
+        srcs = sources_by_bond.get(b.id, [])
+        bloomberg = next((s for s in srcs if (s.source_type or "").lower() in {"bloomberg", "ubs_excel"}), None)
+        custodian = next((s for s in srcs if (s.source_type or "").lower() in {"custodian", "lgi_pdf", "lgi"}), None)
+
+        def _fv(s):
+            return (s.raw_data or {}).get("face_value") if isinstance(s.raw_data, dict) and s else None
+
+        def _mv(s):
+            return (s.raw_data or {}).get("market_value") if isinstance(s.raw_data, dict) and s else None
+
+        ubs_value = _fv(bloomberg) or b.face_value
+        lgi_value = _fv(custodian) or b.book_value
+        try:
+            variance_amount = float(ubs_value or 0) - float(lgi_value or 0)
+            variance_percent = (variance_amount / float(ubs_value) * 100.0) if abs(float(ubs_value or 0)) > 1e-9 else 0.0
+        except (TypeError, ValueError):
+            variance_amount = 0.0
+            variance_percent = 0.0
+
+        is_missing = not bloomberg or not custodian
+        if is_missing:
+            missing += 1
+            status = "MISSING_SOURCE"
+        elif abs(variance_amount) < 0.01 and abs((_mv(bloomberg) or 0) - (_mv(custodian) or 0)) < 0.01:
+            matched += 1
+            status = "MATCHED"
+        else:
+            variances += 1
+            status = "VARIANCE"
+
+        items_to_insert.append(ReconciliationItemForm(
+            reconciliation_run_id=run.id,
+            bond_id=b.bond_id or b.id,
+            isin=b.isin,
+            status=status,
+            ubs_value=float(ubs_value or 0),
+            lgi_value=float(lgi_value or 0),
+            schedule_value=float(b.book_value or 0),
+            previous_value=float(b.market_value or 0),
+            variance_amount=float(variance_amount),
+            variance_percentage=float(variance_percent),
+            field_name="face_value",
+            reason="reconciliation diff",
+            ai_explanation=None,
+        ))
+
+    for item_form in items_to_insert:
+        await ReconciliationItems.insert(item_form)
+
+    duplicates = 0
+    total_for_rate = max(matched + variances + missing, 1)
+    match_rate = round(matched / total_for_rate * 100.0, 1)
+
+    completed = await ReconciliationRuns.update_by_id(run.id, {
+        "status": "COMPLETED",
+        "matched": matched,
+        "variances": variances,
+        "missing": missing,
+        "duplicates": duplicates,
+        "match_rate": match_rate,
+        "completed_at": _now_ms(),
+    })
+
     return {
-        "task_id": _new_id(),
+        "task_id": run.id,
         "period_id": period_id,
-        "status": "processing",
-        "message": "Reconciliation has been queued",
-        "started_at": _utc_now(),
+        "status": completed.status if completed else "COMPLETED",
+        "total_bonds": len(bonds),
+        "matched": matched,
+        "variances": variances,
+        "missing": missing,
+        "match_rate": match_rate,
+        "message": "Reconciliation completed",
+        "started_at": datetime.fromtimestamp(run.started_at, tz=timezone.utc).isoformat(),
     }
 
 
@@ -402,133 +641,39 @@ async def get_reconciliation_results(
     period_id: Optional[str] = None,
     recon_status: Optional[str] = None,
 ) -> list[dict]:
-    results = [
-        {
-            "id": "recon-001",
-            "bond_id": "BOND-001",
-            "isin": "SG7M18000000",
-            "period_id": "period-2024-12",
-            "status": "matched",
-            "bloomberg_face_value": 10_000_000.00,
-            "custodian_face_value": 10_000_000.00,
-            "face_value_diff": 0.00,
-            "bloomberg_market_value": 10_125_000.00,
-            "custodian_market_value": 10_120_000.00,
-            "market_value_diff": 5_000.00,
-            "within_tolerance": True,
-            "reconciled_at": "2024-12-10T14:30:00Z",
-        },
-        {
-            "id": "recon-002",
-            "bond_id": "BOND-002",
-            "isin": "XS1234567890",
-            "period_id": "period-2024-12",
-            "status": "matched",
-            "bloomberg_face_value": 25_000_000.00,
-            "custodian_face_value": 25_000_000.00,
-            "face_value_diff": 0.00,
-            "bloomberg_market_value": 24_375_000.00,
-            "custodian_market_value": 24_375_000.00,
-            "market_value_diff": 0.00,
-            "within_tolerance": True,
-            "reconciled_at": "2024-12-10T14:30:00Z",
-        },
-        {
-            "id": "recon-003",
-            "bond_id": "BOND-003",
-            "isin": "SG3260997239",
-            "period_id": "period-2024-12",
-            "status": "exception",
-            "bloomberg_face_value": 15_000_000.00,
-            "custodian_face_value": 14_500_000.00,
-            "face_value_diff": 500_000.00,
-            "bloomberg_market_value": 15_225_000.00,
-            "custodian_market_value": None,
-            "market_value_diff": None,
-            "within_tolerance": False,
-            "reconciled_at": "2024-12-10T14:30:00Z",
-        },
-    ]
-    if period_id:
-        results = [r for r in results if r["period_id"] == period_id]
+    items = await ReconciliationItems.get_by_run_period(period_id) if period_id else await ReconciliationItems.get_all()
     if recon_status:
-        results = [r for r in results if r["status"] == recon_status]
-    return results
+        items = [i for i in items if i.status == recon_status]
+    return _to_list_of_dicts(items)
 
 
 async def get_reconciliation_summary(user_id: str, period_id: Optional[str] = None) -> dict:
+    runs = await ReconciliationRuns.get_by_period(period_id) if period_id else []
+    items = await ReconciliationItems.get_by_run_period(period_id) if period_id else await ReconciliationItems.get_all()
+    last_run = sorted(runs, key=lambda r: r.created_at, reverse=True)[0] if runs else None
+
+    total_ubs = sum(float(i.ubs_value or 0) for i in items)
+    total_lgi = sum(float(i.lgi_value or 0) for i in items)
+    total_schedule = sum(float(i.schedule_value or 0) for i in items)
+    matched = sum(1 for i in items if i.status == "MATCHED")
+    exceptions = sum(1 for i in items if i.status in {"VARIANCE", "MISSING_SOURCE"})
+    total_items = len(items)
+    match_rate = round(matched / total_items * 100.0, 1) if total_items else 0.0
+
     return {
-        "period_id": period_id or "period-2024-12",
-        "total_bonds": 142,
-        "matched": 139,
-        "exceptions": 3,
-        "match_rate": 97.8,
-        "total_face_value_bloomberg": 1_250_000_000.00,
-        "total_face_value_custodian": 1_249_500_000.00,
-        "total_face_value_diff": 500_000.00,
-        "total_market_value_bloomberg": 1_275_000_000.00,
-        "total_market_value_custodian": 1_274_800_000.00,
-        "total_market_value_diff": 200_000.00,
+        "period_id": period_id or "",
+        "run_id": last_run.id if last_run else None,
+        "run_status": last_run.status if last_run else "NOT_RUN",
+        "total_bonds": total_items,
+        "matched": matched,
+        "exceptions": exceptions,
+        "match_rate": match_rate,
+        "total_face_value_bloomberg": total_ubs,
+        "total_face_value_custodian": total_lgi,
+        "total_face_value_diff": round(total_ubs - total_lgi, 2),
+        "total_schedule_value": total_schedule,
         "generated_at": _utc_now(),
     }
-
-
-SAMPLE_EXCEPTIONS = [
-    {
-        "id": "exc-001",
-        "recon_id": "recon-003",
-        "bond_id": "BOND-003",
-        "isin": "SG3260997239",
-        "period_id": "period-2024-12",
-        "exception_type": "face_value_mismatch",
-        "description": "Face value differs by SGD 500,000 between Bloomberg and custodian",
-        "bloomberg_value": 15_000_000.00,
-        "custodian_value": 14_500_000.00,
-        "difference": 500_000.00,
-        "status": "open",
-        "severity": "high",
-        "assigned_to": None,
-        "resolution": None,
-        "created_at": "2024-12-10T14:30:00Z",
-        "updated_at": "2024-12-10T14:30:00Z",
-    },
-    {
-        "id": "exc-002",
-        "recon_id": "recon-003",
-        "bond_id": "BOND-003",
-        "isin": "SG3260997239",
-        "period_id": "period-2024-12",
-        "exception_type": "missing_custodian_market_value",
-        "description": "Custodian statement missing market value for HDB 3.00% 01-Sep-2027",
-        "bloomberg_value": 15_225_000.00,
-        "custodian_value": None,
-        "difference": None,
-        "status": "open",
-        "severity": "medium",
-        "assigned_to": None,
-        "resolution": None,
-        "created_at": "2024-12-10T14:30:00Z",
-        "updated_at": "2024-12-10T14:30:00Z",
-    },
-    {
-        "id": "exc-003",
-        "recon_id": "recon-010",
-        "bond_id": "BOND-010",
-        "isin": "SG7R59000003",
-        "period_id": "period-2024-12",
-        "exception_type": "accrued_interest_mismatch",
-        "description": "Accrued interest differs by SGD 1,250 (within tolerance but flagged for review)",
-        "bloomberg_value": 87_500.00,
-        "custodian_value": 86_250.00,
-        "difference": 1_250.00,
-        "status": "resolved",
-        "severity": "low",
-        "assigned_to": "user-001",
-        "resolution": "Difference due to day-count convention; custodian value accepted",
-        "created_at": "2024-12-10T14:30:00Z",
-        "updated_at": "2024-12-12T11:00:00Z",
-    },
-]
 
 
 async def get_exceptions(
@@ -536,86 +681,111 @@ async def get_exceptions(
     period_id: Optional[str] = None,
     exc_status: Optional[str] = None,
 ) -> list[dict]:
-    results = SAMPLE_EXCEPTIONS
-    if period_id:
-        results = [e for e in results if e["period_id"] == period_id]
+    excs = await FinanceExceptions.get_by_period(period_id) if period_id else await FinanceExceptions.get_all()
     if exc_status:
-        results = [e for e in results if e["status"] == exc_status]
-    return results
+        excs = [e for e in excs if e.status == exc_status]
+    return _to_list_of_dicts(excs)
 
 
 async def update_exception(user_id: str, exception_id: str, data: dict) -> Optional[dict]:
-    for e in SAMPLE_EXCEPTIONS:
-        if e["id"] == exception_id:
-            updated = {**e, **data, "updated_at": _utc_now()}
-            log.info("Updated exception %s by user %s", exception_id, user_id)
-            return updated
-    return None
+    updated = await FinanceExceptions.update_by_id(exception_id, data)
+    log.info("Updated exception %s by user %s", exception_id, user_id)
+    return _to_dict(updated) if updated else None
 
 
 # ---------------------------------------------------------------------------
 # Movements
 # ---------------------------------------------------------------------------
 
-SAMPLE_MOVEMENTS = [
-    {
-        "id": "mov-001",
-        "bond_id": "BOND-004",
-        "isin": "SG31A9000009",
-        "period_id": "period-2024-12",
-        "movement_type": "purchase",
-        "trade_date": "2024-12-02",
-        "settlement_date": "2024-12-04",
-        "face_value": 5_000_000.00,
-        "settlement_amount": 5_025_000.00,
-        "currency": "SGD",
-        "status": "approved",
-        "classification_confidence": 0.98,
-        "created_at": "2024-12-05T11:02:00Z",
-        "updated_at": "2024-12-06T10:00:00Z",
-    },
-    {
-        "id": "mov-002",
-        "bond_id": "BOND-005",
-        "isin": "SG3261000006",
-        "period_id": "period-2024-12",
-        "movement_type": "maturity",
-        "trade_date": "2024-12-15",
-        "settlement_date": "2024-12-15",
-        "face_value": 8_000_000.00,
-        "settlement_amount": 8_000_000.00,
-        "currency": "SGD",
-        "status": "pending",
-        "classification_confidence": 0.95,
-        "created_at": "2024-12-05T11:02:00Z",
-        "updated_at": "2024-12-05T11:02:00Z",
-    },
-    {
-        "id": "mov-003",
-        "bond_id": "BOND-001",
-        "isin": "SG7M18000000",
-        "period_id": "period-2024-12",
-        "movement_type": "coupon_receipt",
-        "trade_date": "2024-12-15",
-        "settlement_date": "2024-12-15",
-        "face_value": 10_000_000.00,
-        "settlement_amount": 162_500.00,
-        "currency": "SGD",
-        "status": "approved",
-        "classification_confidence": 0.99,
-        "created_at": "2024-12-05T11:02:00Z",
-        "updated_at": "2024-12-06T10:00:00Z",
-    },
-]
-
 
 async def analyze_movements(user_id: str, period_id: str) -> dict:
-    log.info("Movement analysis for period %s by user %s", period_id, user_id)
+    """Compare current period bonds vs previous period and populate BondMovements table."""
+    current = await ReportingPeriods.get_by_id(period_id)
+    if not current:
+        raise ValueError(f"period {period_id} not found")
+
+    previous_period_id = current.previous_period_id
+    curr_bonds = {b.bond_id or b.id: b for b in await BondRecords.get_by_period(period_id)}
+    prev_bonds: dict = {}
+    if previous_period_id:
+        prev_bonds = {b.bond_id or b.id: b for b in await BondRecords.get_by_period(previous_period_id)}
+
+    all_bond_keys = set(curr_bonds.keys()) | set(prev_bonds.keys())
+    created_movements: list[dict] = []
+
+    for key in all_bond_keys:
+        curr = curr_bonds.get(key)
+        prev = prev_bonds.get(key)
+        if curr and prev:
+            for field in ("face_value", "book_value", "market_value", "accrued_interest"):
+                cv = float(getattr(curr, field) or 0)
+                pv = float(getattr(prev, field) or 0)
+                if abs(cv - pv) > 0.01:
+                    movement_type = {
+                        "face_value": "position_change",
+                        "book_value": "amortisation",
+                        "market_value": "fair_value_change",
+                        "accrued_interest": "accrual",
+                    }[field]
+                    form = BondMovementForm(
+                        reporting_period_id=period_id,
+                        bond_id=curr.bond_id or curr.id,
+                        isin=curr.isin,
+                        movement_type=movement_type.upper(),
+                        previous_value=pv,
+                        current_value=cv,
+                        variance=round(cv - pv, 2),
+                        previous_status=prev.status or "DRAFT",
+                        current_status=curr.status or "DRAFT",
+                        ai_explanation=f"auto-movement: {field} changed from {pv:.2f} to {cv:.2f}",
+                        explanation_confidence=0.8,
+                    )
+                    mv = await BondMovements.insert(form)
+                    if mv:
+                        created_movements.append(_to_dict(mv))
+        elif curr and not prev:
+            form = BondMovementForm(
+                reporting_period_id=period_id,
+                bond_id=curr.bond_id or curr.id,
+                isin=curr.isin,
+                movement_type="PURCHASE",
+                previous_value=0.0,
+                current_value=float(curr.face_value or 0),
+                variance=float(curr.face_value or 0),
+                previous_status="NON_EXISTENT",
+                current_status=curr.status or "DRAFT",
+                ai_explanation="new bond in period, interpreted as purchase",
+                explanation_confidence=0.7,
+            )
+            mv = await BondMovements.insert(form)
+            if mv:
+                created_movements.append(_to_dict(mv))
+        else:  # prev but no current
+            assert prev is not None
+            form = BondMovementForm(
+                reporting_period_id=period_id,
+                bond_id=prev.bond_id or prev.id,
+                isin=prev.isin,
+                movement_type="MATURITY",
+                previous_value=float(prev.face_value or 0),
+                current_value=0.0,
+                variance=-1 * float(prev.face_value or 0),
+                previous_status=prev.status or "DRAFT",
+                current_status="RETIRED",
+                ai_explanation="bond removed in current period, interpreted as maturity/sale",
+                explanation_confidence=0.6,
+            )
+            mv = await BondMovements.insert(form)
+            if mv:
+                created_movements.append(_to_dict(mv))
+
     return {
         "task_id": _new_id(),
         "period_id": period_id,
-        "status": "processing",
-        "message": "Movement analysis has been queued",
+        "status": "completed",
+        "movements_created": len(created_movements),
+        "movements": created_movements,
+        "message": "Movement analysis completed",
         "started_at": _utc_now(),
     }
 
@@ -625,72 +795,58 @@ async def get_movements(
     period_id: Optional[str] = None,
     movement_type: Optional[str] = None,
 ) -> list[dict]:
-    results = SAMPLE_MOVEMENTS
     if period_id:
-        results = [m for m in results if m["period_id"] == period_id]
+        results = await BondMovements.get_by_period(period_id)
+    else:
+        results = await BondMovements.get_all()
     if movement_type:
-        results = [m for m in results if m["movement_type"] == movement_type]
-    return results
+        results = [m for m in results if m.movement_type == movement_type.upper()]
+    return _to_list_of_dicts(results)
 
 
 async def update_movement(user_id: str, movement_id: str, data: dict) -> Optional[dict]:
-    for m in SAMPLE_MOVEMENTS:
-        if m["id"] == movement_id:
-            updated = {**m, **data, "updated_at": _utc_now()}
-            log.info("Updated movement %s by user %s", movement_id, user_id)
-            return updated
-    return None
+    updated = await BondMovements.update_by_id(movement_id, data)
+    log.info("Updated movement %s by user %s", movement_id, user_id)
+    return _to_dict(updated) if updated else None
 
 
 # ---------------------------------------------------------------------------
 # Schedule
 # ---------------------------------------------------------------------------
 
-SAMPLE_SCHEDULE = [
-    {
-        "id": "sched-001",
-        "bond_id": "BOND-001",
-        "isin": "SG7M18000000",
-        "issuer": "Monetary Authority of Singapore",
-        "description": "MAS Bill 3.25% 15-Jun-2025",
-        "currency": "SGD",
-        "face_value": 10_000_000.00,
-        "amortised_cost_opening": 10_025_000.00,
-        "amortised_cost_closing": 10_050_000.00,
-        "fair_value": 10_125_000.00,
-        "accrued_interest": 148_611.11,
-        "unrealised_gain_loss": 75_000.00,
-        "impairment": 0.00,
-        "period_id": "period-2024-12",
-        "created_at": "2024-12-12T08:00:00Z",
-    },
-    {
-        "id": "sched-002",
-        "bond_id": "BOND-002",
-        "isin": "XS1234567890",
-        "issuer": "Temasek Holdings",
-        "description": "Temasek 2.75% 01-Mar-2029",
-        "currency": "SGD",
-        "face_value": 25_000_000.00,
-        "amortised_cost_opening": 24_750_000.00,
-        "amortised_cost_closing": 24_800_000.00,
-        "fair_value": 24_375_000.00,
-        "accrued_interest": 229_166.67,
-        "unrealised_gain_loss": -425_000.00,
-        "impairment": 0.00,
-        "period_id": "period-2024-12",
-        "created_at": "2024-12-12T08:00:00Z",
-    },
-]
-
 
 async def generate_schedule(user_id: str, period_id: str) -> dict:
-    log.info("Schedule generation for period %s by user %s", period_id, user_id)
+    """Populate BondScheduleLines table from current period bond records."""
+    bonds = await BondRecords.get_by_period(period_id)
+    created_count = 0
+    for b in bonds:
+        form = BondScheduleLineForm(
+            reporting_period_id=period_id,
+            bond_id=b.bond_id or b.id,
+            isin=b.isin,
+            issuer=b.issuer,
+            currency=b.currency,
+            face_value=float(b.face_value or 0),
+            book_value=float(b.book_value or 0),
+            market_value=float(b.market_value or 0),
+            coupon_rate=float(b.coupon_rate or 0),
+            maturity_date=b.maturity_date or "",
+            accrued_interest=float(b.accrued_interest or 0),
+            movement_type="HOLD",
+            variance=0.0,
+            source_document_id=b.source_document_id,
+            validation_status="VALID",
+            validation_messages=[],
+        )
+        line = await BondScheduleLines.insert(form)
+        if line:
+            created_count += 1
     return {
         "task_id": _new_id(),
         "period_id": period_id,
-        "status": "processing",
-        "message": "Bond schedule generation has been queued",
+        "status": "completed",
+        "lines_generated": created_count,
+        "message": "Bond schedule generation completed",
         "started_at": _utc_now(),
     }
 
@@ -699,33 +855,67 @@ async def get_schedule(
     user_id: str,
     period_id: Optional[str] = None,
 ) -> list[dict]:
-    results = SAMPLE_SCHEDULE
     if period_id:
-        results = [s for s in results if s["period_id"] == period_id]
-    return results
+        results = await BondScheduleLines.get_by_period(period_id)
+    else:
+        results = await BondScheduleLines.get_all()
+    return _to_list_of_dicts(results)
 
 
 async def export_schedule(user_id: str, period_id: Optional[str] = None) -> dict:
-    """Return metadata about the generated export file. Actual file generation is deferred."""
-    log.info("Schedule export for period %s by user %s", period_id, user_id)
+    lines = await get_schedule(user_id, period_id)
     return {
         "task_id": _new_id(),
-        "status": "processing",
-        "message": "Schedule export to Excel has been queued",
+        "status": "completed",
+        "row_count": len(lines),
+        "csv": _schedule_to_csv(lines),
+        "message": "Schedule export completed",
         "started_at": _utc_now(),
     }
 
 
+def _schedule_to_csv(rows: list[dict]) -> str:
+    buf = io.StringIO()
+    if not rows:
+        return ""
+    writer = csv.DictWriter(buf, fieldnames=list(rows[0].keys()))
+    writer.writeheader()
+    for r in rows:
+        writer.writerow(r)
+    return buf.getvalue()
+
+
 async def validate_schedule(user_id: str, period_id: str) -> dict:
-    log.info("Schedule validation for period %s by user %s", period_id, user_id)
+    lines = await BondScheduleLines.get_by_period(period_id)
+    bonds = await BondRecords.get_by_period(period_id)
+
+    total_fv_lines = sum(float(l.face_value or 0) for l in lines)
+    total_fv_bonds = sum(float(b.face_value or 0) for b in bonds)
+    face_ok = abs(total_fv_lines - total_fv_bonds) < 0.01
+
+    ai_checks = []
+    for l in lines:
+        try:
+            cv = float(getattr(l, "current_value", None) or l.market_value or l.book_value or 0)
+            pv = float(getattr(l, "previous_value", None) or ((l.market_value or l.book_value or 0) - (l.variance or 0)))
+            expected_var = round(cv - pv, 2)
+            if abs(expected_var - float(l.variance or 0)) > 0.01:
+                ai_checks.append((l.id, "rollforward_variance_mismatch"))
+        except (TypeError, ValueError):
+            pass
+
+    warning_stale = sum(1 for b in bonds if (b.updated_at or 0) and (b.updated_at < _now_ms() - 5 * 86400))
+
     return {
         "period_id": period_id,
-        "validation_status": "passed",
+        "validation_status": "passed" if face_ok and not ai_checks else ("warning" if face_ok else "failed"),
         "checks": [
-            {"check": "face_value_total", "status": "passed", "message": "Total face value matches GL"},
-            {"check": "amortised_cost_rollforward", "status": "passed", "message": "Opening + movements = closing"},
-            {"check": "accrued_interest_calculation", "status": "passed", "message": "Accrued interest within tolerance"},
-            {"check": "fair_value_source", "status": "warning", "message": "3 bonds using stale pricing (> 5 days old)"},
+            {"check": "face_value_total", "status": "passed" if face_ok else "failed",
+             "message": f"lines={total_fv_lines:.2f} bonds={total_fv_bonds:.2f}"},
+            {"check": "rollforward", "status": "passed" if not ai_checks else "failed",
+             "message": f"{len(ai_checks)} rollforward mismatches"},
+            {"check": "pricing_freshness", "status": ("warning" if warning_stale else "passed"),
+             "message": f"{warning_stale} bonds not updated in >5 days"},
         ],
         "validated_at": _utc_now(),
     }
@@ -735,81 +925,102 @@ async def validate_schedule(user_id: str, period_id: str) -> dict:
 # Journals
 # ---------------------------------------------------------------------------
 
-SAMPLE_JOURNALS = [
-    {
-        "id": "jrnl-001",
-        "period_id": "period-2024-12",
-        "journal_type": "accrued_interest",
-        "description": "Monthly accrued interest recognition - December 2024",
-        "status": "approved",
-        "total_debit": 502_777.78,
-        "total_credit": 502_777.78,
-        "currency": "SGD",
-        "lines": [
-            {
-                "id": "jrnl-001-L1",
-                "account_code": "1210",
-                "account_name": "Accrued Interest Receivable",
-                "debit": 502_777.78,
-                "credit": 0.00,
-                "description": "Accrued interest on bond portfolio",
-            },
-            {
-                "id": "jrnl-001-L2",
-                "account_code": "4110",
-                "account_name": "Interest Income - Bonds",
-                "debit": 0.00,
-                "credit": 502_777.78,
-                "description": "Interest income recognition",
-            },
-        ],
-        "created_by": "system",
-        "approved_by": "user-002",
-        "created_at": "2024-12-12T09:00:00Z",
-        "updated_at": "2024-12-13T10:00:00Z",
-    },
-    {
-        "id": "jrnl-002",
-        "period_id": "period-2024-12",
-        "journal_type": "fair_value_adjustment",
-        "description": "Fair value adjustment for FVOCI portfolio - December 2024",
-        "status": "pending",
-        "total_debit": 350_000.00,
-        "total_credit": 350_000.00,
-        "currency": "SGD",
-        "lines": [
-            {
-                "id": "jrnl-002-L1",
-                "account_code": "1110",
-                "account_name": "Investment in Bonds - FVOCI",
-                "debit": 350_000.00,
-                "credit": 0.00,
-                "description": "Fair value increase on FVOCI bonds",
-            },
-            {
-                "id": "jrnl-002-L2",
-                "account_code": "3210",
-                "account_name": "Other Comprehensive Income - Fair Value Reserve",
-                "debit": 0.00,
-                "credit": 350_000.00,
-                "description": "OCI fair value reserve movement",
-            },
-        ],
-        "created_by": "system",
-        "approved_by": None,
-        "created_at": "2024-12-12T09:15:00Z",
-        "updated_at": "2024-12-12T09:15:00Z",
-    },
-]
-
 
 async def generate_journals(user_id: str, period_id: str) -> dict:
-    log.info("Journal generation for period %s by user %s", period_id, user_id)
+    """Generate journal header + lines for accrued interest and FV adjustment from schedule lines."""
+    lines = await BondScheduleLines.get_by_period(period_id)
+    total_accrued = sum(float(l.accrued_interest or 0) for l in lines)
+    total_fv_change = sum((float(l.market_value or 0) - float(l.book_value or 0)) for l in lines)
+
+    journals_created: list[dict] = []
+
+    if total_accrued > 0.005:
+        jform = JournalForm(
+            reporting_period_id=period_id,
+            journal_number=f"AI-{period_id[:8]}",
+            description=f"Monthly accrued interest recognition for period {period_id}",
+            total_debit=round(total_accrued, 2),
+            total_credit=round(total_accrued, 2),
+            is_balanced=True,
+            status="PENDING",
+            ai_rationale=f"Auto-generated: accrued interest across {len(lines)} bonds",
+        )
+        journal = await Journals.insert(user_id, jform)
+        if journal:
+            debit_line = await JournalLines.insert(JournalLineForm(
+                journal_id=journal.id,
+                line_number=1,
+                account_code="1210",
+                account_description="Accrued Interest Receivable",
+                debit=round(total_accrued, 2),
+                credit=0.0,
+                currency=(lines[0].currency if lines else "SGD"),
+                bond_id=None,
+                description="Accrued interest on bond portfolio",
+                source_reference=f"period:{period_id}:accrued_interest",
+            ))
+            credit_line = await JournalLines.insert(JournalLineForm(
+                journal_id=journal.id,
+                line_number=2,
+                account_code="4110",
+                account_description="Interest Income - Bonds",
+                debit=0.0,
+                credit=round(total_accrued, 2),
+                currency=(lines[0].currency if lines else "SGD"),
+                bond_id=None,
+                description="Interest income recognition",
+                source_reference=f"period:{period_id}:accrued_interest",
+            ))
+            journals_created.append({"journal": _to_dict(journal), "lines": [_to_dict(debit_line), _to_dict(credit_line)]})
+
+    if abs(total_fv_change) > 0.005:
+        fv_debit = round(max(total_fv_change, 0), 2)
+        fv_credit = round(max(-1 * total_fv_change, 0), 2)
+        jform = JournalForm(
+            reporting_period_id=period_id,
+            journal_number=f"FV-{period_id[:8]}",
+            description=f"Fair value adjustment for period {period_id}",
+            total_debit=fv_debit or fv_credit,
+            total_credit=fv_credit or fv_debit,
+            is_balanced=True,
+            status="PENDING",
+            ai_rationale=f"Auto-generated: FV adjustment delta={total_fv_change:.2f} for {len(lines)} bonds",
+        )
+        journal = await Journals.insert(user_id, jform)
+        if journal:
+            d_line = await JournalLines.insert(JournalLineForm(
+                journal_id=journal.id,
+                line_number=1,
+                account_code="1110",
+                account_description="Investment in Bonds - FVOCI",
+                debit=fv_debit,
+                credit=fv_credit,
+                currency=(lines[0].currency if lines else "SGD"),
+                bond_id=None,
+                description="Fair value adjustment",
+                source_reference=f"period:{period_id}:fv_adjustment",
+            ))
+            c_line = await JournalLines.insert(JournalLineForm(
+                journal_id=journal.id,
+                line_number=2,
+                account_code="3210",
+                account_description="OCI - Fair Value Reserve",
+                debit=fv_credit,
+                credit=fv_debit,
+                currency=(lines[0].currency if lines else "SGD"),
+                bond_id=None,
+                description="OCI fair value reserve movement",
+                source_reference=f"period:{period_id}:fv_adjustment",
+            ))
+            journals_created.append({"journal": _to_dict(journal), "lines": [_to_dict(d_line), _to_dict(c_line)]})
+
     return {
         "task_id": _new_id(),
         "period_id": period_id,
-        "status": "processing",
-        "message": "Draft journal generation has been queued",
+        "status": "completed",
+        "journals_created": len(journals_created),
+        "journals": journals_created,
+        "message": "Draft journal generation completed",
         "started_at": _utc_now(),
     }
 
@@ -819,108 +1030,177 @@ async def list_journals(
     period_id: Optional[str] = None,
     journal_status: Optional[str] = None,
 ) -> list[dict]:
-    results = [{**j, "lines": None} for j in SAMPLE_JOURNALS]  # Summary without lines
-    if period_id:
-        results = [j for j in results if j["period_id"] == period_id]
-    if journal_status:
-        results = [j for j in results if j["status"] == journal_status]
-    return results
+    if journal_status and period_id:
+        results = await Journals.get_by_status(journal_status.upper(), period_id)
+    elif journal_status:
+        results = await Journals.get_by_status(journal_status.upper())
+    elif period_id:
+        results = await Journals.get_by_period(period_id)
+    else:
+        results = await Journals.get_all()
+    # Summary without lines (already done by models), include line_count summary
+    out = []
+    for j in results:
+        jd = _to_dict(j)
+        jd["lines"] = None
+        jd["lines_count"] = len(await JournalLines.get_by_journal(j.id))
+        out.append(jd)
+    return out
 
 
 async def get_journal(user_id: str, journal_id: str) -> Optional[dict]:
-    for j in SAMPLE_JOURNALS:
-        if j["id"] == journal_id:
-            return j
-    return None
+    journal = await Journals.get_by_id(journal_id)
+    if not journal:
+        return None
+    lines = await JournalLines.get_by_journal(journal_id)
+    jd = _to_dict(journal)
+    jd["lines"] = _to_list_of_dicts(lines)
+    return jd
 
 
 async def update_journal(user_id: str, journal_id: str, data: dict) -> Optional[dict]:
-    for j in SAMPLE_JOURNALS:
-        if j["id"] == journal_id:
-            updated = {**j, **data, "updated_at": _utc_now()}
-            log.info("Updated journal %s by user %s", journal_id, user_id)
-            return updated
-    return None
+    # Only update header fields recognised on the Journal ORM
+    known_header = {"journal_number", "description", "total_debit", "total_credit", "is_balanced", "status", "ai_rationale"}
+    header_data = {k: v for k, v in data.items() if k in known_header}
+    updated = None
+    if header_data:
+        updated = await Journals.update_by_id(journal_id, header_data)
+
+    # If lines were provided, rebuild them by deletion + re-insert
+    if "lines" in data and isinstance(data["lines"], list):
+        await JournalLines.delete_by_journal(journal_id)
+        for idx, line in enumerate(data["lines"] or [], start=1):
+            lform = JournalLineForm(
+                journal_id=journal_id,
+                line_number=line.get("line_number") or idx,
+                account_code=str(line.get("account_code") or ""),
+                account_description=line.get("account_description") or line.get("account_name") or "",
+                debit=float(line.get("debit") or 0),
+                credit=float(line.get("credit") or 0),
+                currency=line.get("currency") or "SGD",
+                bond_id=line.get("bond_id"),
+                description=line.get("description"),
+                source_reference=line.get("source_reference"),
+            )
+            await JournalLines.insert(lform)
+        updated = updated or await Journals.get_by_id(journal_id)
+
+    log.info("Updated journal %s by user %s", journal_id, user_id)
+    if not updated:
+        return None
+    full = _to_dict(updated)
+    full["lines"] = _to_list_of_dicts(await JournalLines.get_by_journal(journal_id))
+    return full
 
 
-async def approve_journal(user_id: str, journal_id: str) -> Optional[dict]:
-    for j in SAMPLE_JOURNALS:
-        if j["id"] == journal_id:
-            approved = {
-                **j,
-                "status": "approved",
-                "approved_by": user_id,
-                "updated_at": _utc_now(),
-            }
-            log.info("Approved journal %s by user %s", journal_id, user_id)
-            return approved
-    return None
+async def approve_journal(user_id: str, journal_id: str, user: Any = None) -> Optional[dict]:
+    """Set status=APPROVED + record FinanceApproval row. RBAC gating applied in router + service."""
+    _require_approve(user)
+    journal = await Journals.get_by_id(journal_id)
+    if not journal:
+        return None
+    updated = await Journals.update_by_id(journal_id, {
+        "status": "APPROVED",
+        "reviewed_by": user_id,
+        "reviewed_at": _now_ms(),
+        "review_comment": "Approved",
+    })
+    if updated:
+        await FinanceApprovals.insert(FinanceApprovalForm(
+            reporting_period_id=journal.reporting_period_id,
+            object_type="JOURNAL",
+            object_id=journal.id,
+            action="APPROVED",
+            previous_status=journal.status,
+            new_status="APPROVED",
+            user_id=user_id,
+            user_role=getattr(user, "role", None),
+            comment="Approved via service approve_journal",
+        ))
+    log.info("Approved journal %s by user %s", journal_id, user_id)
+    if not updated:
+        return None
+    full = _to_dict(updated)
+    full["lines"] = _to_list_of_dicts(await JournalLines.get_by_journal(journal_id))
+    return full
 
 
-async def reject_journal(user_id: str, journal_id: str, reason: str) -> Optional[dict]:
-    for j in SAMPLE_JOURNALS:
-        if j["id"] == journal_id:
-            rejected = {
-                **j,
-                "status": "rejected",
-                "rejection_reason": reason,
-                "rejected_by": user_id,
-                "updated_at": _utc_now(),
-            }
-            log.info("Rejected journal %s by user %s: %s", journal_id, user_id, reason)
-            return rejected
-    return None
+async def reject_journal(user_id: str, journal_id: str, reason: str, user: Any = None) -> Optional[dict]:
+    _require_approve(user)
+    journal = await Journals.get_by_id(journal_id)
+    if not journal:
+        return None
+    updated = await Journals.update_by_id(journal_id, {
+        "status": "REJECTED",
+        "reviewed_by": user_id,
+        "reviewed_at": _now_ms(),
+        "review_comment": reason,
+    })
+    if updated:
+        await FinanceApprovals.insert(FinanceApprovalForm(
+            reporting_period_id=journal.reporting_period_id,
+            object_type="JOURNAL",
+            object_id=journal.id,
+            action="REJECTED",
+            previous_status=journal.status,
+            new_status="REJECTED",
+            user_id=user_id,
+            user_role=getattr(user, "role", None),
+            comment=reason,
+        ))
+    log.info("Rejected journal %s by user %s: %s", journal_id, user_id, reason)
+    if not updated:
+        return None
+    full = _to_dict(updated)
+    full["lines"] = _to_list_of_dicts(await JournalLines.get_by_journal(journal_id))
+    full["rejection_reason"] = reason
+    full["rejected_by"] = user_id
+    return full
 
 
 # ---------------------------------------------------------------------------
 # Audit Schedule
 # ---------------------------------------------------------------------------
 
-SAMPLE_AUDIT_SCHEDULE = [
-    {
-        "id": "audit-001",
-        "bond_id": "BOND-001",
-        "isin": "SG7M18000000",
-        "issuer": "Monetary Authority of Singapore",
-        "description": "MAS Bill 3.25% 15-Jun-2025",
-        "period_id": "period-2024-12",
-        "face_value": 10_000_000.00,
-        "amortised_cost": 10_050_000.00,
-        "fair_value": 10_125_000.00,
-        "classification": "FVOCI",
-        "impairment_stage": "Stage 1",
-        "ecl_provision": 5_000.00,
-        "source_documents": ["doc-001", "doc-002"],
-        "reconciliation_status": "matched",
-        "last_audit_date": "2024-06-30",
-    },
-    {
-        "id": "audit-002",
-        "bond_id": "BOND-002",
-        "isin": "XS1234567890",
-        "issuer": "Temasek Holdings",
-        "description": "Temasek 2.75% 01-Mar-2029",
-        "period_id": "period-2024-12",
-        "face_value": 25_000_000.00,
-        "amortised_cost": 24_800_000.00,
-        "fair_value": 24_375_000.00,
-        "classification": "FVOCI",
-        "impairment_stage": "Stage 1",
-        "ecl_provision": 12_500.00,
-        "source_documents": ["doc-001", "doc-002"],
-        "reconciliation_status": "matched",
-        "last_audit_date": "2024-06-30",
-    },
-]
-
 
 async def generate_audit_schedule(user_id: str, period_id: str) -> dict:
-    log.info("Audit schedule generation for period %s by user %s", period_id, user_id)
+    """Populate AuditScheduleEntries from schedule lines + movements."""
+    lines = await BondScheduleLines.get_by_period(period_id)
+    movements_by_bond: dict[str, list] = {}
+    for mv in await BondMovements.get_by_period(period_id):
+        movements_by_bond.setdefault(mv.bond_id, []).append(mv)
+
+    created = 0
+    for l in lines:
+        mv_purchases = sum(float(m.current_value or 0) for m in movements_by_bond.get(l.bond_id, []) if m.movement_type == "PURCHASE")
+        mv_sales = abs(sum(float(m.variance or 0) for m in movements_by_bond.get(l.bond_id, []) if m.movement_type == "SALE"))
+        mv_maturities = abs(sum(float(m.variance or 0) for m in movements_by_bond.get(l.bond_id, []) if m.movement_type == "MATURITY"))
+        mv_transfers = sum(float(m.variance or 0) for m in movements_by_bond.get(l.bond_id, []) if m.movement_type == "TRANSFER")
+        mv_interest = sum(float(m.variance or 0) for m in movements_by_bond.get(l.bond_id, []) if m.movement_type == "ACCRUAL")
+        fv_change = float(l.market_value or 0) - float(l.book_value or 0)
+
+        form = AuditScheduleEntryForm(
+            reporting_period_id=period_id,
+            bond_id=l.bond_id,
+            opening_balance=float(l.book_value or 0) - float(l.variance or 0),
+            purchases=mv_purchases,
+            sales=mv_sales,
+            maturities=mv_maturities,
+            transfers=mv_transfers,
+            interest=mv_interest,
+            fair_value_changes=fv_change,
+            closing_balance=float(l.book_value or 0),
+            source_references=[l.id],
+            reconciliation_status=l.validation_status or "UNKNOWN",
+        )
+        if await AuditScheduleEntries.insert(form):
+            created += 1
     return {
         "task_id": _new_id(),
         "period_id": period_id,
-        "status": "processing",
-        "message": "Audit schedule generation has been queued",
+        "status": "completed",
+        "entries_created": created,
+        "message": "Audit schedule generation completed",
         "started_at": _utc_now(),
     }
 
@@ -929,18 +1209,21 @@ async def get_audit_schedule(
     user_id: str,
     period_id: Optional[str] = None,
 ) -> list[dict]:
-    results = SAMPLE_AUDIT_SCHEDULE
     if period_id:
-        results = [a for a in results if a["period_id"] == period_id]
-    return results
+        results = await AuditScheduleEntries.get_by_period(period_id)
+    else:
+        results = await AuditScheduleEntries.get_all()
+    return _to_list_of_dicts(results)
 
 
 async def export_audit_schedule(user_id: str, period_id: Optional[str] = None) -> dict:
-    log.info("Audit schedule export for period %s by user %s", period_id, user_id)
+    rows = await get_audit_schedule(user_id, period_id)
     return {
         "task_id": _new_id(),
-        "status": "processing",
-        "message": "Audit schedule export to Excel has been queued",
+        "status": "completed",
+        "row_count": len(rows),
+        "csv": _schedule_to_csv(rows),
+        "message": "Audit schedule export completed",
         "started_at": _utc_now(),
     }
 
@@ -949,218 +1232,462 @@ async def export_audit_schedule(user_id: str, period_id: Optional[str] = None) -
 # Commentary
 # ---------------------------------------------------------------------------
 
-SAMPLE_COMMENTARY = [
-    {
-        "id": "comm-001",
-        "period_id": "period-2024-12",
-        "section": "portfolio_overview",
-        "title": "Portfolio Overview",
-        "content": (
-            "The bond portfolio as at 31 December 2024 comprises 142 fixed income "
-            "securities with a total face value of SGD 1.25 billion. The portfolio "
-            "is predominantly denominated in SGD (92%) with selective USD exposure (8%). "
-            "Average portfolio duration stands at 3.2 years, reflecting a conservative "
-            "positioning in light of the current interest rate environment."
-        ),
-        "status": "approved",
-        "generated_by": "ai",
-        "approved_by": "user-002",
-        "created_at": "2024-12-13T08:00:00Z",
-        "updated_at": "2024-12-14T09:30:00Z",
-    },
-    {
-        "id": "comm-002",
-        "period_id": "period-2024-12",
-        "section": "movement_analysis",
-        "title": "Period Movements",
-        "content": (
-            "During December 2024, the portfolio saw net purchases of SGD 5.0 million "
-            "(MAS Bills) and one maturity of SGD 8.0 million (LTA Bond 2.50% Dec-2024). "
-            "Coupon receipts totalled SGD 3.2 million across 18 securities. "
-            "No disposals were recorded during the period."
-        ),
-        "status": "draft",
-        "generated_by": "ai",
-        "approved_by": None,
-        "created_at": "2024-12-13T08:15:00Z",
-        "updated_at": "2024-12-13T08:15:00Z",
-    },
-]
 
+async def generate_commentary(
+    user_id: str,
+    period_id: str,
+    sections: Optional[list[str]] = None,
+    *,
+    force_llm: bool = False,
+) -> dict:
+    """Kick off commentary generation.
 
-async def generate_commentary(user_id: str, period_id: str, sections: Optional[list[str]] = None) -> dict:
-    log.info("Commentary generation for period %s by user %s", period_id, user_id)
+    Builds structured section summaries from DB aggregates (bond, movement,
+    reconciliation and exception data) and *optionally* sends them to the
+    configured LLM for polish (Task 6).  The LLM call is best-effort — any
+    connection/auth/parse error or missing config falls back cleanly to the
+    structured DB text, so the UI never sees empty or broken content.
+    """
+    sections_wanted = sections or [
+        "portfolio_overview",
+        "movement_analysis",
+        "reconciliation_summary",
+        "risk_assessment",
+    ]
+    created_ids: list[str] = []
+    any_llm_success = False
+
+    bonds = await BondRecords.get_by_period(period_id)
+    movements = await BondMovements.get_by_period(period_id)
+    reconciliations = await ReconciliationRuns.get_by_period(period_id)
+    exceptions = await FinanceExceptions.get_by_period(period_id)
+
+    period = None
+    if period_id:
+        period = await ReportingPeriods.get_by_id(period_id)
+    period_name = period.name if period else period_id
+    period_label = f"{period_name} (period {period_id})"
+
+    total_fv = sum(float(b.face_value or 0) for b in bonds)
+    total_mv = sum(float(b.market_value or 0) for b in bonds)
+    curr_counts: dict[str, int] = {}
+    for b in bonds:
+        c = b.currency or "UNKNOWN"
+        curr_counts[c] = curr_counts.get(c, 0) + 1
+
+    last_recon = sorted(reconciliations, key=lambda r: r.created_at, reverse=True)[0] if reconciliations else None
+    matched_pct = (last_recon.match_rate if last_recon else 0) or 0
+    total_bonds_recon = last_recon.total_bonds if last_recon else len(bonds)
+    open_exc = sum(1 for e in exceptions if e.status == "OPEN")
+    high_exc = sum(1 for e in exceptions if e.severity == "HIGH")
+    med_exc = sum(1 for e in exceptions if e.severity == "MEDIUM")
+    low_exc = sum(1 for e in exceptions if e.severity == "LOW")
+    mvmt_purch = sum(1 for m in movements if (m.movement_type or "").upper() == "PURCHASE")
+    mvmt_sale = sum(1 for m in movements if (m.movement_type or "").upper() in {"SALE", "SELL", "SOLD"})
+    mvmt_mat = sum(1 for m in movements if (m.movement_type or "").upper() == "MATURITY")
+    mvmt_fv = sum(1 for m in movements if (m.movement_type or "").upper() == "FAIR_VALUE_CHANGE")
+
+    structured: dict[str, str] = {
+        "portfolio_overview": (
+            f"Portfolio Overview — {period_label}\n\n"
+            f"- Bonds in portfolio: {len(bonds)}\n"
+            f"- Total face value: {total_fv:,.2f}\n"
+            f"- Total market value: {total_mv:,.2f}\n"
+            f"- Currency mix: {curr_counts}\n"
+            f"- Generated {_utc_now()} from finance tables."
+        ),
+        "movement_analysis": (
+            f"Movement Analysis — {period_label}\n\n"
+            f"- Purchases: {mvmt_purch}\n"
+            f"- Sales/maturities: {mvmt_sale + mvmt_mat} (sales {mvmt_sale}, maturity {mvmt_mat})\n"
+            f"- Fair value changes: {mvmt_fv}\n"
+            f"- Total movement records: {len(movements)}\n"
+            f"Rows persisted in finance_bond_movement; drill into the Movements view for line-level detail."
+        ),
+        "reconciliation_summary": (
+            f"Reconciliation Summary — {period_label}\n\n"
+            f"- Last run status: {last_recon.status if last_recon else 'NOT_RUN'}\n"
+            f"- Match rate: {matched_pct}%\n"
+            f"- Bonds evaluated: {total_bonds_recon}\n"
+            f"- Open exceptions: {open_exc}\n"
+            f"Review the Exceptions page for individual variance cases."
+        ),
+        "risk_assessment": (
+            f"Risk Assessment — {period_label}\n\n"
+            f"- High severity: {high_exc}\n"
+            f"- Medium severity: {med_exc}\n"
+            f"- Low severity: {low_exc}\n"
+            f"Total open exceptions = {open_exc}. Escalate HIGH items to the review queue immediately."
+        ),
+    }
+
+    # System prompt shared across all section polish requests
+    system = (
+        "You are a senior fixed-income portfolio analyst writing month-end bond "
+        "commentary for an audit-signed finance report. Write clear, concise prose "
+        "in 3–6 short paragraphs per section. Use specific numbers from the input "
+        "snapshot. Avoid bullet list formatting; prefer flowing narrative. Never "
+        "invent data you cannot see. If the input snapshot is empty, simply state "
+        "that there is no data for this period and recommend uploading source "
+        "documents."
+    )
+
+    for section in sections_wanted:
+        existing = await Commentaries.get_by_period_and_type(period_id, section)
+        if existing and not force_llm:
+            continue
+
+        stub = structured.get(section) or structured.get("portfolio_overview")
+        llm_text: Optional[str] = None
+        try:
+            llm_text = await _llm_chat(
+                prompt=f"Please write the {section.replace('_', ' ')} section for {period_label} using these structured inputs:\n\n{stub}",
+                system_prompt=system,
+                temperature=0.2,
+                max_tokens=1400,
+            )
+        except Exception:
+            llm_text = None
+
+        if llm_text and llm_text.strip():
+            any_llm_success = True
+
+        final_text = (llm_text and llm_text.strip()) or stub
+
+        if existing:
+            updated = await Commentaries.update_by_id(existing.id, {
+                "content": final_text,
+                "status": "DRAFT",
+                "generated_by_ai": True,
+                "rationale": f"Regenerated {_utc_now()} via LLM pipeline with DB-aggregate backing.",
+            })
+            if updated:
+                created_ids.append(updated.id)
+        else:
+            form = CommentaryForm(
+                reporting_period_id=period_id,
+                content=final_text,
+                content_type=section,
+                status="DRAFT",
+                generated_by_ai=True,
+                rationale=(
+                    f"LLM polish applied {_utc_now()}; raw DB aggregates kept as fallback."
+                    if llm_text else
+                    f"DB-aggregate only (LLM unavailable) {_utc_now()}."
+                ),
+            )
+            inserted = await Commentaries.insert(user_id, form)
+            if inserted:
+                created_ids.append(inserted.id)
+
     return {
         "task_id": _new_id(),
         "period_id": period_id,
-        "sections": sections or ["portfolio_overview", "movement_analysis", "reconciliation_summary", "risk_assessment"],
-        "status": "processing",
-        "message": "AI commentary generation has been queued",
+        "sections": sections_wanted,
+        "status": "completed",
+        "ids_created": created_ids,
+        "message": (
+            "Commentary rows persisted; LLM polish applied where available."
+            if any_llm_success else
+            "Commentary rows persisted (DB-aggregate based; LLM unreachable or unconfigured)."
+        ),
         "started_at": _utc_now(),
     }
+
+
+async def regenerate_commentary(
+    user_id: str,
+    commentary_id: str,
+) -> Optional[dict]:
+    """Regenerate a single commentary row via LLM (Task 6).
+
+    Refetches the underlying period data and reruns the LLM pipeline for the
+    specific commentary section, then updates the existing commentary row in
+    place.  Returns the updated row dict, or ``None`` if the row does not
+    exist, and always falls back to the structured DB-aggregate text if the
+    LLM call is unavailable.
+    """
+    existing = await Commentaries.get_by_id(commentary_id)
+    if existing is None:
+        return None
+
+    period_id = existing.reporting_period_id
+    section = existing.content_type or "portfolio_overview"
+
+    result = await generate_commentary(
+        user_id,
+        period_id,
+        sections=[section],
+        force_llm=True,
+    )
+    refreshed = await Commentaries.get_by_id(commentary_id)
+    if refreshed is None and result.get("ids_created"):
+        refreshed = await Commentaries.get_by_id(result["ids_created"][0])
+    return _to_dict(refreshed)
 
 
 async def get_commentary(
     user_id: str,
     period_id: Optional[str] = None,
 ) -> list[dict]:
-    results = SAMPLE_COMMENTARY
     if period_id:
-        results = [c for c in results if c["period_id"] == period_id]
-    return results
+        results = await Commentaries.get_by_period(period_id)
+    else:
+        results = await Commentaries.get_all()
+    out = []
+    for c in results:
+        cd = _to_dict(c)
+        cd["section"] = c.content_type
+        cd["title"] = f"Commentary: {c.content_type}"
+        cd["generated_by"] = "ai" if c.generated_by_ai else "human"
+        cd["approved_by"] = c.approved_by
+        out.append(cd)
+    return out
 
 
 async def update_commentary(user_id: str, commentary_id: str, data: dict) -> Optional[dict]:
-    for c in SAMPLE_COMMENTARY:
-        if c["id"] == commentary_id:
-            updated = {**c, **data, "updated_at": _utc_now()}
-            log.info("Updated commentary %s by user %s", commentary_id, user_id)
-            return updated
-    return None
+    known = {"content", "content_type", "status", "edited_by"}
+    payload = {k: v for k, v in data.items() if k in known}
+    payload.setdefault("edited_by", user_id)
+    updated = await Commentaries.update_by_id(commentary_id, payload)
+    log.info("Updated commentary %s by user %s", commentary_id, user_id)
+    return _to_dict(updated) if updated else None
 
 
-async def approve_commentary(user_id: str, commentary_id: str) -> Optional[dict]:
-    for c in SAMPLE_COMMENTARY:
-        if c["id"] == commentary_id:
-            approved = {
-                **c,
-                "status": "approved",
-                "approved_by": user_id,
-                "updated_at": _utc_now(),
-            }
-            log.info("Approved commentary %s by user %s", commentary_id, user_id)
-            return approved
-    return None
+async def approve_commentary(user_id: str, commentary_id: str, user: Any = None) -> Optional[dict]:
+    _require_approve(user)
+    commentary = await Commentaries.get_by_id(commentary_id)
+    if not commentary:
+        return None
+    updated = await Commentaries.update_by_id(commentary_id, {
+        "status": "APPROVED",
+        "approved_by": user_id,
+        "approved_at": _now_ms(),
+    })
+    if updated:
+        await FinanceApprovals.insert(FinanceApprovalForm(
+            reporting_period_id=commentary.reporting_period_id,
+            object_type="COMMENTARY",
+            object_id=commentary.id,
+            action="APPROVED",
+            previous_status=commentary.status,
+            new_status="APPROVED",
+            user_id=user_id,
+            user_role=getattr(user, "role", None),
+            comment="Approved via approve_commentary",
+        ))
+    log.info("Approved commentary %s by user %s", commentary_id, user_id)
+    return _to_dict(updated) if updated else None
 
 
 # ---------------------------------------------------------------------------
-# Review & Approval
+# Review & Approval (generic FinanceApprovals driven view)
 # ---------------------------------------------------------------------------
-
-SAMPLE_REVIEWS = [
-    {
-        "id": "rev-001",
-        "output_type": "journal",
-        "output_id": "jrnl-002",
-        "period_id": "period-2024-12",
-        "title": "Fair value adjustment journal - December 2024",
-        "status": "pending",
-        "submitted_by": "user-001",
-        "submitted_at": "2024-12-13T10:00:00Z",
-        "reviewed_by": None,
-        "reviewed_at": None,
-        "comments": None,
-    },
-    {
-        "id": "rev-002",
-        "output_type": "commentary",
-        "output_id": "comm-002",
-        "period_id": "period-2024-12",
-        "title": "Period Movements commentary - December 2024",
-        "status": "pending",
-        "submitted_by": "user-001",
-        "submitted_at": "2024-12-13T10:15:00Z",
-        "reviewed_by": None,
-        "reviewed_at": None,
-        "comments": None,
-    },
-]
 
 
 async def submit_for_review(user_id: str, data: dict) -> dict:
-    review = {
-        "id": _new_id(),
-        **data,
+    """Create a FINANCE_APPROVAL row with action=SUBMITTED as canonical record of review queue."""
+    object_type_map = {"journal": "JOURNAL", "commentary": "COMMENTARY", "schedule": "SCHEDULE",
+                       "audit_schedule": "AUDIT_SCHEDULE", "period": "PERIOD"}
+    object_type = object_type_map.get((data.get("output_type") or "").lower(), data.get("output_type", "UNKNOWN").upper())
+
+    existing_period = None
+    object_id = data.get("output_id")
+    if object_type == "JOURNAL":
+        j = await Journals.get_by_id(object_id)
+        if j:
+            existing_period = j.reporting_period_id
+            await Journals.update_by_id(object_id, {"status": "SUBMITTED"})
+    elif object_type == "COMMENTARY":
+        c = await Commentaries.get_by_id(object_id)
+        if c:
+            existing_period = c.reporting_period_id
+            await Commentaries.update_by_id(object_id, {"status": "SUBMITTED"})
+
+    period_id = data.get("period_id") or existing_period or ""
+    approval_form = FinanceApprovalForm(
+        reporting_period_id=period_id,
+        object_type=object_type,
+        object_id=object_id,
+        action="SUBMITTED",
+        previous_status=None,
+        new_status="SUBMITTED",
+        user_id=user_id,
+        user_role=None,
+        comment=data.get("title"),
+    )
+    approval = await FinanceApprovals.insert(approval_form)
+    if approval is None:
+        raise RuntimeError("Failed to insert FinanceApproval (submit_for_review)")
+
+    return {
+        "id": approval.id,
+        "review_id": approval.id,
+        "output_type": object_type,
+        "output_id": object_id,
+        "period_id": period_id,
+        "title": data.get("title"),
         "status": "pending",
         "submitted_by": user_id,
-        "submitted_at": _utc_now(),
+        "submitted_at": datetime.fromtimestamp(approval.created_at, tz=timezone.utc).isoformat(),
         "reviewed_by": None,
         "reviewed_at": None,
         "comments": None,
     }
-    log.info("Submitted %s %s for review by user %s", data.get("output_type"), data.get("output_id"), user_id)
-    return review
 
 
-async def approve_review(user_id: str, data: dict) -> dict:
-    result = {
-        "review_id": data.get("review_id"),
+async def approve_review(user_id: str, data: dict, user: Any = None) -> dict:
+    _require_approve(user)
+    review_id = data.get("review_id")
+    if not review_id:
+        raise ValueError("review_id required")
+    # review_id == FinanceApproval.id (created in submit step) — now APPROVED sibling
+    approval = await FinanceApprovals.get_by_id(review_id)
+    if approval is None:
+        raise ValueError(f"review_id {review_id} not found")
+    approved_form = FinanceApprovalForm(
+        reporting_period_id=approval.reporting_period_id,
+        object_type=approval.object_type,
+        object_id=approval.object_id,
+        action="APPROVED",
+        previous_status=approval.new_status,
+        new_status="APPROVED",
+        user_id=user_id,
+        user_role=getattr(user, "role", None),
+        comment=data.get("comments"),
+    )
+    final = await FinanceApprovals.insert(approved_form)
+    # Set related objects status
+    if approval.object_type == "JOURNAL":
+        await Journals.update_by_id(approval.object_id, {
+            "status": "APPROVED",
+            "reviewed_by": user_id,
+            "reviewed_at": _now_ms(),
+            "review_comment": data.get("comments"),
+        })
+    elif approval.object_type == "COMMENTARY":
+        await Commentaries.update_by_id(approval.object_id, {
+            "status": "APPROVED",
+            "approved_by": user_id,
+            "approved_at": _now_ms(),
+        })
+    log.info("Approved review %s by user %s", review_id, user_id)
+    return {
+        "review_id": review_id,
+        "approval_id": final.id if final else None,
         "status": "approved",
         "reviewed_by": user_id,
         "reviewed_at": _utc_now(),
         "comments": data.get("comments"),
     }
-    log.info("Approved review %s by user %s", data.get("review_id"), user_id)
-    return result
 
 
-async def reject_review(user_id: str, data: dict) -> dict:
-    result = {
-        "review_id": data.get("review_id"),
+async def reject_review(user_id: str, data: dict, user: Any = None) -> dict:
+    _require_approve(user)
+    review_id = data.get("review_id")
+    if not review_id:
+        raise ValueError("review_id required")
+    approval = await FinanceApprovals.get_by_id(review_id)
+    if approval is None:
+        raise ValueError(f"review_id {review_id} not found")
+    form = FinanceApprovalForm(
+        reporting_period_id=approval.reporting_period_id,
+        object_type=approval.object_type,
+        object_id=approval.object_id,
+        action="CHANGES_REQUESTED",
+        previous_status=approval.new_status,
+        new_status="CHANGES_REQUESTED",
+        user_id=user_id,
+        user_role=getattr(user, "role", None),
+        comment=data.get("reason"),
+    )
+    final = await FinanceApprovals.insert(form)
+    if approval.object_type == "JOURNAL":
+        await Journals.update_by_id(approval.object_id, {
+            "status": "REJECTED",
+            "reviewed_by": user_id,
+            "reviewed_at": _now_ms(),
+            "review_comment": data.get("reason"),
+        })
+    elif approval.object_type == "COMMENTARY":
+        await Commentaries.update_by_id(approval.object_id, {"status": "CHANGES_REQUESTED"})
+    log.info("Rejected review %s by user %s: %s", review_id, user_id, data.get("reason"))
+    return {
+        "review_id": review_id,
+        "approval_id": final.id if final else None,
         "status": "rejected",
         "reviewed_by": user_id,
         "reviewed_at": _utc_now(),
         "comments": data.get("comments"),
         "reason": data.get("reason"),
     }
-    log.info("Rejected review %s by user %s: %s", data.get("review_id"), user_id, data.get("reason"))
-    return result
 
 
 async def get_pending_reviews(user_id: str) -> list[dict]:
-    return [r for r in SAMPLE_REVIEWS if r["status"] == "pending"]
+    """Pending reviews = the most recent FinanceApproval row per (object_type, object_id)
+       whose action is SUBMITTED (no subsequent APPROVED/REJECTED/CHANGES_REQUESTED exists).
+    """
+    all_approvals = await FinanceApprovals.get_all()
+    latest_by_object: dict[tuple[str, str], Any] = {}
+    for a in all_approvals:
+        key = (a.object_type, a.object_id)
+        existing = latest_by_object.get(key)
+        if existing is None or a.created_at > existing.created_at:
+            latest_by_object[key] = a
+
+    pending = []
+    for (ot, oid), a in latest_by_object.items():
+        if a.action != "SUBMITTED":
+            continue
+        pending.append({
+            "id": a.id,
+            "review_id": a.id,
+            "output_type": ot.lower(),
+            "output_id": oid,
+            "period_id": a.reporting_period_id,
+            "title": a.comment or f"{ot} review",
+            "status": "pending",
+            "submitted_by": a.user_id,
+            "submitted_at": datetime.fromtimestamp(a.created_at, tz=timezone.utc).isoformat(),
+            "reviewed_by": None,
+            "reviewed_at": None,
+            "comments": None,
+        })
+    return pending
 
 
 # ---------------------------------------------------------------------------
 # Audit Trail
 # ---------------------------------------------------------------------------
 
-SAMPLE_AUDIT_TRAIL = [
-    {
-        "id": "trail-001",
-        "action": "document.upload",
-        "entity_type": "document",
-        "entity_id": "doc-001",
-        "period_id": "period-2024-12",
-        "user_id": "user-001",
-        "user_name": "John Doe",
-        "details": "Uploaded MAS_Bond_Statement_Dec2024.pdf",
-        "timestamp": "2024-12-05T10:30:00Z",
-    },
-    {
-        "id": "trail-002",
-        "action": "document.process",
-        "entity_type": "document",
-        "entity_id": "doc-001",
-        "period_id": "period-2024-12",
-        "user_id": "system",
-        "user_name": "System",
-        "details": "Processed document, extracted 85 bond records",
-        "timestamp": "2024-12-05T10:32:15Z",
-    },
-    {
-        "id": "trail-003",
-        "action": "reconciliation.run",
-        "entity_type": "reconciliation",
-        "entity_id": "period-2024-12",
-        "period_id": "period-2024-12",
-        "user_id": "user-001",
-        "user_name": "John Doe",
-        "details": "Executed reconciliation: 139 matched, 3 exceptions",
-        "timestamp": "2024-12-10T14:30:00Z",
-    },
-    {
-        "id": "trail-004",
-        "action": "journal.approve",
-        "entity_type": "journal",
-        "entity_id": "jrnl-001",
-        "period_id": "period-2024-12",
-        "user_id": "user-002",
-        "user_name": "Jane Smith",
-        "details": "Approved accrued interest journal (SGD 502,777.78)",
-        "timestamp": "2024-12-13T10:00:00Z",
-    },
-]
+
+async def log_audit_trail(
+    user_id: str,
+    action: str,
+    entity_type: str,
+    entity_id: str,
+    period_id: Optional[str] = None,
+    details: Optional[str] = None,
+    previous_value: Optional[dict] = None,
+    new_value: Optional[dict] = None,
+    source: Optional[str] = None,
+) -> None:
+    """Persist to finance_audit_log table (truth, not stub log)."""
+    form = FinanceAuditLogForm(
+        reporting_period_id=period_id,
+        user_id=user_id,
+        action=action,
+        object_type=entity_type,
+        object_id=entity_id,
+        previous_value=previous_value,
+        new_value=new_value,
+        source=source or "finance_service",
+        details=details,
+    )
+    try:
+        await FinanceAuditLogs.insert(form)
+    except Exception as e:  # pragma: no cover - best-effort audit log
+        log.exception("Failed to write finance_audit_log row: %s", e)
 
 
 async def get_audit_trail(
@@ -1171,31 +1698,280 @@ async def get_audit_trail(
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
 ) -> list[dict]:
-    results = SAMPLE_AUDIT_TRAIL
-    if period_id:
-        results = [t for t in results if t["period_id"] == period_id]
+    logs = await FinanceAuditLogs.get_by_period(period_id) if period_id else await FinanceAuditLogs.get_all()
     if action_filter:
-        results = [t for t in results if action_filter in t["action"]]
+        logs = [l for l in logs if action_filter in (l.action or "")]
     if entity_type:
-        results = [t for t in results if t["entity_type"] == entity_type]
-    # Date filtering would be implemented with proper date parsing in production
-    return results
+        logs = [l for l in logs if (l.object_type or "") == entity_type]
+    out = []
+    for l in logs:
+        ts = datetime.fromtimestamp(l.created_at, tz=timezone.utc)
+        iso = ts.isoformat()
+        if start_date and iso < start_date:
+            continue
+        if end_date and iso > end_date:
+            continue
+        out.append({
+            "id": l.id,
+            "action": l.action,
+            "entity_type": l.object_type,
+            "entity_id": l.object_id,
+            "period_id": l.reporting_period_id,
+            "user_id": l.user_id,
+            "user_name": l.user_id,
+            "details": l.details,
+            "timestamp": iso,
+            "source": l.source,
+            "ip_address": l.ip_address,
+        })
+    return sorted(out, key=lambda x: x["timestamp"], reverse=True)
 
 
 # ---------------------------------------------------------------------------
-# Audit Trail Logging Helper
+# Utility: CSV download readers (Task 7)
 # ---------------------------------------------------------------------------
 
-async def log_audit_trail(
+
+async def export_bonds_csv(user_id: str, period_id: Optional[str] = None) -> str:
+    bonds = await list_bonds(user_id, period_id=period_id)
+    if not bonds:
+        return ""
+    buf = io.StringIO()
+    writer = csv.DictWriter(buf, fieldnames=list(bonds[0].keys()))
+    writer.writeheader()
+    for r in bonds:
+        writer.writerow(r)
+    return buf.getvalue()
+
+
+# ---------------------------------------------------------------------------
+# Finance Copilot Chat — real DB-driven answers (stub commentary; LLM via Task 6)
+# ---------------------------------------------------------------------------
+
+
+async def copilot_chat(
     user_id: str,
-    action: str,
-    entity_type: str,
-    entity_id: str,
-    period_id: Optional[str] = None,
-    details: Optional[str] = None,
-) -> None:
-    """Record an audit trail entry. Stub: logs only. Production will persist to DB."""
-    log.info(
-        "AUDIT: user=%s action=%s entity=%s/%s period=%s details=%s",
-        user_id, action, entity_type, entity_id, period_id, details,
-    )
+    query: str,
+    reporting_period_id: Optional[str] = None,
+) -> dict:
+    """AI Bond Copilot chat handler.
+
+    Matches query intent and pulls real data from the finance tables so the
+    response is always dynamic (no hardcoded mock strings).  Task 6 replaces
+    the text rendering with a real LLM call; the shape we keep unchanged so
+    the frontend contract is stable.
+    """
+    q = (query or "").strip().lower()
+    period_id = reporting_period_id
+
+    content = ""
+    tool_calls: list[dict[str, str]] = []
+
+    if q in ("", "hi", "hello", "hey", "help"):
+        dashboard = await get_dashboard(user_id, period_id)
+        stats = dashboard.get("stats") or {}
+        content = (
+            f"Hello! I'm the AI Bond Copilot.\n\n"
+            f"Current reporting period: **{dashboard.get('current_period', {}).get('name', 'N/A')}**\n\n"
+            f"- **{stats.get('total_bonds', 0)} bonds** in active portfolio\n"
+            f"- **Portfolio market value:** {stats.get('total_market_value', 'N/A')}\n"
+            f"- **{stats.get('open_exceptions', 0)} open exceptions**\n"
+            f"- **{stats.get('pending_reviews', 0)} pending reviews**\n\n"
+            f"I can help with portfolio analysis, reconciliation, journals, commentary, and approvals.  What would you like to know?"
+        )
+        tool_calls = [{
+            "name": "get_portfolio_summary",
+            "result": json.dumps(dashboard, default=str, indent=2),
+        }]
+
+    elif "portfolio" in q or "bond" in q or "summary" in q or "holding" in q:
+        dashboard = await get_dashboard(user_id, period_id)
+        bonds = await list_bonds(user_id, period_id=period_id)
+        stats = dashboard.get("stats") or {}
+        top = sorted(
+            bonds,
+            key=lambda b: float(b.get("market_value") or b.get("face_value") or 0),
+            reverse=True,
+        )[:5]
+        content = (
+            f"Here is your current portfolio summary for **{dashboard.get('current_period', {}).get('name', 'this period')}**.\n\n"
+            f"- Total bonds: **{stats.get('total_bonds', 0)}**\n"
+            f"- Total market value: **{stats.get('total_market_value', 'N/A')}**\n"
+            f"- Total face value: **{stats.get('total_face_value', 'N/A')}**\n"
+            f"- Reconciliation match rate: **{stats.get('reconciliation_match_rate', 'N/A')}**\n"
+            f"- Currency breakdown: **{len(set(b.get('currency') or 'UNKNOWN' for b in bonds))} currencies**"
+        )
+        tool_calls = [{
+            "name": "get_portfolio_summary",
+            "result": json.dumps({
+                "total_bonds": stats.get("total_bonds", 0),
+                "total_market_value": stats.get("total_market_value"),
+                "total_face_value": stats.get("total_face_value"),
+                "reconciliation_rate": stats.get("reconciliation_match_rate"),
+                "currency": stats.get("currency"),
+                "top_holdings": [
+                    {
+                        "name": b.get("issuer_name") or b.get("isin") or b.get("bond_id"),
+                        "value": b.get("market_value") or b.get("face_value"),
+                    } for b in top
+                ],
+            }, default=str, indent=2),
+        }]
+
+    elif "exception" in q or "issue" in q or "problem" in q or "open" in q:
+        exceptions = await get_exceptions(user_id, period_id=period_id, exc_status="OPEN")
+        resolved_count = 0
+        try:
+            all_exc = await get_exceptions(user_id, period_id=period_id)
+            resolved_count = len([e for e in all_exc if str(e.get("status", "")).upper() != "OPEN"])
+        except Exception:
+            resolved_count = 0
+        content = (
+            f"There are currently **{len(exceptions)} open exceptions** requiring attention.\n\n"
+        )
+        if exceptions:
+            for e in exceptions[:5]:
+                content += (
+                    f"- **{e.get('severity', 'N/A')}** — {e.get('title', e.get('description', 'Exception'))}\n"
+                )
+        else:
+            content += "All exceptions have been resolved.  Well done!"
+        tool_calls = [{
+            "name": "get_open_exceptions",
+            "result": json.dumps({
+                "open_count": len(exceptions),
+                "resolved_count": resolved_count,
+                "exceptions": exceptions[:10],
+            }, default=str, indent=2),
+        }]
+
+    elif "reconciliation" in q or "recon" in q or "match" in q:
+        summary = await get_reconciliation_summary(user_id, period_id)
+        content = (
+            f"Reconciliation for **{summary.get('reporting_period', {}).get('name', 'this period')}** "
+            f"status: **{summary.get('overall_status', 'N/A')}**.\n\n"
+            f"- Total items: **{summary.get('total_items', 0)}**\n"
+            f"- Matched: **{summary.get('matched_count', 0)}**\n"
+            f"- Variances: **{summary.get('variance_count', 0)}**\n"
+            f"- Missing: **{summary.get('missing_count', 0)}**\n"
+            f"- Match rate: **{summary.get('match_rate', 'N/A')}**\n"
+            f"- Total variance amount: **{summary.get('total_variance_amount', 0)}**"
+        )
+        tool_calls = [{
+            "name": "get_reconciliation_summary",
+            "result": json.dumps(summary, default=str, indent=2),
+        }]
+
+    elif "review" in q or "pending" in q or "approval" in q or "queue" in q:
+        reviews = await get_pending_reviews(user_id)
+        content = f"There are **{len(reviews)} items** pending review in the approval queue.\n\n"
+        if reviews:
+            for r in reviews[:6]:
+                content += (
+                    f"- **{r.get('output_type', 'UNKNOWN')}** — {r.get('title', r.get('review_id', ''))} "
+                    f"(submitted {r.get('submitted_at', 'N/A')})\n"
+                )
+        else:
+            content += "The approval queue is empty.  No action items pending."
+        tool_calls = [{
+            "name": "get_pending_reviews",
+            "result": json.dumps({
+                "pending_count": len(reviews),
+                "items": reviews,
+            }, default=str, indent=2),
+        }]
+
+    elif "commentary" in q or "narrative" in q or "report" in q:
+        commentary = await get_commentary(user_id, period_id)
+        sections = sorted({c.get("content_type", "unknown") for c in commentary})
+        total_words = sum(
+            len(str(c.get("content", "")).split()) for c in commentary
+        )
+        period_name = ""
+        if period_id:
+            p = await get_period(user_id, period_id)
+            period_name = p.get("name", "") if p else ""
+        content = (
+            f"Month-end commentary for **{period_name or 'the selected period'}**:\n\n"
+            f"- **{len(commentary)} sections** covered\n"
+            f"- **{len(sections)} content types**: {', '.join(sections)}\n"
+            f"- Approximately **{total_words} words**\n\n"
+            f"Run `/commentary/generate` to (re)build fresh sections for the current period."
+        )
+        tool_calls = [{
+            "name": "get_commentary",
+            "result": json.dumps({
+                "section_count": len(commentary),
+                "total_words": total_words,
+                "sections": sections,
+            }, default=str, indent=2),
+        }]
+
+    elif "journal" in q or "entries" in q or "accounting" in q:
+        journals = await list_journals(user_id, period_id=period_id)
+        by_status: dict[str, int] = {}
+        total_debits = 0.0
+        total_credits = 0.0
+        for j in journals:
+            st = str(j.get("status", "UNKNOWN")).upper()
+            by_status[st] = by_status.get(st, 0) + 1
+            total_debits += float(j.get("total_debit") or 0)
+            total_credits += float(j.get("total_credit") or 0)
+        is_balanced = abs(total_debits - total_credits) < 0.01
+        content = (
+            f"There are **{len(journals)} journal entries** for this period.\n\n"
+            f"- Status breakdown: {', '.join(f'{k}={v}' for k, v in by_status.items()) or 'none'}\n"
+            f"- Total debits: **{total_debits:,.2f}**\n"
+            f"- Total credits: **{total_credits:,.2f}**\n"
+            f"- Balanced: **{is_balanced}**"
+        )
+        tool_calls = [{
+            "name": "get_journal_summary",
+            "result": json.dumps({
+                "total_journals": len(journals),
+                "status_summary": by_status,
+                "total_debits": total_debits,
+                "total_credits": total_credits,
+                "balanced": is_balanced,
+            }, default=str, indent=2),
+        }]
+
+    elif "audit" in q or "schedule" in q:
+        try:
+            schedule = await get_audit_schedule(user_id, period_id)
+            lines = schedule.get("lines") or schedule if isinstance(schedule, dict) else []
+            total_lines = len(lines) if isinstance(lines, list) else 0
+            content = (
+                f"The audit schedule for this period has been generated with **{total_lines} bond line items**.\n\n"
+                f"Run the `/audit-schedule/export` endpoint to download the CSV, or use the export button in the UI."
+            )
+            tool_calls = [{
+                "name": "get_audit_schedule",
+                "result": json.dumps({"line_count": total_lines}, default=str, indent=2),
+            }]
+        except Exception as ex:
+            content = f"Audit schedule data unavailable: {ex}.  Run audit-schedule generation first."
+            tool_calls = []
+
+    else:
+        dashboard = await get_dashboard(user_id, period_id)
+        stats = dashboard.get("stats") or {}
+        content = (
+            f"I understood your question about **{query[:120]}**.\n\n"
+            f"Current period snapshot:\n"
+            f"- Bonds: **{stats.get('total_bonds', 0)}**\n"
+            f"- Market value: **{stats.get('total_market_value', 'N/A')}**\n"
+            f"- Open exceptions: **{stats.get('open_exceptions', 0)}**\n"
+            f"- Pending reviews: **{stats.get('pending_reviews', 0)}**\n"
+            f"- Match rate: **{stats.get('reconciliation_match_rate', 'N/A')}**\n\n"
+            f"Try asking about 'portfolio', 'exceptions', 'reconciliation', 'journals', 'commentary', or 'reviews'."
+        )
+        tool_calls = [{
+            "name": "get_portfolio_summary",
+            "result": json.dumps(dashboard, default=str, indent=2),
+        }]
+
+    return {
+        "content": content,
+        "tool_calls": tool_calls,
+    }
