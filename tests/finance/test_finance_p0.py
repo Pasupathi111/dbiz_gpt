@@ -723,3 +723,59 @@ async def test_19_movement_analysis_classifies_sale_and_transfer(_session_engine
     assert by_bond["SOLD-BOND"]["movement_type"] == "SALE"
     assert by_bond["XFER-BOND"]["movement_type"] == "TRANSFER"
     assert by_bond["MATURED-BOND"]["movement_type"] == "MATURITY"
+
+
+@pytest.mark.asyncio
+async def test_20_schedule_variance_reflects_real_rollforward(_session_engine, user_id):
+    """generate_schedule must compute a real variance against the previous
+    period (not always 0), so validate_schedule's roll-forward check —
+    which reconstructs previous_value as market_value - variance — can
+    actually catch a mismatch instead of trivially passing every time."""
+    from open_webui.models.finance import BondRecords, BondRecordForm, ReportingPeriods, ReportingPeriodForm
+    from open_webui.services import finance_service as svc
+
+    prev_period = await ReportingPeriods.insert(user_id, ReportingPeriodForm(
+        name="Aug 2026 Sched", year=2026, month=8, status="FINALIZED",
+    ))
+    curr_period = await ReportingPeriods.insert(user_id, ReportingPeriodForm(
+        name="Sep 2026 Sched", year=2026, month=9, status="OPEN",
+        previous_period_id=prev_period.id,
+    ))
+
+    await BondRecords.insert(BondRecordForm(
+        reporting_period_id=prev_period.id, bond_id="ROLL-BOND", isin="ROLL-BOND",
+        face_value=100000.0, market_value=100000.0, status="ACTIVE",
+    ))
+    await BondRecords.insert(BondRecordForm(
+        reporting_period_id=curr_period.id, bond_id="ROLL-BOND", isin="ROLL-BOND",
+        face_value=100000.0, market_value=105000.0, status="ACTIVE",
+    ))
+    await BondRecords.insert(BondRecordForm(
+        reporting_period_id=curr_period.id, bond_id="NEW-BOND", isin="NEW-BOND",
+        face_value=50000.0, market_value=50000.0, status="ACTIVE",
+    ))
+
+    gen = await svc.generate_schedule(user_id, curr_period.id)
+    assert gen["lines_generated"] == 2, gen
+
+    lines = await svc.get_schedule(user_id, curr_period.id)
+    by_bond = {l["bond_id"]: l for l in lines}
+    assert by_bond["ROLL-BOND"]["movement_type"] == "VALUE_CHANGE"
+    assert by_bond["ROLL-BOND"]["variance"] == pytest.approx(5000.0)
+    assert by_bond["NEW-BOND"]["movement_type"] == "NEW"
+
+    validation = await svc.validate_schedule(user_id, curr_period.id)
+    rollforward_check = next(c for c in validation["checks"] if c["check"] == "rollforward")
+    assert rollforward_check["status"] == "passed", rollforward_check
+
+
+def test_21_require_approve_denies_when_user_omitted():
+    """_require_approve must deny by default when no user is passed, not
+    silently allow — the router always passes user, so an omission means
+    some other caller bypassed the router-level gate."""
+    from open_webui.services.finance_service import _require_approve
+
+    with pytest.raises(PermissionError):
+        _require_approve()
+    with pytest.raises(PermissionError):
+        _require_approve(None)

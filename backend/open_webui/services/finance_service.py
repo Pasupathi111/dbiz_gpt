@@ -87,14 +87,12 @@ def _require_approve(user=None) -> None:
     short-circuit.  This second-layer check exists so that anyone calling the
     service functions directly (e.g. tests, internal tooling, future imports)
     cannot bypass the Human-in-the-Loop approval constraint.  Only callers
-    that explicitly pass a user with `role == 'admin'` are authorised.  If
-    the caller omits `user` entirely we also allow transit because the
-    router-level gate will already have run before reaching this call in
-    normal request flow.
+    that explicitly pass a user with `role == 'admin'` are authorised.  The
+    router always passes `user`, so an omitted `user` means this is being
+    called from somewhere that bypassed the router-level gate — deny by
+    default rather than assume that gate already ran.
     """
-    if user is None:
-        return
-    role = getattr(user, "role", None)
+    role = getattr(user, "role", None) if user is not None else None
     if role != "admin":
         raise PermissionError(
             f"Finance approval rejected for user role={role!r}: "
@@ -994,13 +992,39 @@ async def update_movement(user_id: str, movement_id: str, data: dict) -> Optiona
 
 
 async def generate_schedule(user_id: str, period_id: str) -> dict:
-    """Populate BondScheduleLines table from current period bond records."""
+    """Populate BondScheduleLines table from current period bond records.
+
+    movement_type/variance are derived against the previous period's bond
+    (by bond_id) so validate_schedule's roll-forward check — which
+    reconstructs previous_value as market_value - variance — has a real
+    variance to check rather than always seeing 0.
+    """
     bonds = await BondRecords.get_by_period(period_id)
+
+    current_period = await ReportingPeriods.get_by_id(period_id)
+    prev_bonds_by_id: dict[str, Any] = {}
+    if current_period and current_period.previous_period_id:
+        prev_bonds_by_id = {
+            (b.bond_id or b.id): b
+            for b in await BondRecords.get_by_period(current_period.previous_period_id)
+        }
+
     created_count = 0
     for b in bonds:
+        bond_key = b.bond_id or b.id
+        prev = prev_bonds_by_id.get(bond_key)
+        current_value = float(b.market_value or 0)
+        if prev is None:
+            movement_type = "NEW"
+            variance = current_value
+        else:
+            previous_value = float(prev.market_value or 0)
+            variance = round(current_value - previous_value, 2)
+            movement_type = "UNCHANGED" if abs(variance) < 0.01 else "VALUE_CHANGE"
+
         form = BondScheduleLineForm(
             reporting_period_id=period_id,
-            bond_id=b.bond_id or b.id,
+            bond_id=bond_key,
             isin=b.isin,
             issuer=b.issuer,
             currency=b.currency,
@@ -1010,8 +1034,8 @@ async def generate_schedule(user_id: str, period_id: str) -> dict:
             coupon_rate=float(b.coupon_rate or 0),
             maturity_date=b.maturity_date or "",
             accrued_interest=float(b.accrued_interest or 0),
-            movement_type="HOLD",
-            variance=0.0,
+            movement_type=movement_type,
+            variance=variance,
             source_document_id=b.source_document_id,
             validation_status="VALID",
             validation_messages=[],
