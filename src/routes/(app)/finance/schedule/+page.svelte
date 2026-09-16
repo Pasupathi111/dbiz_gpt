@@ -4,6 +4,7 @@
 	import { getSchedule, generateSchedule, validateSchedule, getReportingPeriods } from '$lib/apis/finance';
 	import { toast } from 'svelte-sonner';
 	import Spinner from '$lib/components/common/Spinner.svelte';
+	import { registerAssistantContext } from '$lib/assistant/context';
 
 	const i18n = getContext('i18n');
 
@@ -16,6 +17,15 @@
 	let sortDirection = 'asc';
 	let periods: any[] = [];
 	let selectedPeriodId = '';
+
+	$: registerAssistantContext({
+		page: 'schedule',
+		pageTitle: 'Bond Schedule',
+		module: 'Bond Reporting',
+		periodId: selectedPeriodId || undefined,
+		availableActions: ['schedule.generate', 'schedule.validate'],
+		pageData: { lineCount: scheduleData.length }
+	});
 
 	async function loadSchedule() {
 		loading = true;
@@ -98,7 +108,7 @@
 
 <div class="flex flex-col h-full overflow-y-auto">
 	<!-- Header -->
-	<div class="px-8 pt-6 pb-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+	<div class="px-4 sm:px-6 lg:px-8 pt-6 pb-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
 		<div class="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500 mb-1">
 			<span>AI Bond Copilot</span><span>/</span><span>Bond Schedule</span>
 		</div>
@@ -135,7 +145,7 @@
 		<div class="flex-1 flex items-center justify-center"><Spinner /></div>
 	{:else}
 		<div class="flex-1 overflow-y-auto">
-			<div class="px-8 py-6 space-y-4">
+			<div class="px-4 sm:px-6 lg:px-8 py-6 space-y-4">
 				<!-- Summary Cards -->
 				<div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
 					<div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm">

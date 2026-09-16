@@ -3,7 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { getContext } from 'svelte';
 	import { user, WEBUI_NAME } from '$lib/stores';
-	import FinanceCopilotChat from '$lib/components/finance/FinanceCopilotChat.svelte';
+	import GlobalAgenticAssistant from '$lib/components/assistant/GlobalAgenticAssistant.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -43,7 +43,6 @@
 	}
 
 	let sidebarCollapsed = false;
-	let showCopilotChat = false;
 </script>
 
 <div class="flex h-full w-full">
@@ -179,21 +178,8 @@
 	<div class="flex-1 flex flex-col min-w-0 h-full overflow-hidden bg-gray-50 dark:bg-gray-950 relative">
 		<slot />
 
-		<!-- Floating Copilot Chat Button -->
-		<button
-			class="fixed bottom-6 right-6 z-40 w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg hover:shadow-xl hover:scale-105 flex items-center justify-center transition-all duration-200 group"
-			on:click={() => (showCopilotChat = !showCopilotChat)}
-			aria-label="Toggle AI Copilot Chat"
-		>
-			<svg class="w-5.5 h-5.5 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-				<path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
-			</svg>
-			<!-- Pulse dot -->
-			<span class="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-amber-400 border-2 border-white dark:border-gray-900 copilot-pulse"></span>
-		</button>
-
-		<!-- Copilot Chat Panel -->
-		<FinanceCopilotChat bind:open={showCopilotChat} onClose={() => (showCopilotChat = false)} />
+		<!-- Global Agentic Assistant (floating button + drawer, context-aware) -->
+		<GlobalAgenticAssistant />
 	</div>
 </div>
 
@@ -201,20 +187,5 @@
 	.finance-sidebar {
 		scrollbar-width: thin;
 		scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
-	}
-
-	@keyframes copilotPulse {
-		0%, 100% {
-			opacity: 1;
-			transform: scale(1);
-		}
-		50% {
-			opacity: 0.6;
-			transform: scale(1.15);
-		}
-	}
-
-	.copilot-pulse {
-		animation: copilotPulse 2s ease-in-out infinite;
 	}
 </style>

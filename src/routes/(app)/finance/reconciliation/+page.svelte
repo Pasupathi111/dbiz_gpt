@@ -10,6 +10,7 @@
 	} from '$lib/apis/finance';
 	import { toast } from 'svelte-sonner';
 	import Spinner from '$lib/components/common/Spinner.svelte';
+	import { registerAssistantContext } from '$lib/assistant/context';
 
 	const i18n = getContext('i18n');
 
@@ -55,6 +56,19 @@
 	let selectedPeriodId = '';
 	let drawerOpen = false;
 	let selectedItem: ReconciliationItem | null = null;
+
+	$: registerAssistantContext({
+		page: 'reconciliation',
+		pageTitle: 'Reconciliation',
+		module: 'Bond Reporting',
+		periodId: selectedPeriodId || undefined,
+		selectedRecords: selectedItem ? [selectedItem.id] : [],
+		availableActions: ['reconciliation.run', 'exceptions.analyze', 'reconciliation.summary', 'exceptions.list'],
+		pageData: {
+			openExceptions: (summary?.variances ?? 0) + (summary?.missing ?? 0),
+			reconciliationIncomplete: items.length === 0
+		}
+	});
 
 	const emptySummary: ReconciliationSummary = {
 		matched: 0, variances: 0, missing: 0, duplicates: 0, total: 0, match_rate: 0
@@ -248,20 +262,20 @@
 
 <div class="flex flex-col h-full overflow-y-auto">
 	<!-- Header -->
-	<div class="px-8 pt-6 pb-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+	<div class="px-4 sm:px-6 lg:px-8 pt-6 pb-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
 		<div class="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500 mb-1">
 			<span>AI Bond Copilot</span>
 			<span>/</span>
 			<span>Reconciliation</span>
 		</div>
-		<div class="flex items-center justify-between flex-wrap gap-4">
+		<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 			<div>
-				<h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Reconciliation Dashboard</h1>
+				<h1 class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">Reconciliation Dashboard</h1>
 				<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
 					Cross-source validation across UBS, LGI and prior-period schedules
 				</p>
 			</div>
-			<div class="flex items-center gap-3">
+			<div class="flex flex-wrap items-center gap-3">
 				<select
 					class="text-sm border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
 					bind:value={selectedPeriodId}
@@ -302,7 +316,7 @@
 		</div>
 	{:else}
 		<div class="flex-1 overflow-y-auto">
-			<div class="px-8 py-6 space-y-6">
+			<div class="px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 				<!-- Summary Cards -->
 				<div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
 					<!-- Matched -->
@@ -588,7 +602,7 @@
 					<!-- Bond Identifier -->
 					<div class="space-y-3">
 						<h3 class="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">Bond Identifier</h3>
-						<div class="grid grid-cols-2 gap-3">
+						<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
 							<div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
 								<div class="text-[10px] text-gray-400 dark:text-gray-500 mb-1">Bond ID</div>
 								<div class="text-sm font-mono font-medium text-gray-900 dark:text-white">{selectedItem.bond_id}</div>
@@ -630,7 +644,7 @@
 					<div class="space-y-3">
 						<h3 class="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">Difference Calculation</h3>
 						<div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-							<div class="grid grid-cols-2 gap-4">
+							<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 								<div>
 									<div class="text-[10px] text-gray-400 dark:text-gray-500 mb-1">Variance Amount</div>
 									<div class="text-lg font-mono font-semibold {getVarianceColor(selectedItem.variance)}">

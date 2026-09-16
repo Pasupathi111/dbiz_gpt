@@ -4,6 +4,7 @@
 	import { getJournals, generateJournals, approveJournal, rejectJournal, getReportingPeriods } from '$lib/apis/finance';
 	import { toast } from 'svelte-sonner';
 	import Spinner from '$lib/components/common/Spinner.svelte';
+	import { registerAssistantContext } from '$lib/assistant/context';
 
 	const i18n = getContext('i18n');
 
@@ -15,6 +16,17 @@
 	let approvalComment = '';
 	let periods: any[] = [];
 	let selectedPeriodId = '';
+
+	$: registerAssistantContext({
+		page: 'journals',
+		pageTitle: 'Draft Journals',
+		module: 'Bond Reporting',
+		periodId: selectedPeriodId || undefined,
+		entityId: selectedJournal?.id,
+		selectedRecords: selectedJournal ? [selectedJournal.id] : [],
+		availableActions: ['journals.generate', 'journals.approve', 'journals.reject', 'review.pending'],
+		pageData: { journalCount: journals.length }
+	});
 
 	async function loadJournals() {
 		try {
@@ -105,16 +117,16 @@
 
 <div class="flex flex-col h-full overflow-y-auto">
 	<!-- Header -->
-	<div class="px-8 pt-6 pb-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+	<div class="px-4 sm:px-6 lg:px-8 pt-6 pb-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
 		<div class="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500 mb-1">
 			<span>AI Bond Copilot</span><span>/</span><span>Draft Journals</span>
 		</div>
-		<div class="flex items-center justify-between">
+		<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
 			<div>
-				<h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Draft Accounting Journals</h1>
+				<h1 class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">Draft Accounting Journals</h1>
 				<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">AI-generated journal entries for finance review and approval</p>
 			</div>
-			<div class="flex items-center gap-2">
+			<div class="flex flex-wrap items-center gap-2">
 				<select
 					class="text-sm border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300"
 					bind:value={selectedPeriodId}
@@ -139,9 +151,9 @@
 		<div class="flex-1 flex items-center justify-center"><Spinner /></div>
 	{:else}
 		<div class="flex-1 overflow-y-auto">
-			<div class="px-8 py-6 space-y-4">
+			<div class="px-4 sm:px-6 lg:px-8 py-6 space-y-4">
 				<!-- Summary -->
-				<div class="grid grid-cols-3 gap-4">
+				<div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
 					<div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm">
 						<div class="text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-1">Total Journals</div>
 						<div class="text-2xl font-semibold text-gray-900 dark:text-white font-mono">{journals.length}</div>
@@ -263,7 +275,7 @@
 						<div class="text-xs text-gray-400 uppercase tracking-wider mb-1">Description</div>
 						<div class="text-sm text-gray-700 dark:text-gray-300">{selectedJournal.description}</div>
 					</div>
-					<div class="grid grid-cols-2 gap-4">
+					<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 						<div>
 							<div class="text-xs text-gray-400 uppercase tracking-wider mb-1">Total Debit</div>
 							<div class="text-lg font-mono font-semibold text-gray-900 dark:text-white">{formatCurrency(selectedJournal.total_debit)}</div>

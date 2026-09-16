@@ -3,6 +3,7 @@
 	import { user } from '$lib/stores';
 	import { getFinanceDashboard, getReportingPeriods } from '$lib/apis/finance';
 	import Spinner from '$lib/components/common/Spinner.svelte';
+	import { registerAssistantContext } from '$lib/assistant/context';
 
 	const i18n = getContext('i18n');
 
@@ -32,19 +33,31 @@
 		if (value >= 1_000) return `S$${(value / 1_000).toFixed(0)}K`;
 		return `S$${value ?? 0}`;
 	}
+
+	$: registerAssistantContext({
+		page: 'dashboard',
+		pageTitle: 'Dashboard',
+		module: 'Bond Reporting',
+		periodId: selectedPeriodId || undefined,
+		availableActions: ['portfolio.summary', 'movements.analyze', 'reconciliation.summary', 'commentary.generate_with_movements'],
+		pageData: {
+			totalBonds: dashboard?.kpis?.total_bonds ?? 0,
+			openExceptions: dashboard?.kpis?.exceptions_open ?? 0
+		}
+	});
 </script>
 
 <div class="flex flex-col h-full overflow-y-auto">
 	<!-- Header -->
-	<div class="px-8 pt-6 pb-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+	<div class="px-4 sm:px-6 lg:px-8 pt-6 pb-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
 		<div class="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500 mb-1">
 			<span>AI Bond Copilot</span>
 			<span>/</span>
 			<span>Dashboard</span>
 		</div>
-		<div class="flex items-center justify-between">
+		<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
 			<div>
-				<h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Finance Operations Dashboard</h1>
+				<h1 class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">Finance Operations Dashboard</h1>
 				<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
 					Bond reconciliation, movement analysis and monthly reporting
 				</p>
@@ -82,7 +95,7 @@
 		</div>
 	{:else if error}
 		<div class="flex-1 overflow-y-auto">
-			<div class="px-8 py-10">
+			<div class="px-4 sm:px-6 lg:px-8 py-10">
 				<div class="max-w-xl mx-auto rounded-xl border border-red-200 dark:border-red-800/60 bg-red-50 dark:bg-red-900/10 p-6">
 					<div class="flex items-start gap-4">
 						<div class="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 dark:bg-red-500/20 flex items-center justify-center">
@@ -118,7 +131,7 @@
 		</div>
 	{:else if !dashboard || (dashboard.bond_line_items === 0 && dashboard.total_market_value === 0)}
 		<div class="flex-1 overflow-y-auto">
-			<div class="px-8 py-10">
+			<div class="px-4 sm:px-6 lg:px-8 py-10">
 				<div class="max-w-xl mx-auto rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-8 text-center">
 					<div class="w-14 h-14 mx-auto rounded-2xl bg-indigo-100 dark:bg-indigo-500/10 flex items-center justify-center mb-4">
 						<svg class="w-7 h-7 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
@@ -140,9 +153,9 @@
 		</div>
 	{:else}
 		<div class="flex-1 overflow-y-auto">
-			<div class="px-8 py-6 space-y-6">
+			<div class="px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 				<!-- KPI Cards Row -->
-				<div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+				<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 					<!-- Bond Line Items -->
 					<div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm">
 						<div class="text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">Bond Line Items</div>

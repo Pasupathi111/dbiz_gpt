@@ -918,6 +918,19 @@ class ReconciliationRunsTable:
             except Exception:
                 return False
 
+    async def delete_by_period(
+        self, reporting_period_id: str, db: AsyncSession | None = None
+    ) -> bool:
+        async with get_async_db_context(db) as db:
+            try:
+                await db.execute(
+                    delete(ReconciliationRun).filter_by(reporting_period_id=reporting_period_id)
+                )
+                await db.commit()
+                return True
+            except Exception:
+                return False
+
     async def get_all(
         self, db: AsyncSession | None = None
     ) -> list[ReconciliationRunModel]:
@@ -1114,6 +1127,19 @@ class ReconciliationItemsTable:
             )
             result = await db.execute(stmt)
             return [ReconciliationItemModel.model_validate(r) for r in result.scalars().all()]
+
+    async def delete_by_run(
+        self, reconciliation_run_id: str, db: AsyncSession | None = None
+    ) -> bool:
+        async with get_async_db_context(db) as db:
+            try:
+                await db.execute(
+                    delete(ReconciliationItem).filter_by(reconciliation_run_id=reconciliation_run_id)
+                )
+                await db.commit()
+                return True
+            except Exception:
+                return False
 
 
 ReconciliationItems = ReconciliationItemsTable()
@@ -1854,6 +1880,19 @@ class AuditScheduleEntriesTable:
         async with get_async_db_context(db) as db:
             try:
                 await db.execute(delete(AuditScheduleEntry).filter_by(id=id))
+                await db.commit()
+                return True
+            except Exception:
+                return False
+
+    async def delete_by_period(
+        self, reporting_period_id: str, db: AsyncSession | None = None
+    ) -> bool:
+        async with get_async_db_context(db) as db:
+            try:
+                await db.execute(
+                    delete(AuditScheduleEntry).filter_by(reporting_period_id=reporting_period_id)
+                )
                 await db.commit()
                 return True
             except Exception:

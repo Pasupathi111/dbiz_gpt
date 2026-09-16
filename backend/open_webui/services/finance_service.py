@@ -685,6 +685,13 @@ _RECON_SOURCE_ALIASES = {
 
 
 async def run_reconciliation(user_id: str, period_id: str) -> dict:
+    # Re-running reconciliation for a period replaces the prior run's rows
+    # rather than accumulating alongside them (items are read joined across
+    # all runs for a period via get_by_run_period).
+    for prior_run in await ReconciliationRuns.get_by_period(period_id):
+        await ReconciliationItems.delete_by_run(prior_run.id)
+    await ReconciliationRuns.delete_by_period(period_id)
+
     bonds = await BondRecords.get_by_period(period_id)
 
     # Ingestion persists one BondRecord *per source* per bond_id (a UBS-sourced
@@ -1369,6 +1376,10 @@ async def reject_journal(user_id: str, journal_id: str, reason: str, user: Any =
 
 async def generate_audit_schedule(user_id: str, period_id: str) -> dict:
     """Populate AuditScheduleEntries from schedule lines + movements."""
+    # Re-generating for a period replaces the prior entries rather than
+    # appending duplicate rows on top of them.
+    await AuditScheduleEntries.delete_by_period(period_id)
+
     lines = await BondScheduleLines.get_by_period(period_id)
     movements_by_bond: dict[str, list] = {}
     for mv in await BondMovements.get_by_period(period_id):
@@ -1875,8 +1886,12 @@ async def log_audit_trail(
     previous_value: Optional[dict] = None,
     new_value: Optional[dict] = None,
     source: Optional[str] = None,
-) -> None:
-    """Persist to finance_audit_log table (truth, not stub log)."""
+) -> Optional[str]:
+    """Persist to finance_audit_log table (truth, not stub log).
+
+    Returns the inserted row's id (used as an execution id by the agentic
+    assistant), or None if the insert failed.
+    """
     form = FinanceAuditLogForm(
         reporting_period_id=period_id,
         user_id=user_id,
@@ -1889,9 +1904,29 @@ async def log_audit_trail(
         details=details,
     )
     try:
-        await FinanceAuditLogs.insert(form)
+        row = await FinanceAuditLogs.insert(form)
+        return row.id if row else None
     except Exception as e:  # pragma: no cover - best-effort audit log
         log.exception("Failed to write finance_audit_log row: %s", e)
+        return None
+
+
+async def get_audit_log_entry(execution_id: str) -> Optional[dict]:
+    row = await FinanceAuditLogs.get_by_id(execution_id)
+    if not row:
+        return None
+    ts = datetime.fromtimestamp(row.created_at, tz=timezone.utc)
+    return {
+        "id": row.id,
+        "action": row.action,
+        "entity_type": row.object_type,
+        "entity_id": row.object_id,
+        "period_id": row.reporting_period_id,
+        "user_id": row.user_id,
+        "details": row.details,
+        "timestamp": ts.isoformat(),
+        "source": row.source,
+    }
 
 
 async def get_audit_trail(
@@ -1929,6 +1964,140 @@ async def get_audit_trail(
             "ip_address": l.ip_address,
         })
     return sorted(out, key=lambda x: x["timestamp"], reverse=True)
+
+
+# ---------------------------------------------------------------------------
+# Agentic Assistant — compound/multi-step tools
+#
+# These orchestrate 2+ existing service functions into one call so the
+# assistant can satisfy a single user intent (e.g. "run reconciliation and
+# tell me what changed") without the user manually chaining page actions.
+# They never duplicate business logic — each step below calls the exact same
+# function the corresponding page button already calls.
+# ---------------------------------------------------------------------------
+
+
+async def analyze_reconciliation_exceptions(user_id: str, period_id: str) -> dict:
+    """Fetch exceptions for a period, group by severity/category, summarize."""
+    exceptions = await get_exceptions(user_id, period_id=period_id)
+    by_severity: dict[str, int] = {}
+    by_category: dict[str, int] = {}
+    open_count = 0
+    high_or_critical: list[dict] = []
+    for e in exceptions:
+        sev = (e.get("severity") or "UNKNOWN").upper()
+        cat = e.get("category") or "UNKNOWN"
+        by_severity[sev] = by_severity.get(sev, 0) + 1
+        by_category[cat] = by_category.get(cat, 0) + 1
+        if (e.get("status") or "").upper() == "OPEN":
+            open_count += 1
+            if sev in ("HIGH", "CRITICAL"):
+                high_or_critical.append(e)
+
+    if not exceptions:
+        summary_text = (
+            "No reconciliation exceptions are recorded for this period. "
+            "Note: exceptions are currently only created via manual review — "
+            "reconciliation variances are tracked separately and are not yet "
+            "auto-promoted into exceptions."
+        )
+    else:
+        parts = [f"{open_count} open exception(s) out of {len(exceptions)} total."]
+        if by_severity:
+            parts.append("By severity: " + ", ".join(f"{k}={v}" for k, v in sorted(by_severity.items())) + ".")
+        if high_or_critical:
+            parts.append(f"{len(high_or_critical)} are HIGH/CRITICAL severity and open — review these first.")
+        summary_text = " ".join(parts)
+
+    return {
+        "period_id": period_id,
+        "total": len(exceptions),
+        "open_count": open_count,
+        "by_severity": by_severity,
+        "by_category": by_category,
+        "high_priority": high_or_critical[:10],
+        "exceptions": exceptions[:20],
+        "summary_text": summary_text,
+        "steps": [
+            {"label": "Retrieved exceptions for period", "status": "done"},
+            {"label": "Grouped by severity and category", "status": "done"},
+            {"label": "Generated summary", "status": "done"},
+        ],
+    }
+
+
+async def run_reconciliation_and_summarize(user_id: str, period_id: str) -> dict:
+    """Run reconciliation, then summarize what differed (variances/missing)."""
+    run_result = await run_reconciliation(user_id, period_id)
+    items = await get_reconciliation_results(user_id, period_id=period_id)
+    variance_items = sorted(
+        [i for i in items if i.get("status") == "VARIANCE"],
+        key=lambda i: abs(i.get("variance_amount") or 0),
+        reverse=True,
+    )
+    missing_items = [i for i in items if i.get("status") == "MISSING_SOURCE"]
+
+    parts = [
+        f"Processed {run_result.get('total_bonds', 0)} bonds: "
+        f"{run_result.get('matched', 0)} matched, "
+        f"{run_result.get('variances', 0)} variance(s), "
+        f"{run_result.get('missing', 0)} missing source record(s)."
+    ]
+    if variance_items:
+        top = variance_items[0]
+        parts.append(
+            f"Largest variance: bond {top.get('bond_id')} "
+            f"(UBS {top.get('ubs_value')} vs LGI {top.get('lgi_value')}, "
+            f"diff {top.get('variance_amount'):.2f})."
+        )
+    if missing_items:
+        parts.append(f"{len(missing_items)} bond(s) are missing a source record entirely.")
+
+    return {
+        **run_result,
+        "variance_items": variance_items[:10],
+        "missing_items": missing_items[:10],
+        "summary_text": " ".join(parts),
+        "steps": [
+            {"label": "Ran reconciliation", "status": "done"},
+            {"label": "Identified differences", "status": "done"},
+            {"label": "Generated summary", "status": "done"},
+        ],
+    }
+
+
+async def generate_commentary_with_movements(user_id: str, period_id: str) -> dict:
+    """Analyze movements, flag unusual ones, then generate month-end commentary."""
+    movement_result = await analyze_movements(user_id, period_id)
+    movements = await get_movements(user_id, period_id=period_id)
+    unusual = sorted(
+        [m for m in movements if m.get("movement_type") not in (None, "UNCHANGED")],
+        key=lambda m: abs(m.get("variance") or 0),
+        reverse=True,
+    )[:5]
+    commentary_result = await generate_commentary(user_id, period_id, force_llm=True)
+
+    parts = [f"Analyzed {len(movements)} bond movement(s) for this period."]
+    if unusual:
+        top = unusual[0]
+        parts.append(
+            f"Most significant: bond {top.get('bond_id')} — {top.get('movement_type')} "
+            f"(variance {top.get('variance')})."
+        )
+    sections = commentary_result.get("sections", [])
+    parts.append(f"Commentary generated for {len(sections)} section(s).")
+
+    return {
+        "movement_summary": movement_result,
+        "unusual_movements": unusual,
+        "commentary": commentary_result,
+        "summary_text": " ".join(parts),
+        "steps": [
+            {"label": "Analyzed bond movements", "status": "done"},
+            {"label": "Flagged unusual movements", "status": "done"},
+            {"label": "Generated commentary", "status": "done"},
+        ],
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -1987,7 +2156,57 @@ async def copilot_chat(
     has_action_verb = any(v in q for v in action_verbs)
     matched_topic = next((topic for phrase, topic in action_topics if phrase in q), None) if has_action_verb else None
 
-    if matched_topic and not period_id:
+    # --- Compound flows: multi-step intents recognised ahead of the single-
+    # action dispatch below, e.g. "run reconciliation and tell me what
+    # changed" orchestrates run + diff-summary in one call instead of just
+    # running reconciliation and stopping. Each still calls real service
+    # functions only (see the "Agentic Assistant — compound/multi-step
+    # tools" section of this file) — no separate business logic here.
+    compound_flows = (
+        (("reconcil",), ("what changed", "what differ", "difference", "summar"), "reconciliation_and_summarize"),
+        (("exception",), ("analy", "prioriti", "group", "categori"), "analyze_exceptions"),
+        (("commentary",), ("movement", "unusual"), "commentary_with_movements"),
+    )
+    matched_compound = next(
+        (
+            flow for topic_kws, extra_kws, flow in compound_flows
+            if any(k in q for k in topic_kws) and any(k in q for k in extra_kws)
+        ),
+        None,
+    )
+
+    if matched_compound and not period_id:
+        content = (
+            "I can do that, but no reporting period is selected. "
+            "Choose a period from the dropdown above and ask me again."
+        )
+        tool_calls = []
+
+    elif matched_compound == "reconciliation_and_summarize":
+        try:
+            result = await run_reconciliation_and_summarize(user_id, period_id)
+            content = result.get("summary_text", "Reconciliation completed.")
+            tool_calls = [{"name": "reconciliation.run_and_summarize", "result": json.dumps(result, default=str, indent=2)}]
+        except Exception as ex:
+            content = f"Reconciliation run failed: {ex}"
+
+    elif matched_compound == "analyze_exceptions":
+        try:
+            result = await analyze_reconciliation_exceptions(user_id, period_id)
+            content = result.get("summary_text", "No exceptions found.")
+            tool_calls = [{"name": "exceptions.analyze", "result": json.dumps(result, default=str, indent=2)}]
+        except Exception as ex:
+            content = f"Exception analysis failed: {ex}"
+
+    elif matched_compound == "commentary_with_movements":
+        try:
+            result = await generate_commentary_with_movements(user_id, period_id)
+            content = result.get("summary_text", "Commentary generated.")
+            tool_calls = [{"name": "commentary.generate_with_movements", "result": json.dumps(result, default=str, indent=2)}]
+        except Exception as ex:
+            content = f"Commentary generation failed: {ex}"
+
+    elif matched_topic and not period_id:
         content = (
             "I can do that, but no reporting period is selected. "
             "Choose a period from the dropdown above and ask me again."
@@ -2069,6 +2288,33 @@ async def copilot_chat(
             "result": json.dumps(dashboard, default=str, indent=2),
         }]
 
+    elif "exception" in q or "issue" in q or "problem" in q or "open" in q:
+        exceptions = await get_exceptions(user_id, period_id=period_id, exc_status="OPEN")
+        resolved_count = 0
+        try:
+            all_exc = await get_exceptions(user_id, period_id=period_id)
+            resolved_count = len([e for e in all_exc if str(e.get("status", "")).upper() != "OPEN"])
+        except Exception:
+            resolved_count = 0
+        content = (
+            f"There are currently **{len(exceptions)} open exceptions** requiring attention.\n\n"
+        )
+        if exceptions:
+            for e in exceptions[:5]:
+                content += (
+                    f"- **{e.get('severity', 'N/A')}** — {e.get('title', e.get('description', 'Exception'))}\n"
+                )
+        else:
+            content += "All exceptions have been resolved.  Well done!"
+        tool_calls = [{
+            "name": "get_open_exceptions",
+            "result": json.dumps({
+                "open_count": len(exceptions),
+                "resolved_count": resolved_count,
+                "exceptions": exceptions[:10],
+            }, default=str, indent=2),
+        }]
+
     elif "portfolio" in q or "bond" in q or "summary" in q or "holding" in q:
         dashboard = await get_dashboard(user_id, period_id)
         bonds = await list_bonds(user_id, period_id=period_id)
@@ -2101,33 +2347,6 @@ async def copilot_chat(
                         "value": b.get("market_value") or b.get("face_value"),
                     } for b in top
                 ],
-            }, default=str, indent=2),
-        }]
-
-    elif "exception" in q or "issue" in q or "problem" in q or "open" in q:
-        exceptions = await get_exceptions(user_id, period_id=period_id, exc_status="OPEN")
-        resolved_count = 0
-        try:
-            all_exc = await get_exceptions(user_id, period_id=period_id)
-            resolved_count = len([e for e in all_exc if str(e.get("status", "")).upper() != "OPEN"])
-        except Exception:
-            resolved_count = 0
-        content = (
-            f"There are currently **{len(exceptions)} open exceptions** requiring attention.\n\n"
-        )
-        if exceptions:
-            for e in exceptions[:5]:
-                content += (
-                    f"- **{e.get('severity', 'N/A')}** — {e.get('title', e.get('description', 'Exception'))}\n"
-                )
-        else:
-            content += "All exceptions have been resolved.  Well done!"
-        tool_calls = [{
-            "name": "get_open_exceptions",
-            "result": json.dumps({
-                "open_count": len(exceptions),
-                "resolved_count": resolved_count,
-                "exceptions": exceptions[:10],
             }, default=str, indent=2),
         }]
 

@@ -214,3 +214,19 @@ export const copilotChat = (
 		method: 'POST',
 		body: JSON.stringify({ query, reporting_period_id: reportingPeriodId })
 	});
+
+// Agentic Assistant
+export const executeAgentAction = (
+	token: string,
+	action: string,
+	context: Record<string, unknown> = {},
+	userMessage?: string,
+	confirmed = false
+) =>
+	request(token, '/agent/execute', {
+		method: 'POST',
+		body: JSON.stringify({ action, context, userMessage, confirmed })
+	});
+
+export const getAgentExecution = (token: string, executionId: string) =>
+	request(token, `/agent/execution/${executionId}`);
