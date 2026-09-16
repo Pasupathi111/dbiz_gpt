@@ -19,6 +19,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from open_webui.internal.db import get_async_db_context
+from open_webui.services import finance_ingestion
 from open_webui.models.finance import (
     AuditScheduleEntries,
     AuditScheduleEntryForm,
@@ -381,15 +382,17 @@ async def upload_document(
     file_size: int,
     document_type: str,
     reporting_period_id: str,
+    file_path: str,
+    file_hash: Optional[str] = None,
 ) -> dict:
     form = FinanceDocumentForm(
         reporting_period_id=reporting_period_id,
         document_type=document_type,
         filename=filename,
         original_filename=filename,
-        file_path=f"uploads/{reporting_period_id}/{_new_id()}-{filename}",
+        file_path=file_path,
         file_size=file_size,
-        file_hash=None,
+        file_hash=file_hash,
         mime_type=content_type,
         status="UPLOADED",
     )
@@ -425,28 +428,171 @@ async def get_document(user_id: str, doc_id: str) -> Optional[dict]:
     return _to_dict(doc) if doc else None
 
 
+_EXTRACTION_TYPE_BY_DOCUMENT_TYPE = {
+    "UBS_EXCEL": "EXCEL",
+    "LGI_PDF": "PDF",
+}
+
+
 async def process_document(user_id: str, doc_id: str) -> dict:
-    """Kick off extraction by inserting an ExtractionJob record."""
+    """Run extraction for a document: parse the stored file (UBS Excel /
+    LGI PDF) and persist BondRecord + BondSourceRecord rows from it.
+    """
     doc = await FinanceDocuments.get_by_id(doc_id)
     if doc is None:
         raise ValueError(f"document {doc_id} not found")
 
+    extraction_type = _EXTRACTION_TYPE_BY_DOCUMENT_TYPE.get(doc.document_type, "GENERIC")
     job_form = ExtractionJobForm(
         document_id=doc.id,
-        status="QUEUED",
-        extraction_type=doc.document_type or "GENERIC",
+        status="RUNNING",
+        extraction_type=extraction_type,
     )
     job = await ExtractionJobs.insert(job_form)
-    # Flip document to QUEUED as well
-    await FinanceDocuments.update_by_id(doc.id, {"status": "QUEUED"})
+    job_id = job.id if job else _new_id()
+    await ExtractionJobs.update_by_id(job_id, {"started_at": _now_ms()})
+    await FinanceDocuments.update_by_id(doc.id, {"status": "PROCESSING"})
     log.info("Processing document %s triggered by user %s", doc_id, user_id)
-    return {
-        "task_id": job.id if job else _new_id(),
-        "document_id": doc_id,
-        "status": (job.status if job else "QUEUED"),
-        "message": "Document processing has been queued",
-        "started_at": _utc_now(),
-    }
+
+    if doc.document_type not in _EXTRACTION_TYPE_BY_DOCUMENT_TYPE:
+        errors = [f"Unsupported document_type for extraction: {doc.document_type}"]
+        await ExtractionJobs.update_by_id(
+            job_id, {"status": "FAILED", "errors": errors, "completed_at": _now_ms()}
+        )
+        await FinanceDocuments.update_by_id(
+            doc.id,
+            {"status": "FAILED", "validation_status": "ERROR", "validation_messages": errors},
+        )
+        return {
+            "task_id": job_id,
+            "document_id": doc_id,
+            "status": "FAILED",
+            "message": errors[0],
+            "started_at": _utc_now(),
+        }
+
+    try:
+        # Imported lazily (like the config import above) to keep this heavy,
+        # multi-cloud-SDK-backed module out of finance_service's import cost.
+        from open_webui.storage.provider import Storage
+
+        local_path = Storage.get_file(doc.file_path)
+        with open(local_path, "rb") as f:
+            contents = f.read()
+        rows = finance_ingestion.parse_document(doc.document_type, contents)
+        records_created, source_type = await _persist_extracted_bond_rows(
+            doc, rows
+        )
+
+        await ExtractionJobs.update_by_id(
+            job_id,
+            {
+                "status": "COMPLETED",
+                "records_extracted": len(rows),
+                "completed_at": _now_ms(),
+            },
+        )
+        validation_status = "VALID" if rows else "WARNING"
+        validation_messages = None if rows else ["No bond records could be parsed from this file"]
+        await FinanceDocuments.update_by_id(
+            doc.id,
+            {
+                "status": "EXTRACTED",
+                "validation_status": validation_status,
+                "validation_messages": validation_messages,
+                "processed_at": _now_ms(),
+            },
+        )
+        log.info(
+            "Extracted %s bond record(s) from document %s (source=%s)",
+            len(rows), doc_id, source_type,
+        )
+        return {
+            "task_id": job_id,
+            "document_id": doc_id,
+            "status": "COMPLETED",
+            "message": f"Extracted {len(rows)} bond record(s)",
+            "records_extracted": len(rows),
+            "started_at": _utc_now(),
+        }
+    except Exception as e:
+        log.exception("Extraction failed for document %s: %s", doc_id, e)
+        errors = [str(e)]
+        await ExtractionJobs.update_by_id(
+            job_id, {"status": "FAILED", "errors": errors, "completed_at": _now_ms()}
+        )
+        await FinanceDocuments.update_by_id(
+            doc.id,
+            {"status": "FAILED", "validation_status": "ERROR", "validation_messages": errors},
+        )
+        return {
+            "task_id": job_id,
+            "document_id": doc_id,
+            "status": "FAILED",
+            "message": f"Extraction failed: {e}",
+            "started_at": _utc_now(),
+        }
+
+
+async def _persist_extracted_bond_rows(doc, rows: list[dict]) -> tuple[int, str]:
+    source_type = "UBS" if doc.document_type == "UBS_EXCEL" else "LGI"
+    created = 0
+    for row in rows:
+        bond_id = row.get("bond_id")
+        if not bond_id:
+            continue
+
+        existing = await BondRecords.get_by_bond_id(bond_id, doc.reporting_period_id)
+        existing_same_source = next(
+            (r for r in existing if r.source_type == source_type), None
+        )
+
+        bond_fields = {
+            "reporting_period_id": doc.reporting_period_id,
+            "bond_id": bond_id,
+            "isin": row.get("isin"),
+            "description": row.get("description"),
+            "issuer": row.get("issuer"),
+            "currency": row.get("currency"),
+            "face_value": row.get("face_value"),
+            "book_value": row.get("book_value"),
+            "market_value": row.get("market_value"),
+            "coupon_rate": row.get("coupon_rate"),
+            "accrued_interest": row.get("accrued_interest"),
+            "maturity_date": row.get("maturity_date"),
+            "purchase_date": row.get("purchase_date"),
+            "settlement_date": row.get("settlement_date"),
+            "quantity": row.get("quantity"),
+            "source_document_id": doc.id,
+            "source_type": source_type,
+            "extraction_confidence": row.get("_confidence"),
+        }
+
+        if existing_same_source:
+            bond_record_id = existing_same_source.id
+            await BondRecords.update_by_id(bond_record_id, bond_fields)
+        else:
+            form = BondRecordForm(**bond_fields)
+            inserted = await BondRecords.insert(form)
+            if inserted is None:
+                continue
+            bond_record_id = inserted.id
+            created += 1
+
+        source_form = BondSourceRecordForm(
+            bond_record_id=bond_record_id,
+            document_id=doc.id,
+            source_type=source_type,
+            raw_data=row.get("_raw_data") or {},
+            sheet_name=row.get("_sheet_name"),
+            row_number=row.get("_row_number"),
+            page_number=row.get("_page_number"),
+            cell_references=row.get("_cell_references"),
+            extraction_confidence=row.get("_confidence"),
+        )
+        await BondSourceRecords.insert(source_form)
+
+    return created, source_type
 
 
 async def delete_document(user_id: str, doc_id: str) -> bool:

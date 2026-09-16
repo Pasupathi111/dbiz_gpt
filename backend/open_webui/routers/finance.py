@@ -1,10 +1,15 @@
+import asyncio
+import hashlib
 import logging
+import os
+import uuid
 from typing import Optional
 
 from fastapi import (
     APIRouter,
     Depends,
     File,
+    Form,
     HTTPException,
     Query,
     Request,
@@ -15,9 +20,12 @@ from fastapi import (
 from open_webui.constants import ERROR_MESSAGES
 from open_webui.models.config import Config
 from open_webui.services import finance_service
+from open_webui.storage.provider import Storage
 from open_webui.utils.access_control import has_permission
 from open_webui.utils.auth import get_verified_user
 from pydantic import BaseModel, Field
+
+FINANCE_DOCUMENT_TYPES = {"UBS_EXCEL", "LGI_PDF", "PREVIOUS_SCHEDULE", "TEMPLATE"}
 
 log = logging.getLogger(__name__)
 
@@ -375,17 +383,33 @@ async def upload_document(
     reporting_period_id: str = Form(...),
     user=Depends(get_verified_user),
 ):
+    if document_type not in FINANCE_DOCUMENT_TYPES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ERROR_MESSAGES.DEFAULT(f'Unsupported document_type: {document_type}'),
+        )
     try:
-        contents = await file.read()
+        original_filename = os.path.basename(file.filename or 'unknown')
+        storage_filename = f'{uuid.uuid4()}_{original_filename}'
+        tags = {
+            'OpenWebUI-User-Id': user.id,
+            'OpenWebUI-Finance-Document-Type': document_type,
+        }
+        contents, stored_file_path = await asyncio.to_thread(
+            Storage.upload_file, file.file, storage_filename, tags
+        )
         file_size = len(contents)
+        file_hash = hashlib.sha256(contents).hexdigest()
 
         result = await finance_service.upload_document(
             user_id=user.id,
-            filename=file.filename or 'unknown',
+            filename=original_filename,
             content_type=file.content_type or 'application/octet-stream',
             file_size=file_size,
             document_type=document_type,
             reporting_period_id=reporting_period_id,
+            file_path=stored_file_path,
+            file_hash=file_hash,
         )
         await finance_service.log_audit_trail(
             user_id=user.id,
