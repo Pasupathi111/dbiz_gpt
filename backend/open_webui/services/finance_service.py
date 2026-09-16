@@ -1971,14 +1971,15 @@ async def copilot_chat(
 
     if q in ("", "hi", "hello", "hey", "help"):
         dashboard = await get_dashboard(user_id, period_id)
-        stats = dashboard.get("stats") or {}
+        stats = dashboard.get("kpis") or {}
+        pending_reviews = len(await get_pending_reviews(user_id))
         content = (
             f"Hello! I'm the AI Bond Copilot.\n\n"
-            f"Current reporting period: **{dashboard.get('current_period', {}).get('name', 'N/A')}**\n\n"
+            f"Current reporting period: **{dashboard.get('period_name', 'N/A')}**\n\n"
             f"- **{stats.get('total_bonds', 0)} bonds** in active portfolio\n"
             f"- **Portfolio market value:** {stats.get('total_market_value', 'N/A')}\n"
-            f"- **{stats.get('open_exceptions', 0)} open exceptions**\n"
-            f"- **{stats.get('pending_reviews', 0)} pending reviews**\n\n"
+            f"- **{stats.get('exceptions_open', 0)} open exceptions**\n"
+            f"- **{pending_reviews} pending reviews**\n\n"
             f"I can help with portfolio analysis, reconciliation, journals, commentary, and approvals.  What would you like to know?"
         )
         tool_calls = [{
@@ -1989,19 +1990,20 @@ async def copilot_chat(
     elif "portfolio" in q or "bond" in q or "summary" in q or "holding" in q:
         dashboard = await get_dashboard(user_id, period_id)
         bonds = await list_bonds(user_id, period_id=period_id)
-        stats = dashboard.get("stats") or {}
+        stats = dashboard.get("kpis") or {}
+        currencies = sorted(set(b.get("currency") or "UNKNOWN" for b in bonds))
         top = sorted(
             bonds,
             key=lambda b: float(b.get("market_value") or b.get("face_value") or 0),
             reverse=True,
         )[:5]
         content = (
-            f"Here is your current portfolio summary for **{dashboard.get('current_period', {}).get('name', 'this period')}**.\n\n"
+            f"Here is your current portfolio summary for **{dashboard.get('period_name', 'this period')}**.\n\n"
             f"- Total bonds: **{stats.get('total_bonds', 0)}**\n"
             f"- Total market value: **{stats.get('total_market_value', 'N/A')}**\n"
             f"- Total face value: **{stats.get('total_face_value', 'N/A')}**\n"
-            f"- Reconciliation match rate: **{stats.get('reconciliation_match_rate', 'N/A')}**\n"
-            f"- Currency breakdown: **{len(set(b.get('currency') or 'UNKNOWN' for b in bonds))} currencies**"
+            f"- Reconciliation match rate: **{stats.get('recon_rate', 'N/A')}**\n"
+            f"- Currency breakdown: **{len(currencies)} currencies**"
         )
         tool_calls = [{
             "name": "get_portfolio_summary",
@@ -2009,8 +2011,8 @@ async def copilot_chat(
                 "total_bonds": stats.get("total_bonds", 0),
                 "total_market_value": stats.get("total_market_value"),
                 "total_face_value": stats.get("total_face_value"),
-                "reconciliation_rate": stats.get("reconciliation_match_rate"),
-                "currency": stats.get("currency"),
+                "reconciliation_rate": stats.get("recon_rate"),
+                "currencies": currencies,
                 "top_holdings": [
                     {
                         "name": b.get("issuer_name") or b.get("isin") or b.get("bond_id"),
@@ -2157,15 +2159,16 @@ async def copilot_chat(
 
     else:
         dashboard = await get_dashboard(user_id, period_id)
-        stats = dashboard.get("stats") or {}
+        stats = dashboard.get("kpis") or {}
+        pending_reviews = len(await get_pending_reviews(user_id))
         content = (
             f"I understood your question about **{query[:120]}**.\n\n"
             f"Current period snapshot:\n"
             f"- Bonds: **{stats.get('total_bonds', 0)}**\n"
             f"- Market value: **{stats.get('total_market_value', 'N/A')}**\n"
-            f"- Open exceptions: **{stats.get('open_exceptions', 0)}**\n"
-            f"- Pending reviews: **{stats.get('pending_reviews', 0)}**\n"
-            f"- Match rate: **{stats.get('reconciliation_match_rate', 'N/A')}**\n\n"
+            f"- Open exceptions: **{stats.get('exceptions_open', 0)}**\n"
+            f"- Pending reviews: **{pending_reviews}**\n"
+            f"- Match rate: **{stats.get('recon_rate', 'N/A')}**\n\n"
             f"Try asking about 'portfolio', 'exceptions', 'reconciliation', 'journals', 'commentary', or 'reviews'."
         )
         tool_calls = [{
