@@ -1,7 +1,15 @@
 <script lang="ts">
 	import { onMount, getContext } from 'svelte';
 	import { user } from '$lib/stores';
-	import { getCommentary } from '$lib/apis/finance';
+	import {
+		getCommentary,
+		getReportingPeriods,
+		generateCommentary,
+		regenerateCommentary,
+		updateCommentary,
+		approveCommentary
+	} from '$lib/apis/finance';
+	import { toast } from 'svelte-sonner';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 
 	const i18n = getContext('i18n');
@@ -9,7 +17,14 @@
 	let loading = true;
 	let commentary: any = null;
 	let editMode = false;
-	let editContent = '';
+	let editedContent: Record<string, string> = {};
+	let periods: any[] = [];
+	let selectedPeriodId = '';
+	let regenerating = false;
+	let approving = false;
+	let returning = false;
+	let saving = false;
+	let reviewComment = '';
 
 	const sampleCommentary = {
 		id: 'CMT-Sep-2026',
@@ -78,16 +93,123 @@
 		};
 	}
 
-	onMount(async () => {
+	async function loadCommentary() {
 		try {
-			const data = await getCommentary(localStorage.token);
+			const data = await getCommentary(
+				localStorage.token,
+				selectedPeriodId ? { period_id: selectedPeriodId } : undefined
+			);
 			commentary = Array.isArray(data) ? toCommentaryView(data) : null;
 			if (!commentary) commentary = sampleCommentary;
 		} catch {
 			commentary = sampleCommentary;
 		}
+		editedContent = {};
+	}
+
+	onMount(async () => {
+		periods = (await getReportingPeriods(localStorage.token).catch(() => [])) ?? [];
+		if (!selectedPeriodId && periods.length) selectedPeriodId = periods[0].id;
+		await loadCommentary();
 		loading = false;
 	});
+
+	async function handlePeriodChange() {
+		loading = true;
+		await loadCommentary();
+		loading = false;
+	}
+
+	async function handleRegenerate() {
+		if (!selectedPeriodId) {
+			toast.error('Select a reporting period first');
+			return;
+		}
+		regenerating = true;
+		try {
+			const hasRealSections = commentary?.sections?.some((s: any) => s.id);
+			if (hasRealSections) {
+				await Promise.all(
+					commentary.sections.map((s: any) => regenerateCommentary(localStorage.token, s.id))
+				);
+			} else {
+				await generateCommentary(localStorage.token, selectedPeriodId);
+			}
+			await loadCommentary();
+			toast.success('Commentary regenerated');
+		} catch (e: any) {
+			toast.error(e?.message || 'Failed to regenerate commentary');
+		}
+		regenerating = false;
+	}
+
+	function handleExportPdf() {
+		window.print();
+	}
+
+	function toggleEditMode() {
+		if (editMode) {
+			editedContent = {};
+		}
+		editMode = !editMode;
+	}
+
+	async function handleSaveEdits() {
+		const changed = Object.entries(editedContent).filter(([, content]) => content !== undefined);
+		if (!changed.length) {
+			editMode = false;
+			return;
+		}
+		saving = true;
+		try {
+			await Promise.all(
+				changed.map(([id, content]) => updateCommentary(localStorage.token, id, { content }))
+			);
+			await loadCommentary();
+			toast.success('Commentary saved');
+			editMode = false;
+		} catch (e: any) {
+			toast.error(e?.message || 'Failed to save commentary');
+		}
+		saving = false;
+	}
+
+	async function handleApprove() {
+		const ids = (commentary?.sections || []).map((s: any) => s.id).filter(Boolean);
+		if (!ids.length) {
+			toast.error('Nothing to approve yet — generate commentary first');
+			return;
+		}
+		approving = true;
+		try {
+			await Promise.all(ids.map((id: string) => approveCommentary(localStorage.token, id)));
+			await loadCommentary();
+			toast.success('Commentary approved');
+		} catch (e: any) {
+			toast.error(e?.message || 'Failed to approve commentary');
+		}
+		approving = false;
+	}
+
+	async function handleReturn() {
+		const ids = (commentary?.sections || []).map((s: any) => s.id).filter(Boolean);
+		if (!ids.length) {
+			toast.error('Nothing to return yet — generate commentary first');
+			return;
+		}
+		returning = true;
+		try {
+			await Promise.all(
+				ids.map((id: string) => updateCommentary(localStorage.token, id, { status: 'EDITED' }))
+			);
+			await loadCommentary();
+			reviewComment = '';
+			toast.success('Commentary returned for edits');
+		} catch (e: any) {
+			toast.error(e?.message || 'Failed to return commentary');
+		}
+		returning = false;
+	}
 
 	function statusBadge(s: string): string {
 		const m: Record<string, string> = {
@@ -110,10 +232,30 @@
 				<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">AI-generated month-end narrative with human review and approval</p>
 			</div>
 			<div class="flex items-center gap-2">
-				<button class="px-4 py-2 text-sm font-medium border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+				<select
+					class="text-sm border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+					bind:value={selectedPeriodId}
+					on:change={handlePeriodChange}
+				>
+					{#if periods.length === 0}
+						<option value="">Current period</option>
+					{/if}
+					{#each periods as p}
+						<option value={p.id}>{p.name}</option>
+					{/each}
+				</select>
+				<button
+					on:click={handleRegenerate}
+					disabled={regenerating}
+					class="px-4 py-2 text-sm font-medium border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center gap-2"
+				>
+					{#if regenerating}<Spinner className="size-3.5" />{/if}
 					Regenerate
 				</button>
-				<button class="px-4 py-2 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+				<button
+					on:click={handleExportPdf}
+					class="px-4 py-2 text-sm font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+				>
 					Export PDF
 				</button>
 			</div>
@@ -142,11 +284,20 @@
 						</div>
 					</div>
 					<div class="flex items-center gap-2">
+						{#if editMode}
+							<button
+								class="px-3 py-1.5 text-xs rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors disabled:opacity-50"
+								on:click={handleSaveEdits}
+								disabled={saving}
+							>
+								{saving ? 'Saving…' : 'Save Changes'}
+							</button>
+						{/if}
 						<button
 							class="px-3 py-1.5 text-xs rounded-lg border transition-colors {editMode ? 'bg-indigo-600 text-white border-indigo-600' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'}"
-							on:click={() => (editMode = !editMode)}
+							on:click={toggleEditMode}
 						>
-							{editMode ? 'View Mode' : 'Edit Mode'}
+							{editMode ? 'Cancel' : 'Edit Mode'}
 						</button>
 					</div>
 				</div>
@@ -170,7 +321,8 @@
 							{#if editMode}
 								<textarea
 									class="w-full min-h-[120px] text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 resize-y"
-									value={section.content}
+									value={editedContent[section.id] ?? section.content}
+									on:input={(e) => (editedContent[section.id] = e.currentTarget.value)}
 								></textarea>
 							{:else}
 								<div class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-line">{section.content}</div>
@@ -183,10 +335,26 @@
 				<div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm p-6">
 					<h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Approval</h3>
 					<div class="flex items-center gap-3">
-						<textarea placeholder="Add review comments..." class="flex-1 text-sm border border-gray-200 dark:border-gray-700 rounded-lg p-3 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 resize-none h-[72px]"></textarea>
+						<textarea
+							bind:value={reviewComment}
+							placeholder="Add review comments..."
+							class="flex-1 text-sm border border-gray-200 dark:border-gray-700 rounded-lg p-3 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 resize-none h-[72px]"
+						></textarea>
 						<div class="flex flex-col gap-2">
-							<button class="px-6 py-2 text-sm font-medium bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors">Approve</button>
-							<button class="px-6 py-2 text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">Return</button>
+							<button
+								on:click={handleApprove}
+								disabled={approving || commentary.status === 'APPROVED'}
+								class="px-6 py-2 text-sm font-medium bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50"
+							>
+								{approving ? 'Approving…' : 'Approve'}
+							</button>
+							<button
+								on:click={handleReturn}
+								disabled={returning}
+								class="px-6 py-2 text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+							>
+								{returning ? 'Returning…' : 'Return'}
+							</button>
 						</div>
 					</div>
 				</div>

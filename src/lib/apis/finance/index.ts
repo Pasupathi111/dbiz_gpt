@@ -146,8 +146,8 @@ export const updateJournal = (token: string, id: string, data: any) =>
 export const approveJournal = (token: string, id: string, comment?: string) =>
 	request(token, `/journals/${id}/approve`, { method: 'POST', body: JSON.stringify({ comment }) });
 
-export const rejectJournal = (token: string, id: string, comment: string) =>
-	request(token, `/journals/${id}/reject`, { method: 'POST', body: JSON.stringify({ comment }) });
+export const rejectJournal = (token: string, id: string, reason: string) =>
+	request(token, `/journals/${id}/reject`, { method: 'POST', body: JSON.stringify({ reason }) });
 
 // Audit Schedule
 export const generateAuditSchedule = (token: string, periodId: string) =>
@@ -173,18 +173,21 @@ export const getCommentary = (token: string, params?: Record<string, string>) =>
 export const updateCommentary = (token: string, id: string, data: any) =>
 	request(token, `/commentary/${id}`, { method: 'PUT', body: JSON.stringify(data) });
 
+export const regenerateCommentary = (token: string, id: string) =>
+	request(token, `/commentary/${id}/regenerate`, { method: 'POST' });
+
 export const approveCommentary = (token: string, id: string) =>
 	request(token, `/commentary/${id}/approve`, { method: 'POST' });
 
 // Review & Approval
-export const submitForReview = (token: string, data: { object_type: string; object_id: string }) =>
+export const submitForReview = (token: string, data: { output_type: string; output_id: string; period_id: string; title?: string }) =>
 	request(token, '/review/submit', { method: 'POST', body: JSON.stringify(data) });
 
-export const approveOutput = (token: string, data: { object_type: string; object_id: string; comment?: string }) =>
-	request(token, '/review/approve', { method: 'POST', body: JSON.stringify(data) });
+export const approveOutput = (token: string, reviewId: string, comments?: string) =>
+	request(token, '/review/approve', { method: 'POST', body: JSON.stringify({ review_id: reviewId, comments }) });
 
-export const rejectOutput = (token: string, data: { object_type: string; object_id: string; comment: string }) =>
-	request(token, '/review/reject', { method: 'POST', body: JSON.stringify(data) });
+export const rejectOutput = (token: string, reviewId: string, reason: string, comments?: string) =>
+	request(token, '/review/reject', { method: 'POST', body: JSON.stringify({ review_id: reviewId, reason, comments }) });
 
 export const getPendingReviews = (token: string) =>
 	request(token, '/review/pending');
