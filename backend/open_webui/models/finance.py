@@ -286,6 +286,15 @@ class FinanceDocumentsTable:
             except Exception:
                 return False
 
+    async def get_all(
+        self, db: AsyncSession | None = None
+    ) -> list[FinanceDocumentModel]:
+        async with get_async_db_context(db) as db:
+            result = await db.execute(
+                select(FinanceDocument).order_by(FinanceDocument.created_at.desc())
+            )
+            return [FinanceDocumentModel.model_validate(r) for r in result.scalars().all()]
+
 
 FinanceDocuments = FinanceDocumentsTable()
 
@@ -399,6 +408,15 @@ class ExtractionJobsTable:
             except Exception:
                 return False
 
+    async def get_all(
+        self, db: AsyncSession | None = None
+    ) -> list[ExtractionJobModel]:
+        async with get_async_db_context(db) as db:
+            result = await db.execute(
+                select(ExtractionJob).order_by(ExtractionJob.created_at.desc())
+            )
+            return [ExtractionJobModel.model_validate(r) for r in result.scalars().all()]
+
 
 ExtractionJobs = ExtractionJobsTable()
 
@@ -491,8 +509,28 @@ class BondRecordForm(BaseModel):
 
 class BondRecordsTable:
     async def insert(
-        self, form_data: BondRecordForm, db: AsyncSession | None = None
+        self, *args, db: AsyncSession | None = None
     ) -> BondRecordModel | None:
+        """Flexible insert signature.
+
+        Supported call conventions:
+        * ``insert(form_data: BondRecordForm)`` — original 1-arg style
+        * ``insert(user_id: str, form_data: BondRecordForm)`` — 2-arg style
+          (``user_id`` is accepted for signature compatibility and currently
+          unused; bonds don't have a ``created_by`` column.)
+        """
+        if len(args) == 1 and isinstance(args[0], BondRecordForm):
+            form_data = args[0]
+        elif (
+            len(args) == 2
+            and isinstance(args[0], str)
+            and isinstance(args[1], BondRecordForm)
+        ):
+            _, form_data = args
+        else:
+            raise TypeError(
+                f"BondRecords.insert() called with unsupported args: {[type(a).__name__ for a in args]!r}"
+            )
         async with get_async_db_context(db) as db:
             try:
                 now = _now()
@@ -592,6 +630,15 @@ class BondRecordsTable:
             )
             return result.scalar() or 0
 
+    async def get_all(
+        self, db: AsyncSession | None = None
+    ) -> list[BondRecordModel]:
+        async with get_async_db_context(db) as db:
+            result = await db.execute(
+                select(BondRecord).order_by(BondRecord.created_at.desc())
+            )
+            return [BondRecordModel.model_validate(r) for r in result.scalars().all()]
+
 
 BondRecords = BondRecordsTable()
 
@@ -646,8 +693,21 @@ class BondSourceRecordForm(BaseModel):
 
 class BondSourceRecordsTable:
     async def insert(
-        self, form_data: BondSourceRecordForm, db: AsyncSession | None = None
+        self, *args, db: AsyncSession | None = None
     ) -> BondSourceRecordModel | None:
+        """Flexible insert signature (1-arg form, or 2-arg user_id,form)."""
+        if len(args) == 1 and isinstance(args[0], BondSourceRecordForm):
+            form_data = args[0]
+        elif (
+            len(args) == 2
+            and isinstance(args[0], str)
+            and isinstance(args[1], BondSourceRecordForm)
+        ):
+            _, form_data = args
+        else:
+            raise TypeError(
+                f"BondSourceRecords.insert() called with unsupported args: {[type(a).__name__ for a in args]!r}"
+            )
         async with get_async_db_context(db) as db:
             try:
                 model = BondSourceRecordModel(
@@ -708,6 +768,15 @@ class BondSourceRecordsTable:
             except Exception:
                 return False
 
+    async def get_all(
+        self, db: AsyncSession | None = None
+    ) -> list[BondSourceRecordModel]:
+        async with get_async_db_context(db) as db:
+            result = await db.execute(
+                select(BondSourceRecord).order_by(BondSourceRecord.created_at.desc())
+            )
+            return [BondSourceRecordModel.model_validate(r) for r in result.scalars().all()]
+
 
 BondSourceRecords = BondSourceRecordsTable()
 
@@ -759,21 +828,35 @@ class ReconciliationRunForm(BaseModel):
 
 class ReconciliationRunsTable:
     async def insert(
-        self, user_id: str, form_data: ReconciliationRunForm, db: AsyncSession | None = None
+        self,
+        user_id_or_form,
+        form_data=None,
+        db: AsyncSession | None = None,
     ) -> ReconciliationRunModel | None:
-        async with get_async_db_context(db) as db:
+        if isinstance(user_id_or_form, ReconciliationRunForm):
+            actual_form: ReconciliationRunForm = user_id_or_form
+            actual_user_id: str = "system"
+            actual_db = db
+            if isinstance(form_data, AsyncSession) and db is None:
+                actual_db = form_data
+        else:
+            actual_user_id = str(user_id_or_form)
+            actual_form = form_data
+            actual_db = db
+
+        async with get_async_db_context(actual_db) as db:
             try:
                 now = _now()
                 model = ReconciliationRunModel(
                     **{
-                        **form_data.model_dump(),
+                        **actual_form.model_dump(),
                         "id": _uuid(),
                         "total_bonds": 0,
                         "matched": 0,
                         "variances": 0,
                         "missing": 0,
                         "duplicates": 0,
-                        "run_by": user_id,
+                        "run_by": actual_user_id,
                         "started_at": now,
                         "created_at": now,
                     }
@@ -834,6 +917,15 @@ class ReconciliationRunsTable:
                 return True
             except Exception:
                 return False
+
+    async def get_all(
+        self, db: AsyncSession | None = None
+    ) -> list[ReconciliationRunModel]:
+        async with get_async_db_context(db) as db:
+            result = await db.execute(
+                select(ReconciliationRun).order_by(ReconciliationRun.created_at.desc())
+            )
+            return [ReconciliationRunModel.model_validate(r) for r in result.scalars().all()]
 
 
 ReconciliationRuns = ReconciliationRunsTable()
@@ -907,8 +999,20 @@ class ReconciliationItemForm(BaseModel):
 
 class ReconciliationItemsTable:
     async def insert(
-        self, form_data: ReconciliationItemForm, db: AsyncSession | None = None
+        self, *args, db: AsyncSession | None = None
     ) -> ReconciliationItemModel | None:
+        if len(args) == 1 and isinstance(args[0], ReconciliationItemForm):
+            form_data = args[0]
+        elif (
+            len(args) == 2
+            and isinstance(args[0], str)
+            and isinstance(args[1], ReconciliationItemForm)
+        ):
+            _, form_data = args
+        else:
+            raise TypeError(
+                f"ReconciliationItems.insert() called with unsupported args: {[type(a).__name__ for a in args]!r}"
+            )
         async with get_async_db_context(db) as db:
             try:
                 model = ReconciliationItemModel(
@@ -985,6 +1089,31 @@ class ReconciliationItemsTable:
                 return True
             except Exception:
                 return False
+
+    async def get_all(
+        self, db: AsyncSession | None = None
+    ) -> list[ReconciliationItemModel]:
+        async with get_async_db_context(db) as db:
+            result = await db.execute(
+                select(ReconciliationItem).order_by(ReconciliationItem.created_at.desc())
+            )
+            return [ReconciliationItemModel.model_validate(r) for r in result.scalars().all()]
+
+    async def get_by_run_period(
+        self, reporting_period_id: str, db: AsyncSession | None = None
+    ) -> list[ReconciliationItemModel]:
+        async with get_async_db_context(db) as db:
+            stmt = (
+                select(ReconciliationItem)
+                .join(
+                    ReconciliationRun,
+                    ReconciliationRun.id == ReconciliationItem.reconciliation_run_id,
+                )
+                .filter(ReconciliationRun.reporting_period_id == reporting_period_id)
+                .order_by(ReconciliationItem.bond_id)
+            )
+            result = await db.execute(stmt)
+            return [ReconciliationItemModel.model_validate(r) for r in result.scalars().all()]
 
 
 ReconciliationItems = ReconciliationItemsTable()
@@ -1136,6 +1265,15 @@ class BondMovementsTable:
             except Exception:
                 return False
 
+    async def get_all(
+        self, db: AsyncSession | None = None
+    ) -> list[BondMovementModel]:
+        async with get_async_db_context(db) as db:
+            result = await db.execute(
+                select(BondMovement).order_by(BondMovement.created_at.desc())
+            )
+            return [BondMovementModel.model_validate(r) for r in result.scalars().all()]
+
 
 BondMovements = BondMovementsTable()
 
@@ -1213,8 +1351,20 @@ class BondScheduleLineForm(BaseModel):
 
 class BondScheduleLinesTable:
     async def insert(
-        self, form_data: BondScheduleLineForm, db: AsyncSession | None = None
+        self, *args, db: AsyncSession | None = None
     ) -> BondScheduleLineModel | None:
+        if len(args) == 1 and isinstance(args[0], BondScheduleLineForm):
+            form_data = args[0]
+        elif (
+            len(args) == 2
+            and isinstance(args[0], str)
+            and isinstance(args[1], BondScheduleLineForm)
+        ):
+            _, form_data = args
+        else:
+            raise TypeError(
+                f"BondScheduleLines.insert() called with unsupported args: {[type(a).__name__ for a in args]!r}"
+            )
         async with get_async_db_context(db) as db:
             try:
                 now = _now()
@@ -1283,6 +1433,15 @@ class BondScheduleLinesTable:
                 return True
             except Exception:
                 return False
+
+    async def get_all(
+        self, db: AsyncSession | None = None
+    ) -> list[BondScheduleLineModel]:
+        async with get_async_db_context(db) as db:
+            result = await db.execute(
+                select(BondScheduleLine).order_by(BondScheduleLine.created_at.desc())
+            )
+            return [BondScheduleLineModel.model_validate(r) for r in result.scalars().all()]
 
 
 BondScheduleLines = BondScheduleLinesTable()
@@ -1427,6 +1586,15 @@ class JournalsTable:
             except Exception:
                 return False
 
+    async def get_all(
+        self, db: AsyncSession | None = None
+    ) -> list[JournalModel]:
+        async with get_async_db_context(db) as db:
+            result = await db.execute(
+                select(Journal).order_by(Journal.created_at.desc())
+            )
+            return [JournalModel.model_validate(r) for r in result.scalars().all()]
+
 
 Journals = JournalsTable()
 
@@ -1545,6 +1713,15 @@ class JournalLinesTable:
                 return True
             except Exception:
                 return False
+
+    async def get_all(
+        self, db: AsyncSession | None = None
+    ) -> list[JournalLineModel]:
+        async with get_async_db_context(db) as db:
+            result = await db.execute(
+                select(JournalLine).order_by(JournalLine.created_at.desc())
+            )
+            return [JournalLineModel.model_validate(r) for r in result.scalars().all()]
 
 
 JournalLines = JournalLinesTable()
@@ -1682,6 +1859,15 @@ class AuditScheduleEntriesTable:
             except Exception:
                 return False
 
+    async def get_all(
+        self, db: AsyncSession | None = None
+    ) -> list[AuditScheduleEntryModel]:
+        async with get_async_db_context(db) as db:
+            result = await db.execute(
+                select(AuditScheduleEntry).order_by(AuditScheduleEntry.created_at.desc())
+            )
+            return [AuditScheduleEntryModel.model_validate(r) for r in result.scalars().all()]
+
 
 AuditScheduleEntries = AuditScheduleEntriesTable()
 
@@ -1732,14 +1918,26 @@ class CommentaryForm(BaseModel):
 
 class CommentariesTable:
     async def insert(
-        self, form_data: CommentaryForm, db: AsyncSession | None = None
+        self,
+        user_id_or_form,
+        form_data=None,
+        db: AsyncSession | None = None,
     ) -> CommentaryModel | None:
-        async with get_async_db_context(db) as db:
+        if isinstance(user_id_or_form, CommentaryForm):
+            actual_form: CommentaryForm = user_id_or_form
+            actual_db = db
+            if isinstance(form_data, AsyncSession) and db is None:
+                actual_db = form_data
+        else:
+            actual_form = form_data
+            actual_db = db
+
+        async with get_async_db_context(actual_db) as db:
             try:
                 now = _now()
                 model = CommentaryModel(
                     **{
-                        **form_data.model_dump(),
+                        **actual_form.model_dump(),
                         "id": _uuid(),
                         "created_at": now,
                         "updated_at": now,
@@ -1814,6 +2012,35 @@ class CommentariesTable:
             except Exception:
                 return False
 
+    async def get_all(
+        self, db: AsyncSession | None = None
+    ) -> list[CommentaryModel]:
+        async with get_async_db_context(db) as db:
+            result = await db.execute(
+                select(Commentary).order_by(Commentary.created_at.desc())
+            )
+            return [CommentaryModel.model_validate(r) for r in result.scalars().all()]
+
+    async def get_by_period_and_type(
+        self,
+        reporting_period_id: str,
+        content_type: str,
+        db: AsyncSession | None = None,
+    ) -> CommentaryModel | None:
+        async with get_async_db_context(db) as db:
+            stmt = (
+                select(Commentary)
+                .filter_by(
+                    reporting_period_id=reporting_period_id,
+                    content_type=content_type,
+                )
+                .order_by(Commentary.created_at.desc())
+                .limit(1)
+            )
+            result = await db.execute(stmt)
+            row = result.scalars().first()
+            return CommentaryModel.model_validate(row) if row else None
+
 
 Commentaries = CommentariesTable()
 
@@ -1867,15 +2094,30 @@ class FinanceApprovalForm(BaseModel):
 
 class FinanceApprovalsTable:
     async def insert(
-        self, user_id: str, form_data: FinanceApprovalForm, db: AsyncSession | None = None
+        self,
+        user_id_or_form,
+        form_data=None,
+        db: AsyncSession | None = None,
     ) -> FinanceApprovalModel | None:
-        async with get_async_db_context(db) as db:
+        if isinstance(user_id_or_form, FinanceApprovalForm):
+            actual_form: FinanceApprovalForm = user_id_or_form
+            actual_user_id: str = actual_form.model_dump().get("user_id") or getattr(
+                actual_form, "user_id", None) or "system"
+            actual_db = db if db is None else db
+            if isinstance(form_data, AsyncSession) and db is None:
+                actual_db = form_data
+        else:
+            actual_user_id = str(user_id_or_form)
+            actual_form = form_data
+            actual_db = db
+
+        async with get_async_db_context(actual_db) as db:
             try:
                 model = FinanceApprovalModel(
                     **{
-                        **form_data.model_dump(),
+                        **actual_form.model_dump(),
                         "id": _uuid(),
-                        "user_id": user_id,
+                        "user_id": actual_user_id,
                         "created_at": _now(),
                     }
                 )
@@ -1929,6 +2171,15 @@ class FinanceApprovalsTable:
                 return True
             except Exception:
                 return False
+
+    async def get_all(
+        self, db: AsyncSession | None = None
+    ) -> list[FinanceApprovalModel]:
+        async with get_async_db_context(db) as db:
+            result = await db.execute(
+                select(FinanceApproval).order_by(FinanceApproval.created_at.desc())
+            )
+            return [FinanceApprovalModel.model_validate(r) for r in result.scalars().all()]
 
 
 FinanceApprovals = FinanceApprovalsTable()
@@ -2091,6 +2342,15 @@ class FinanceExceptionsTable:
             )
             return result.scalar() or 0
 
+    async def get_all(
+        self, db: AsyncSession | None = None
+    ) -> list[FinanceExceptionModel]:
+        async with get_async_db_context(db) as db:
+            result = await db.execute(
+                select(FinanceException).order_by(FinanceException.created_at.desc())
+            )
+            return [FinanceExceptionModel.model_validate(r) for r in result.scalars().all()]
+
 
 FinanceExceptions = FinanceExceptionsTable()
 
@@ -2135,6 +2395,7 @@ class FinanceAuditLogModel(BaseModel):
 
 class FinanceAuditLogForm(BaseModel):
     reporting_period_id: str | None = None
+    user_id: str | None = None
     action: str
     object_type: str | None = None
     object_id: str | None = None
@@ -2147,15 +2408,30 @@ class FinanceAuditLogForm(BaseModel):
 
 class FinanceAuditLogsTable:
     async def insert(
-        self, user_id: str, form_data: FinanceAuditLogForm, db: AsyncSession | None = None
+        self,
+        user_id_or_form,
+        form_data=None,
+        db: AsyncSession | None = None,
     ) -> FinanceAuditLogModel | None:
-        async with get_async_db_context(db) as db:
+        if isinstance(user_id_or_form, FinanceAuditLogForm):
+            actual_form: FinanceAuditLogForm = user_id_or_form
+            dumped = actual_form.model_dump()
+            actual_user_id: str = dumped.get("user_id") or "system"
+            actual_db = db if db is None else db
+            if isinstance(form_data, AsyncSession) and db is None:
+                actual_db = form_data
+        else:
+            actual_user_id = str(user_id_or_form)
+            actual_form = form_data
+            actual_db = db
+
+        async with get_async_db_context(actual_db) as db:
             try:
                 model = FinanceAuditLogModel(
                     **{
-                        **form_data.model_dump(),
+                        **actual_form.model_dump(),
                         "id": _uuid(),
-                        "user_id": user_id,
+                        "user_id": actual_user_id,
                         "created_at": _now(),
                     }
                 )
@@ -2224,6 +2500,18 @@ class FinanceAuditLogsTable:
                 stmt = stmt.filter_by(reporting_period_id=reporting_period_id)
             result = await db.execute(
                 stmt.order_by(FinanceAuditLog.created_at.desc()).offset(skip).limit(limit)
+            )
+            return [FinanceAuditLogModel.model_validate(r) for r in result.scalars().all()]
+
+    async def get_all(
+        self, skip: int = 0, limit: int = 1000, db: AsyncSession | None = None
+    ) -> list[FinanceAuditLogModel]:
+        async with get_async_db_context(db) as db:
+            result = await db.execute(
+                select(FinanceAuditLog)
+                .order_by(FinanceAuditLog.created_at.desc())
+                .offset(skip)
+                .limit(limit)
             )
             return [FinanceAuditLogModel.model_validate(r) for r in result.scalars().all()]
 
@@ -2359,6 +2647,15 @@ class SourceReferencesTable:
                 return True
             except Exception:
                 return False
+
+    async def get_all(
+        self, db: AsyncSession | None = None
+    ) -> list[SourceReferenceModel]:
+        async with get_async_db_context(db) as db:
+            result = await db.execute(
+                select(SourceReference).order_by(SourceReference.created_at.desc())
+            )
+            return [SourceReferenceModel.model_validate(r) for r in result.scalars().all()]
 
 
 SourceReferences = SourceReferencesTable()
