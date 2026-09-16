@@ -318,7 +318,7 @@
 		<div class="flex-1 overflow-y-auto">
 			<div class="px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 				<!-- Summary Cards -->
-				<div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+				<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 					<!-- Matched -->
 					<div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 shadow-sm">
 						<div class="flex items-center justify-between mb-2">
@@ -551,7 +551,7 @@
 					</div>
 
 					<!-- Table Footer -->
-					<div class="px-5 py-3 border-t border-gray-100 dark:border-gray-800 text-xs text-gray-400 dark:text-gray-500 flex items-center justify-between">
+					<div class="px-5 py-3 border-t border-gray-100 dark:border-gray-800 text-xs text-gray-400 dark:text-gray-500 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1">
 						<span>Showing {filteredItems.length} of {items.length} items</span>
 						<span>
 							{#if items.length}
@@ -579,7 +579,7 @@
 		<div class="absolute inset-0 bg-black/30 dark:bg-black/50 transition-opacity" on:click={closeDrawer}></div>
 
 		<!-- Drawer Panel -->
-		<div class="relative w-full max-w-lg bg-white dark:bg-gray-900 shadow-2xl border-l border-gray-200 dark:border-gray-700 flex flex-col h-full overflow-hidden animate-slide-in">
+		<div class="relative w-full sm:max-w-lg bg-white dark:bg-gray-900 shadow-2xl border-l border-gray-200 dark:border-gray-700 flex flex-col h-full overflow-hidden animate-slide-in">
 			{#if selectedItem}
 				<!-- Drawer Header -->
 				<div class="px-6 py-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between flex-shrink-0">

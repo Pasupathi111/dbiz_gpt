@@ -136,7 +136,7 @@
 				</div>
 
 				<!-- Type Filter -->
-				<div class="flex items-center gap-1.5">
+				<div class="flex flex-wrap items-center gap-1.5">
 					{#each ['', 'JOURNAL', 'MOVEMENT', 'EXCEPTION', 'COMMENTARY'] as t}
 						<button
 							class="px-3 py-1.5 text-xs rounded-lg border transition-colors {filterType === t ? 'bg-indigo-600 text-white border-indigo-600' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'}"
@@ -156,12 +156,12 @@
 						>
 							<div class="px-5 py-4 flex items-start gap-4">
 								<div class="flex-1 min-w-0">
-									<div class="flex items-center gap-2 mb-1">
+									<div class="flex flex-wrap items-center gap-2 mb-1">
 										<span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium {typeBadge(item.output_type)}">{(item.output_type || '').toUpperCase()}</span>
 										<span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium {statusBadge(item.status)}">{(item.status || '').toUpperCase()}</span>
 									</div>
 									<h3 class="text-sm font-medium text-gray-900 dark:text-white">{item.title || `${item.output_type} ${item.output_id}`}</h3>
-									<div class="flex items-center gap-3 mt-2 text-[10px] text-gray-400">
+									<div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-[10px] text-gray-400">
 										<span>Submitted by {item.submitted_by}</span>
 										{#if item.submitted_at}<span>{new Date(item.submitted_at).toLocaleString('en-SG')}</span>{/if}
 									</div>

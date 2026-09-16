@@ -99,7 +99,7 @@
 		<div class="flex-1 overflow-y-auto">
 			<div class="px-4 sm:px-6 lg:px-8 py-6 space-y-4">
 				<!-- Filters -->
-				<div class="flex items-center gap-3">
+				<div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
 					<div class="relative flex-1 max-w-sm">
 						<svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
 						<input type="text" bind:value={searchQuery} placeholder="Search audit logs..." class="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400" />
@@ -116,21 +116,22 @@
 				<div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
 					<div class="divide-y divide-gray-100 dark:divide-gray-800">
 						{#each filtered as log}
-							<div class="px-5 py-4 flex items-start gap-4 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
+							<div class="px-4 sm:px-5 py-4 flex items-start gap-3 sm:gap-4 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
 								<div class="mt-1 w-2.5 h-2.5 rounded-full flex-shrink-0 {actionColors[log.action] || 'bg-gray-400'}"></div>
 								<div class="flex-1 min-w-0">
-									<div class="flex items-center gap-2 mb-0.5">
+									<div class="flex flex-wrap items-center gap-2 mb-0.5">
 										<span class="text-sm font-medium text-gray-900 dark:text-white">{log.action.replace(/_/g, ' ')}</span>
 										<span class="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 font-mono">{log.object_type}</span>
 									</div>
-									<div class="text-sm text-gray-600 dark:text-gray-400">{log.details}</div>
-									<div class="flex items-center gap-3 mt-1.5">
+									<div class="text-sm text-gray-600 dark:text-gray-400 break-words">{log.details}</div>
+									<div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
 										<span class="text-[10px] text-gray-400 dark:text-gray-500">{formatTime(log.timestamp)}</span>
 										<span class="text-[10px] text-gray-400 dark:text-gray-500">by {log.user_name}</span>
 										<span class="text-[10px] text-gray-400 dark:text-gray-500">via {log.source}</span>
 									</div>
+									<div class="sm:hidden text-xs text-gray-400 dark:text-gray-500 font-mono mt-1 truncate">{log.object_id}</div>
 								</div>
-								<div class="text-xs text-gray-400 dark:text-gray-500 font-mono flex-shrink-0">{log.object_id}</div>
+								<div class="text-xs text-gray-400 dark:text-gray-500 font-mono flex-shrink-0 hidden sm:block">{log.object_id}</div>
 							</div>
 						{/each}
 					</div>

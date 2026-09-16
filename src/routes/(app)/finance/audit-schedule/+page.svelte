@@ -103,12 +103,12 @@
 		<div class="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500 mb-1">
 			<span>AI Bond Copilot</span><span>/</span><span>Audit Schedule</span>
 		</div>
-		<div class="flex items-center justify-between">
+		<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
 			<div>
 				<h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Audit Schedule</h1>
 				<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Per-bond roll-forward for month-end audit support</p>
 			</div>
-			<div class="flex items-center gap-2">
+			<div class="flex flex-wrap items-center gap-2">
 				<select
 					class="text-sm border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300"
 					bind:value={selectedPeriodId}
@@ -158,12 +158,12 @@
 				</div>
 
 				<!-- Filters -->
-				<div class="flex items-center gap-3">
+				<div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
 					<div class="relative flex-1 max-w-sm">
 						<svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
 						<input type="text" bind:value={searchQuery} placeholder="Search by Bond ID..." class="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400" />
 					</div>
-					<div class="flex items-center gap-1.5">
+					<div class="flex flex-wrap items-center gap-1.5">
 						{#each ['', 'VALID', 'WARNING', 'ERROR'] as s}
 							<button
 								class="px-3 py-1.5 text-xs rounded-lg border transition-colors {statusFilter === s ? 'bg-indigo-600 text-white border-indigo-600' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'}"
