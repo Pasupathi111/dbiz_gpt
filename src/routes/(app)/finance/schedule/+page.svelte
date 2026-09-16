@@ -17,24 +17,14 @@
 	let periods: any[] = [];
 	let selectedPeriodId = '';
 
-	const sampleSchedule = [
-		{ id: '1', bond_id: 'BOND-001', isin: 'SG7M18000001', issuer: 'DBS Group Holdings', currency: 'SGD', face_value: 1000000, book_value: 998500, market_value: 1012000, coupon_rate: 3.25, maturity_date: '2028-03-15', accrued_interest: 8125, movement_type: 'UNCHANGED', variance: 0, source: 'UBS', validation_status: 'VALID' },
-		{ id: '2', bond_id: 'BOND-002', isin: 'SG7M18000002', issuer: 'OCBC Bank', currency: 'SGD', face_value: 2000000, book_value: 1995000, market_value: 2035000, coupon_rate: 3.50, maturity_date: '2029-06-20', accrued_interest: 17500, movement_type: 'VALUE_CHANGE', variance: 15000, source: 'UBS', validation_status: 'VALID' },
-		{ id: '3', bond_id: 'BOND-003', isin: 'XS1234567890', issuer: 'Temasek Holdings', currency: 'SGD', face_value: 500000, book_value: 502000, market_value: 510000, coupon_rate: 2.75, maturity_date: '2027-12-01', accrued_interest: 3437, movement_type: 'NEW', variance: null, source: 'UBS', validation_status: 'VALID' },
-		{ id: '4', bond_id: 'BOND-004', isin: 'SG3258987654', issuer: 'Singtel Group', currency: 'SGD', face_value: 1500000, book_value: 1498000, market_value: 1520000, coupon_rate: 4.00, maturity_date: '2030-09-30', accrued_interest: 15000, movement_type: 'UNCHANGED', variance: 0, source: 'UBS', validation_status: 'VALID' },
-		{ id: '5', bond_id: 'BOND-005', isin: 'SG7M18000003', issuer: 'CapitaLand Investment', currency: 'SGD', face_value: 750000, book_value: 748500, market_value: 755000, coupon_rate: 3.10, maturity_date: '2028-07-15', accrued_interest: 5812, movement_type: 'NEW', variance: null, source: 'UBS', validation_status: 'VALID' },
-		{ id: '6', bond_id: 'BOND-006', isin: 'SG1K24000006', issuer: 'Mapletree Logistics Trust', currency: 'SGD', face_value: 800000, book_value: 799000, market_value: 795000, coupon_rate: 3.80, maturity_date: '2029-01-20', accrued_interest: 7600, movement_type: 'VALUE_CHANGE', variance: -5200, source: 'LGI', validation_status: 'WARNING' },
-		{ id: '7', bond_id: 'BOND-007', isin: 'XS9876543210', issuer: 'Keppel Corporation', currency: 'SGD', face_value: 1200000, book_value: 1198000, market_value: 1205000, coupon_rate: 3.45, maturity_date: '2028-11-30', accrued_interest: 10350, movement_type: 'UNCHANGED', variance: 0, source: 'UBS', validation_status: 'VALID' },
-		{ id: '8', bond_id: 'BOND-008', isin: 'SG3L58000008', issuer: 'Singapore Airlines', currency: 'SGD', face_value: 600000, book_value: 598000, market_value: 0, coupon_rate: 2.90, maturity_date: '2026-08-31', accrued_interest: 0, movement_type: 'MATURED', variance: -598000, source: 'Schedule', validation_status: 'VALID' }
-	];
-
 	async function loadSchedule() {
 		loading = true;
 		try {
 			const data = await getSchedule(localStorage.token, { period_id: selectedPeriodId });
-			scheduleData = Array.isArray(data) ? data : sampleSchedule;
-		} catch {
-			scheduleData = sampleSchedule;
+			scheduleData = Array.isArray(data) ? data : [];
+		} catch (e: any) {
+			scheduleData = [];
+			toast.error(e?.message || 'Failed to load schedule');
 		}
 		loading = false;
 	}
@@ -90,12 +80,15 @@
 	}
 
 	async function handleValidate() {
+		if (!selectedPeriodId) {
+			toast.error('Select a reporting period first');
+			return;
+		}
 		try {
 			validationResult = await validateSchedule(localStorage.token, selectedPeriodId);
 			toast.success('Validation complete');
-		} catch {
-			validationResult = { passed: 76, warnings: 2, errors: 0 };
-			toast.success('Validation complete');
+		} catch (e: any) {
+			toast.error(e?.message || 'Validation failed');
 		}
 	}
 

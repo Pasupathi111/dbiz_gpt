@@ -5,7 +5,8 @@
 		getReconciliation,
 		getReconciliationSummary,
 		runReconciliation,
-		updateException
+		updateException,
+		getReportingPeriods
 	} from '$lib/apis/finance';
 	import { toast } from 'svelte-sonner';
 	import Spinner from '$lib/components/common/Spinner.svelte';
@@ -50,153 +51,74 @@
 	let statusFilter: string = 'ALL';
 	let sortColumn: string = 'bond_id';
 	let sortDirection: 'asc' | 'desc' = 'asc';
-	let selectedPeriod = 'sep-2026';
+	let periods: any[] = [];
+	let selectedPeriodId = '';
 	let drawerOpen = false;
 	let selectedItem: ReconciliationItem | null = null;
 
-	// --- Sample data ---
-	const defaultItems: ReconciliationItem[] = [
-		{
-			id: 'rec-001', bond_id: 'BOND-001', isin: 'SG7Q99939698', bond_name: 'Singapore Govt 3.375% 2033',
-			ubs_value: 4_250_000.00, lgi_value: 4_250_000.00, schedule_value: 4_250_000.00,
-			variance: 0, variance_pct: 0, status: 'MATCHED',
-			source_a_label: 'UBS Custody', source_b_label: 'LGI GL',
-			ai_explanation: 'All three sources agree on the market value for this Singapore Government bond. No discrepancies detected.',
-			source_references: ['UBS Monthly Statement Sep-2026 Row 12', 'LGI GL Account 30410 Entry 0091'],
-			recommended_action: 'No action required.', last_updated: '2026-09-15T10:30:00Z'
-		},
-		{
-			id: 'rec-002', bond_id: 'BOND-002', isin: 'SG3260985842', bond_name: 'HDB 2.750% 2029',
-			ubs_value: 3_180_000.00, lgi_value: 3_180_000.00, schedule_value: 3_180_000.00,
-			variance: 0, variance_pct: 0, status: 'MATCHED',
-			source_a_label: 'UBS Custody', source_b_label: 'LGI GL',
-			ai_explanation: 'Market values match across UBS custody statement, LGI general ledger and prior-period schedule.',
-			source_references: ['UBS Monthly Statement Sep-2026 Row 14', 'LGI GL Account 30410 Entry 0093'],
-			recommended_action: 'No action required.', last_updated: '2026-09-15T10:30:00Z'
-		},
-		{
-			id: 'rec-003', bond_id: 'BOND-003', isin: 'XS2530501857', bond_name: 'Temasek 4.125% 2034',
-			ubs_value: 5_420_000.00, lgi_value: 5_420_000.00, schedule_value: 5_420_000.00,
-			variance: 0, variance_pct: 0, status: 'MATCHED',
-			source_a_label: 'UBS Custody', source_b_label: 'LGI GL',
-			ai_explanation: 'Temasek bond fully reconciled across all data sources with zero variance.',
-			source_references: ['UBS Monthly Statement Sep-2026 Row 3', 'LGI GL Account 30420 Entry 0034'],
-			recommended_action: 'No action required.', last_updated: '2026-09-15T10:30:00Z'
-		},
-		{
-			id: 'rec-004', bond_id: 'BOND-004', isin: 'SG7S83939893', bond_name: 'Singapore Govt 2.875% 2030',
-			ubs_value: 6_750_000.00, lgi_value: 6_750_000.00, schedule_value: 6_750_000.00,
-			variance: 0, variance_pct: 0, status: 'MATCHED',
-			source_a_label: 'UBS Custody', source_b_label: 'LGI GL',
-			ai_explanation: 'Perfect three-way match. Bond settlement and accrued interest align.',
-			source_references: ['UBS Monthly Statement Sep-2026 Row 5', 'LGI GL Account 30410 Entry 0056'],
-			recommended_action: 'No action required.', last_updated: '2026-09-15T10:30:00Z'
-		},
-		{
-			id: 'rec-005', bond_id: 'BOND-005', isin: 'SG31A7000007', bond_name: 'LTA 3.040% 2031',
-			ubs_value: 2_890_000.00, lgi_value: 2_890_000.00, schedule_value: 2_890_000.00,
-			variance: 0, variance_pct: 0, status: 'MATCHED',
-			source_a_label: 'UBS Custody', source_b_label: 'LGI GL',
-			ai_explanation: 'Land Transport Authority bond matched across all sources without exception.',
-			source_references: ['UBS Monthly Statement Sep-2026 Row 8', 'LGI GL Account 30430 Entry 0012'],
-			recommended_action: 'No action required.', last_updated: '2026-09-15T10:30:00Z'
-		},
-		{
-			id: 'rec-006', bond_id: 'BOND-006', isin: 'XS2388598867', bond_name: 'DBS 3.500% 2028',
-			ubs_value: 4_100_000.00, lgi_value: 4_100_000.00, schedule_value: 4_100_000.00,
-			variance: 0, variance_pct: 0, status: 'MATCHED',
-			source_a_label: 'UBS Custody', source_b_label: 'LGI GL',
-			ai_explanation: 'DBS corporate bond fully reconciled with zero variance across custody and ledger.',
-			source_references: ['UBS Monthly Statement Sep-2026 Row 17', 'LGI GL Account 30440 Entry 0045'],
-			recommended_action: 'No action required.', last_updated: '2026-09-15T10:30:00Z'
-		},
-		{
-			id: 'rec-007', bond_id: 'BOND-007', isin: 'SG7V18000009', bond_name: 'Singapore Govt 3.000% 2032',
-			ubs_value: 3_560_000.00, lgi_value: 3_560_000.00, schedule_value: 3_560_000.00,
-			variance: 0, variance_pct: 0, status: 'MATCHED',
-			source_a_label: 'UBS Custody', source_b_label: 'LGI GL',
-			ai_explanation: 'Government bond reconciled with zero variance. All sources in agreement.',
-			source_references: ['UBS Monthly Statement Sep-2026 Row 21', 'LGI GL Account 30410 Entry 0078'],
-			recommended_action: 'No action required.', last_updated: '2026-09-15T10:30:00Z'
-		},
-		{
-			id: 'rec-008', bond_id: 'BOND-008', isin: 'SG3265998534', bond_name: 'HDB 2.500% 2027',
-			ubs_value: 1_980_000.00, lgi_value: 1_980_000.00, schedule_value: 1_980_000.00,
-			variance: 0, variance_pct: 0, status: 'MATCHED',
-			source_a_label: 'UBS Custody', source_b_label: 'LGI GL',
-			ai_explanation: 'HDB statutory board bond matched. Market value consistent across all data sources.',
-			source_references: ['UBS Monthly Statement Sep-2026 Row 25', 'LGI GL Account 30410 Entry 0082'],
-			recommended_action: 'No action required.', last_updated: '2026-09-15T10:30:00Z'
-		},
-		{
-			id: 'rec-009', bond_id: 'BOND-009', isin: 'XS2591847523', bond_name: 'Mapletree 4.250% 2035',
-			ubs_value: 7_150_000.00, lgi_value: 7_123_500.00, schedule_value: 7_150_000.00,
-			variance: -26_500.00, variance_pct: -0.37, status: 'VARIANCE',
-			source_a_label: 'UBS Custody', source_b_label: 'LGI GL',
-			ai_explanation: 'LGI general ledger shows S$26,500 less than UBS custody statement. The difference likely stems from an unreflected accrued interest adjustment in the LGI posting for this period. The prior-period schedule agrees with UBS.',
-			source_references: ['UBS Monthly Statement Sep-2026 Row 28', 'LGI GL Account 30440 Entry 0098', 'Prior Schedule Row 28'],
-			recommended_action: 'Post accrued interest adjustment journal of S$26,500 to LGI GL Account 30440.',
-			last_updated: '2026-09-15T10:30:00Z'
-		},
-		{
-			id: 'rec-010', bond_id: 'BOND-010', isin: 'SG7Q50929404', bond_name: 'Singapore Govt 2.625% 2028',
-			ubs_value: 5_800_000.00, lgi_value: 5_812_400.00, schedule_value: 5_800_000.00,
-			variance: 12_400.00, variance_pct: 0.21, status: 'VARIANCE',
-			source_a_label: 'UBS Custody', source_b_label: 'LGI GL',
-			ai_explanation: 'LGI GL exceeds UBS custody by S$12,400. This appears to be a duplicate interest accrual entry posted in the current period. The schedule value aligns with UBS.',
-			source_references: ['UBS Monthly Statement Sep-2026 Row 31', 'LGI GL Account 30410 Entry 0105', 'LGI GL Account 30410 Entry 0106 (duplicate)'],
-			recommended_action: 'Reverse duplicate accrual entry 0106 for S$12,400 in LGI GL Account 30410.',
-			last_updated: '2026-09-15T10:30:00Z'
-		},
-		{
-			id: 'rec-011', bond_id: 'BOND-011', isin: 'XS2715934821', bond_name: 'CapitaLand 3.875% 2031',
-			ubs_value: 3_200_000.00, lgi_value: null, schedule_value: 3_200_000.00,
-			variance: 0, variance_pct: 0, status: 'MISSING',
-			source_a_label: 'UBS Custody', source_b_label: 'LGI GL',
-			ai_explanation: 'This bond appears in UBS custody statement and the prior-period schedule but has no corresponding entry in the LGI general ledger. It may have been omitted during the monthly posting cycle.',
-			source_references: ['UBS Monthly Statement Sep-2026 Row 35', 'Prior Schedule Row 35'],
-			recommended_action: 'Create LGI GL posting for CapitaLand bond BOND-011, market value S$3,200,000.',
-			last_updated: '2026-09-15T10:30:00Z'
-		},
-		{
-			id: 'rec-012', bond_id: 'BOND-012', isin: 'SG7T44939609', bond_name: 'Singapore Govt 3.125% 2034',
-			ubs_value: 8_450_000.00, lgi_value: 8_450_000.00, schedule_value: 8_450_000.00,
-			variance: 0, variance_pct: 0, status: 'REVIEW_REQUIRED',
-			source_a_label: 'UBS Custody', source_b_label: 'LGI GL',
-			ai_explanation: 'Values match across all sources, but this bond was recently restructured. The coupon rate changed from 2.875% to 3.125% effective August 2026. The schedule needs manual verification to confirm the updated amortisation parameters are applied correctly.',
-			source_references: ['UBS Monthly Statement Sep-2026 Row 38', 'LGI GL Account 30410 Entry 0112', 'Restructure Notice Aug-2026'],
-			recommended_action: 'Manually verify amortisation schedule parameters reflect the coupon rate change to 3.125%. Approve once confirmed.',
-			last_updated: '2026-09-15T10:30:00Z'
-		}
-	];
-
-	const defaultSummary: ReconciliationSummary = {
-		matched: 8,
-		variances: 2,
-		missing: 1,
-		duplicates: 0,
-		total: 12,
-		match_rate: 95.1
+	const emptySummary: ReconciliationSummary = {
+		matched: 0, variances: 0, missing: 0, duplicates: 0, total: 0, match_rate: 0
 	};
+
+	// Backend rows use variance_amount/variance_percentage and don't carry a bond
+	// name, source labels, or reference list — reshape into what this UI renders.
+	function toReconciliationItem(row: any): ReconciliationItem {
+		return {
+			id: row.id,
+			bond_id: row.bond_id,
+			isin: row.isin,
+			bond_name: row.isin || row.bond_id,
+			ubs_value: row.ubs_value ?? null,
+			lgi_value: row.lgi_value ?? null,
+			schedule_value: row.schedule_value ?? null,
+			variance: row.variance_amount ?? 0,
+			variance_pct: row.variance_percentage ?? 0,
+			status: row.status === 'MISSING_SOURCE' ? 'MISSING' : row.status,
+			source_a_label: 'UBS Custody',
+			source_b_label: 'LGI GL',
+			ai_explanation: row.ai_explanation || row.reason || 'No explanation available.',
+			source_references: [],
+			recommended_action: row.resolution || row.reason || 'Review manually.',
+			last_updated: row.created_at ? new Date(row.created_at * 1000).toISOString() : ''
+		};
+	}
+
+	function computeSummary(rows: ReconciliationItem[]): ReconciliationSummary {
+		const matched = rows.filter((r) => r.status === 'MATCHED').length;
+		const variances = rows.filter((r) => r.status === 'VARIANCE').length;
+		const missing = rows.filter((r) => r.status === 'MISSING').length;
+		const duplicates = rows.filter((r) => r.status === 'DUPLICATE').length;
+		const total = rows.length;
+		return {
+			matched, variances, missing, duplicates, total,
+			match_rate: total ? Math.round((matched / total) * 1000) / 10 : 0
+		};
+	}
+
+	async function loadReconciliation() {
+		try {
+			const fetchedItems = await getReconciliation(
+				localStorage.token,
+				selectedPeriodId ? { period_id: selectedPeriodId } : undefined
+			);
+			items = Array.isArray(fetchedItems) ? fetchedItems.map(toReconciliationItem) : [];
+		} catch (e: any) {
+			items = [];
+			toast.error(e?.message || 'Failed to load reconciliation data');
+		}
+		summary = computeSummary(items);
+	}
 
 	// --- Lifecycle ---
 	onMount(async () => {
-		try {
-			const [fetchedItems, fetchedSummary] = await Promise.all([
-				getReconciliation(localStorage.token).catch(() => null),
-				getReconciliationSummary(localStorage.token, selectedPeriod).catch(() => null)
-			]);
-			items = Array.isArray(fetchedItems) && fetchedItems.length ? fetchedItems : defaultItems;
-			summary = fetchedSummary?.total_items ? fetchedSummary : defaultSummary;
-		} catch {
-			items = defaultItems;
-			summary = defaultSummary;
-		}
+		periods = (await getReportingPeriods(localStorage.token).catch(() => [])) ?? [];
+		if (!selectedPeriodId && periods.length) selectedPeriodId = periods[0].id;
+		await loadReconciliation();
 		loading = false;
 	});
 
 	// --- Computed ---
-	$: data = summary || defaultSummary;
+	$: data = summary || emptySummary;
 
 	$: filteredItems = items
 		.filter((item) => {
@@ -272,18 +194,17 @@
 	}
 
 	async function handleRunReconciliation() {
+		if (!selectedPeriodId) {
+			toast.error('Select a reporting period first');
+			return;
+		}
 		running = true;
 		try {
-			await runReconciliation(localStorage.token, selectedPeriod);
+			await runReconciliation(localStorage.token, selectedPeriodId);
 			toast.success('Reconciliation completed successfully');
-			const [fetchedItems, fetchedSummary] = await Promise.all([
-				getReconciliation(localStorage.token).catch(() => null),
-				getReconciliationSummary(localStorage.token, selectedPeriod).catch(() => null)
-			]);
-			if (fetchedItems) items = fetchedItems;
-			if (fetchedSummary) summary = fetchedSummary;
-		} catch {
-			toast.error('Reconciliation failed. Using sample data.');
+			await loadReconciliation();
+		} catch (e: any) {
+			toast.error(e?.message || 'Reconciliation failed');
 		}
 		running = false;
 	}
@@ -294,8 +215,9 @@
 			await updateException(localStorage.token, selectedItem.id, { status: 'RESOLVED', action: 'resolve' });
 			toast.success(`Exception ${selectedItem.bond_id} resolved`);
 			closeDrawer();
-		} catch {
-			toast.error('Failed to resolve exception');
+			await loadReconciliation();
+		} catch (e: any) {
+			toast.error(e?.message || 'Failed to resolve exception');
 		}
 	}
 
@@ -305,8 +227,9 @@
 			await updateException(localStorage.token, selectedItem.id, { status: 'WAIVED', action: 'waive' });
 			toast.success(`Exception ${selectedItem.bond_id} waived`);
 			closeDrawer();
-		} catch {
-			toast.error('Failed to waive exception');
+			await loadReconciliation();
+		} catch (e: any) {
+			toast.error(e?.message || 'Failed to waive exception');
 		}
 	}
 
@@ -341,11 +264,15 @@
 			<div class="flex items-center gap-3">
 				<select
 					class="text-sm border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-					bind:value={selectedPeriod}
+					bind:value={selectedPeriodId}
+					on:change={loadReconciliation}
 				>
-					<option value="sep-2026">September 2026</option>
-					<option value="aug-2026">August 2026</option>
-					<option value="jul-2026">July 2026</option>
+					{#if periods.length === 0}
+						<option value="">No periods</option>
+					{/if}
+					{#each periods as p}
+						<option value={p.id}>{p.name}</option>
+					{/each}
 				</select>
 				<button
 					class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -612,7 +539,13 @@
 					<!-- Table Footer -->
 					<div class="px-5 py-3 border-t border-gray-100 dark:border-gray-800 text-xs text-gray-400 dark:text-gray-500 flex items-center justify-between">
 						<span>Showing {filteredItems.length} of {items.length} items</span>
-						<span>Last reconciliation: 15 Sep 2026, 10:30 AM</span>
+						<span>
+							{#if items.length}
+								Last reconciliation: {new Date(Math.max(...items.map((i) => new Date(i.last_updated || 0).getTime()))).toLocaleString('en-SG')}
+							{:else}
+								No reconciliation run yet
+							{/if}
+						</span>
 					</div>
 				</div>
 			</div>

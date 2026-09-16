@@ -2,6 +2,7 @@
 	import { onMount, getContext } from 'svelte';
 	import { user } from '$lib/stores';
 	import { getBonds } from '$lib/apis/finance';
+	import { toast } from 'svelte-sonner';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 
 	const i18n = getContext('i18n');
@@ -14,25 +15,13 @@
 	let selectedBond: any = null;
 	let showDetail = false;
 
-	const sampleBonds = [
-		{ id: '1', bond_id: 'BOND-001', isin: 'SG7M18000001', description: '3.25% DBS 2028', issuer: 'DBS Group Holdings', currency: 'SGD', face_value: 1000000, book_value: 998500, market_value: 1012000, coupon_rate: 3.25, accrued_interest: 8125, maturity_date: '2028-03-15', purchase_date: '2024-03-15', status: 'ACTIVE', source_type: 'UBS', extraction_confidence: 0.98, is_validated: true },
-		{ id: '2', bond_id: 'BOND-002', isin: 'SG7M18000002', description: '3.50% OCBC 2029', issuer: 'OCBC Bank', currency: 'SGD', face_value: 2000000, book_value: 1995000, market_value: 2035000, coupon_rate: 3.50, accrued_interest: 17500, maturity_date: '2029-06-20', purchase_date: '2024-06-20', status: 'ACTIVE', source_type: 'UBS', extraction_confidence: 0.99, is_validated: true },
-		{ id: '3', bond_id: 'BOND-003', isin: 'XS1234567890', description: '2.75% Temasek 2027', issuer: 'Temasek Holdings', currency: 'SGD', face_value: 500000, book_value: 502000, market_value: 510000, coupon_rate: 2.75, accrued_interest: 3437, maturity_date: '2027-12-01', purchase_date: '2026-09-05', status: 'ACTIVE', source_type: 'UBS', extraction_confidence: 0.97, is_validated: true },
-		{ id: '4', bond_id: 'BOND-004', isin: 'SG3258987654', description: '4.00% Singtel 2030', issuer: 'Singtel Group', currency: 'SGD', face_value: 1500000, book_value: 1498000, market_value: 1520000, coupon_rate: 4.00, accrued_interest: 15000, maturity_date: '2030-09-30', purchase_date: '2025-03-15', status: 'ACTIVE', source_type: 'UBS', extraction_confidence: 0.99, is_validated: true },
-		{ id: '5', bond_id: 'BOND-005', isin: 'SG7M18000003', description: '3.10% CapitaLand 2028', issuer: 'CapitaLand Investment', currency: 'SGD', face_value: 750000, book_value: 748500, market_value: 755000, coupon_rate: 3.10, accrued_interest: 5812, maturity_date: '2028-07-15', purchase_date: '2026-09-10', status: 'ACTIVE', source_type: 'UBS', extraction_confidence: 0.96, is_validated: false },
-		{ id: '6', bond_id: 'BOND-006', isin: 'SG1K24000006', description: '3.80% Mapletree 2029', issuer: 'Mapletree Logistics Trust', currency: 'SGD', face_value: 800000, book_value: 799000, market_value: 795000, coupon_rate: 3.80, accrued_interest: 7600, maturity_date: '2029-01-20', purchase_date: '2025-01-20', status: 'ACTIVE', source_type: 'LGI', extraction_confidence: 0.92, is_validated: false },
-		{ id: '7', bond_id: 'BOND-007', isin: 'XS9876543210', description: '3.45% Keppel 2028', issuer: 'Keppel Corporation', currency: 'SGD', face_value: 1200000, book_value: 1198000, market_value: 1205000, coupon_rate: 3.45, accrued_interest: 10350, maturity_date: '2028-11-30', purchase_date: '2024-11-30', status: 'ACTIVE', source_type: 'UBS', extraction_confidence: 0.98, is_validated: true },
-		{ id: '8', bond_id: 'BOND-008', isin: 'SG3L58000008', description: '2.90% SIA 2026', issuer: 'Singapore Airlines', currency: 'SGD', face_value: 600000, book_value: 598000, market_value: 0, coupon_rate: 2.90, accrued_interest: 0, maturity_date: '2026-08-31', purchase_date: '2023-08-31', status: 'MATURED', source_type: 'SCHEDULE', extraction_confidence: 1.0, is_validated: true },
-		{ id: '9', bond_id: 'BOND-009', isin: 'SG4R92000009', description: '3.60% UOB 2030', issuer: 'United Overseas Bank', currency: 'SGD', face_value: 1800000, book_value: 1795000, market_value: 1830000, coupon_rate: 3.60, accrued_interest: 16200, maturity_date: '2030-04-15', purchase_date: '2025-04-15', status: 'ACTIVE', source_type: 'UBS', extraction_confidence: 0.99, is_validated: true },
-		{ id: '10', bond_id: 'BOND-010', isin: 'SG5T71000010', description: '2.50% HDB 2027', issuer: 'Housing & Development Board', currency: 'SGD', face_value: 400000, book_value: 398000, market_value: 0, coupon_rate: 2.50, accrued_interest: 0, maturity_date: '2026-07-15', purchase_date: '2022-07-15', status: 'SOLD', source_type: 'SCHEDULE', extraction_confidence: 1.0, is_validated: true }
-	];
-
 	onMount(async () => {
 		try {
 			const data = await getBonds(localStorage.token);
-			bonds = Array.isArray(data) ? data : sampleBonds;
-		} catch {
-			bonds = sampleBonds;
+			bonds = Array.isArray(data) ? data : [];
+		} catch (e: any) {
+			bonds = [];
+			toast.error(e?.message || 'Failed to load bonds');
 		}
 		loading = false;
 	});
@@ -62,10 +51,15 @@
 		return m[s] || 'bg-gray-100 text-gray-600';
 	}
 
-	function confidenceColor(c: number): string {
+	function confidenceColor(c: number | null | undefined): string {
+		if (c === null || c === undefined) return 'text-gray-400 dark:text-gray-500';
 		if (c >= 0.95) return 'text-emerald-600 dark:text-emerald-400';
 		if (c >= 0.80) return 'text-amber-600 dark:text-amber-400';
 		return 'text-red-600 dark:text-red-400';
+	}
+
+	function confidencePct(c: number | null | undefined): string {
+		return c === null || c === undefined ? '—' : `${(c * 100).toFixed(0)}%`;
 	}
 
 	$: totalMarket = filtered.reduce((s, b) => s + (b.market_value || 0), 0);
@@ -164,7 +158,7 @@
 											<span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium {statusBadge(bond.status)}">{bond.status}</span>
 										</td>
 										<td class="px-4 py-3 text-center text-xs text-gray-500">{bond.source_type}</td>
-										<td class="px-4 py-3 text-center text-xs font-mono {confidenceColor(bond.extraction_confidence)}">{(bond.extraction_confidence * 100).toFixed(0)}%</td>
+										<td class="px-4 py-3 text-center text-xs font-mono {confidenceColor(bond.extraction_confidence)}">{confidencePct(bond.extraction_confidence)}</td>
 										<td class="px-4 py-3 text-center">
 											{#if bond.is_validated}
 												<span class="text-emerald-500">✓</span>
@@ -228,9 +222,9 @@
 						<div class="text-[10px] font-medium uppercase tracking-wider text-gray-400 mb-2">Extraction Confidence</div>
 						<div class="flex items-center gap-2">
 							<div class="flex-1 bg-gray-100 dark:bg-gray-800 rounded-full h-2">
-								<div class="bg-emerald-500 h-2 rounded-full" style="width: {selectedBond.extraction_confidence * 100}%"></div>
+								<div class="bg-emerald-500 h-2 rounded-full" style="width: {(selectedBond.extraction_confidence ?? 0) * 100}%"></div>
 							</div>
-							<span class="text-sm font-mono {confidenceColor(selectedBond.extraction_confidence)}">{(selectedBond.extraction_confidence * 100).toFixed(1)}%</span>
+							<span class="text-sm font-mono {confidenceColor(selectedBond.extraction_confidence)}">{confidencePct(selectedBond.extraction_confidence)}</span>
 						</div>
 					</div>
 					<div class="flex items-center gap-2 pt-2">
