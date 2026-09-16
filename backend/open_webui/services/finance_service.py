@@ -247,6 +247,7 @@ async def get_dashboard(user_id: str, period_id: Optional[str] = None) -> dict:
 
     schedule_entries = await AuditScheduleEntries.get_by_period(resolved_id) if resolved_id else []
     commentary_entries = await Commentaries.get_by_period(resolved_id) if resolved_id else []
+    movements = await BondMovements.get_by_period(resolved_id) if resolved_id else []
 
     approvals = await FinanceApprovals.get_by_period(resolved_id) if resolved_id else []
     if approvals:
@@ -277,6 +278,7 @@ async def get_dashboard(user_id: str, period_id: Optional[str] = None) -> dict:
             "documents_pending": docs_pending,
             "schedule_generated": len(schedule_entries) > 0,
             "commentary_generated": len(commentary_entries) > 0,
+            "movements_count": len(movements),
             "review_status": review_status,
         },
         "generated_at": _utc_now(),

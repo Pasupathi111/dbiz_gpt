@@ -779,3 +779,45 @@ def test_21_require_approve_denies_when_user_omitted():
         _require_approve()
     with pytest.raises(PermissionError):
         _require_approve(None)
+
+
+@pytest.mark.asyncio
+async def test_22_dashboard_reports_real_movements_count(_session_engine, user_id, period):
+    """get_dashboard's kpis must include a real movements_count so the
+    router's dashboard-steps/work-distribution logic (which reads
+    kpis['movements_count']) doesn't always see it as absent -> 0."""
+    from open_webui.models.finance import BondMovements, BondMovementForm
+    from open_webui.services import finance_service as svc
+
+    await BondMovements.insert(BondMovementForm(
+        reporting_period_id=period.id, bond_id="MV-BOND", isin="MV-BOND",
+        movement_type="PURCHASE", previous_value=0.0, current_value=1000.0, variance=1000.0,
+    ))
+
+    dash = await svc.get_dashboard(user_id, period.id)
+    assert "movements_count" in dash["kpis"]
+    assert dash["kpis"]["movements_count"] == 1
+
+
+@pytest.mark.asyncio
+async def test_23_copilot_chat_reads_real_dashboard_kpis(_session_engine, user_id, period):
+    """copilot_chat must read dashboard['kpis']/['period_name'] (the real
+    get_dashboard shape), not the nonexistent 'stats'/'current_period' keys
+    — otherwise every response shows 0 bonds regardless of real data."""
+    from open_webui.models.finance import BondRecords, BondRecordForm
+    from open_webui.services import finance_service as svc
+
+    await BondRecords.insert(BondRecordForm(
+        reporting_period_id=period.id, bond_id="CHAT-BOND", isin="CHAT-BOND",
+        face_value=100000.0, market_value=100000.0, status="ACTIVE",
+    ))
+
+    for query, expect_period_name in (
+        ("hello", True),
+        ("give me the portfolio summary", True),
+        ("what is the weather like today", False),
+    ):
+        r = await svc.copilot_chat(user_id, query, reporting_period_id=period.id)
+        assert "1" in r["content"], f"query={query!r} content={r['content']!r}"
+        if expect_period_name:
+            assert period.name in r["content"], f"query={query!r} content={r['content']!r}"
