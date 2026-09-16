@@ -50,10 +50,39 @@
 		]
 	};
 
+	function titleCase(contentType: string): string {
+		return (contentType || '')
+			.split('_')
+			.map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+			.join(' ');
+	}
+
+	// Backend returns a flat list of commentary rows (one per content_type),
+	// not the single { sections: [...] } object this page renders — reshape it.
+	function toCommentaryView(rows: any[]): any {
+		if (!rows.length) return null;
+		const generatedAtMs = Math.max(...rows.map((r) => (r.created_at || 0) * 1000));
+		const allApproved = rows.every((r) => r.status === 'APPROVED');
+		return {
+			id: rows[0].reporting_period_id,
+			period: rows[0].reporting_period_id,
+			generated_at: generatedAtMs ? new Date(generatedAtMs).toISOString() : new Date().toISOString(),
+			status: allApproved ? 'APPROVED' : 'DRAFT',
+			sections: rows.map((r) => ({
+				id: r.id,
+				title: r.title || titleCase(r.content_type),
+				content: r.content,
+				ai_generated: r.generated_by === 'ai',
+				status: r.status
+			}))
+		};
+	}
+
 	onMount(async () => {
 		try {
 			const data = await getCommentary(localStorage.token);
-			commentary = data?.sections?.length ? data : sampleCommentary;
+			commentary = Array.isArray(data) ? toCommentaryView(data) : null;
+			if (!commentary) commentary = sampleCommentary;
 		} catch {
 			commentary = sampleCommentary;
 		}

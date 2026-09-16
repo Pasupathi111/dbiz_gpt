@@ -45,7 +45,7 @@
 	onMount(async () => {
 		try {
 			const data = await getAuditTrail(localStorage.token);
-			auditLogs = data?.items?.length ? data.items : sampleLogs;
+			auditLogs = Array.isArray(data) ? data : sampleLogs;
 		} catch {
 			auditLogs = sampleLogs;
 		}

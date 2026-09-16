@@ -27,7 +27,7 @@
 	onMount(async () => {
 		try {
 			const data = await getPendingReviews(localStorage.token);
-			items = data?.items?.length ? data.items : sampleItems;
+			items = Array.isArray(data) ? data : sampleItems;
 		} catch {
 			items = sampleItems;
 		}

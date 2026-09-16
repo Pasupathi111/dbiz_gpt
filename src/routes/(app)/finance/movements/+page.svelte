@@ -31,6 +31,7 @@
 	let loading = true;
 	let analyzing = false;
 	let movements: Movement[] = [];
+	let dataLoaded = false; // true once a real (possibly empty) fetch has succeeded
 	let expandedRow: string | null = null;
 	let searchQuery = '';
 	let activeTypeFilter: MovementType | 'ALL' = 'ALL';
@@ -147,7 +148,7 @@
 	];
 
 	// --- Summary counts ---
-	$: summary = computeSummary(filteredMovements.length > 0 ? movements : sampleMovements);
+	$: summary = computeSummary(dataLoaded ? movements : sampleMovements);
 
 	function computeSummary(data: Movement[]) {
 		const counts: Record<string, number> = {
@@ -163,7 +164,7 @@
 	}
 
 	// --- Filtering ---
-	$: filteredMovements = filterMovements(movements.length > 0 ? movements : sampleMovements, activeTypeFilter, searchQuery, showOnlyUnapproved);
+	$: filteredMovements = filterMovements(dataLoaded ? movements : sampleMovements, activeTypeFilter, searchQuery, showOnlyUnapproved);
 
 	function filterMovements(data: Movement[], typeFilter: MovementType | 'ALL', search: string, unapprovedOnly: boolean): Movement[] {
 		let result = data;
@@ -262,6 +263,7 @@
 			const result = await getMovements(localStorage.token);
 			if (Array.isArray(result)) {
 				movements = result;
+				dataLoaded = true;
 			}
 			toast.success('Movement analysis completed');
 		} catch {
@@ -273,18 +275,18 @@
 	async function handleApprove(movement: Movement) {
 		try {
 			await updateMovement(localStorage.token, movement.id, { approved: true, status: 'approved' });
-			const data = movements.length > 0 ? movements : sampleMovements;
+			const data = dataLoaded ? movements : sampleMovements;
 			const idx = data.findIndex(m => m.id === movement.id);
 			if (idx !== -1) {
 				data[idx] = { ...data[idx], approved: true, status: 'approved' };
-				if (movements.length > 0) {
+				if (dataLoaded) {
 					movements = [...movements];
 				}
 			}
 			toast.success(`Movement ${movement.id} approved`);
 		} catch {
 			// Optimistic update for sample data
-			const data = movements.length > 0 ? movements : sampleMovements;
+			const data = dataLoaded ? movements : sampleMovements;
 			const idx = data.findIndex(m => m.id === movement.id);
 			if (idx !== -1) {
 				data[idx] = { ...data[idx], approved: true, status: 'approved' };
@@ -306,8 +308,9 @@
 	onMount(async () => {
 		try {
 			const result = await getMovements(localStorage.token);
-			if (Array.isArray(result) && result.length > 0) {
+			if (Array.isArray(result)) {
 				movements = result;
+				dataLoaded = true;
 			}
 		} catch {
 			// Use sample data
@@ -632,7 +635,7 @@
 					<!-- Table Footer -->
 					<div class="px-4 py-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
 						<div class="text-xs text-gray-400 dark:text-gray-500">
-							Showing <span class="font-medium text-gray-600 dark:text-gray-400">{filteredMovements.length}</span> of <span class="font-medium text-gray-600 dark:text-gray-400">{(movements.length > 0 ? movements : sampleMovements).length}</span> movements
+							Showing <span class="font-medium text-gray-600 dark:text-gray-400">{filteredMovements.length}</span> of <span class="font-medium text-gray-600 dark:text-gray-400">{(dataLoaded ? movements : sampleMovements).length}</span> movements
 						</div>
 						<div class="flex items-center gap-2">
 							<span class="inline-flex items-center gap-1 text-[10px] text-gray-400 dark:text-gray-500">

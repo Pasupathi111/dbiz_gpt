@@ -57,7 +57,7 @@
 	onMount(async () => {
 		try {
 			const data = await getJournals(localStorage.token);
-			journals = data?.items?.length ? data.items : sampleJournals;
+			journals = Array.isArray(data) ? data : sampleJournals;
 		} catch {
 			journals = sampleJournals;
 		}

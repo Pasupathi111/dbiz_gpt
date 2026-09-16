@@ -629,3 +629,60 @@ async def test_17_process_document_unsupported_type_fails_cleanly(_session_engin
     processed_doc = await svc.get_document(user_id, doc["id"])
     assert processed_doc["status"] == "FAILED"
     assert processed_doc["validation_status"] == "ERROR"
+
+
+@pytest.mark.asyncio
+async def test_18_reconciliation_matches_ubs_vs_lgi_after_ingestion(_session_engine, user_id, period, tmp_path):
+    """3-way recon: a bond present in both UBS and LGI ingested files must be
+    seen as MATCHED/VARIANCE (not MISSING_SOURCE) once both are ingested —
+    covers the BondRecord-per-source grouping in run_reconciliation."""
+    import openpyxl
+    from fpdf import FPDF
+    from open_webui.services import finance_service as svc
+
+    # UBS_EXCEL: two bonds — one will match LGI exactly, one will vary.
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.append(["ISIN", "Description", "Currency", "Quantity", "Market Value"])
+    ws.append(["US912828U816", "US TREASURY N/B", "USD", 100000, 100000.00])
+    ws.append(["XS1234567890", "APPLE INC BOND", "USD", 50000, 51000.00])
+    ws.append(["XS9999999999", "UBS ONLY BOND", "USD", 10000, 10000.00])
+    xlsx_path = tmp_path / "ubs.xlsx"
+    wb.save(xlsx_path)
+    ubs_doc = await svc.upload_document(
+        user_id=user_id, filename="ubs.xlsx", content_type="application/octet-stream",
+        file_size=xlsx_path.stat().st_size, document_type="UBS_EXCEL",
+        reporting_period_id=period.id, file_path=str(xlsx_path), file_hash="h1",
+    )
+    ubs_result = await svc.process_document(user_id, ubs_doc["id"])
+    assert ubs_result["status"] == "COMPLETED", ubs_result
+
+    # LGI_PDF: same two ISINs, one with an identical market value (MATCHED),
+    # one with a different market value (VARIANCE). No entry for the UBS-only bond.
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Helvetica", size=10)
+    pdf.cell(0, 10, "US TREASURY N/B US912828U816 USD 100000 100000.00")
+    pdf.ln()
+    pdf.cell(0, 10, "APPLE INC BOND XS1234567890 USD 50000 48000.00")
+    pdf.ln()
+    pdf_path = tmp_path / "lgi.pdf"
+    pdf.output(str(pdf_path))
+    lgi_doc = await svc.upload_document(
+        user_id=user_id, filename="lgi.pdf", content_type="application/pdf",
+        file_size=pdf_path.stat().st_size, document_type="LGI_PDF",
+        reporting_period_id=period.id, file_path=str(pdf_path), file_hash="h2",
+    )
+    lgi_result = await svc.process_document(user_id, lgi_doc["id"])
+    assert lgi_result["status"] == "COMPLETED", lgi_result
+
+    recon = await svc.run_reconciliation(user_id, period.id)
+    assert recon["matched"] == 1, recon
+    assert recon["variances"] == 1, recon
+    assert recon["missing"] == 1, recon
+
+    items = await svc.get_reconciliation_results(user_id, period.id)
+    by_bond = {i["bond_id"]: i for i in items}
+    assert by_bond["US912828U816"]["status"] == "MATCHED"
+    assert by_bond["XS1234567890"]["status"] == "VARIANCE"
+    assert by_bond["XS9999999999"]["status"] == "MISSING_SOURCE"

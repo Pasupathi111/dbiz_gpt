@@ -677,12 +677,35 @@ async def get_bond_sources(user_id: str, bond_id: str) -> list[dict]:
 # ---------------------------------------------------------------------------
 
 
+_RECON_SOURCE_ALIASES = {
+    "UBS": {"ubs", "ubs_excel", "bloomberg"},
+    "LGI": {"lgi", "lgi_pdf", "custodian"},
+    "SCHEDULE": {"schedule", "previous_schedule"},
+}
+
+
 async def run_reconciliation(user_id: str, period_id: str) -> dict:
     bonds = await BondRecords.get_by_period(period_id)
+
+    # Ingestion persists one BondRecord *per source* per bond_id (a UBS-sourced
+    # row and an LGI-sourced row are separate rows, each source_type-tagged —
+    # see _persist_extracted_bond_rows). So the 3-way reconciliation groups by
+    # bond_id across those rows rather than treating each BondRecord as a
+    # single bond with multiple attached BondSourceRecords.
+    by_bond_id: dict[str, dict[str, Any]] = {}
+    for b in bonds:
+        key = b.bond_id or b.id
+        group = by_bond_id.setdefault(key, {"isin": b.isin})
+        source_type = (b.source_type or "").lower()
+        for canonical, aliases in _RECON_SOURCE_ALIASES.items():
+            if source_type in aliases and canonical not in group:
+                group[canonical] = b
+        group["isin"] = group.get("isin") or b.isin
+
     form = ReconciliationRunForm(
         reporting_period_id=period_id,
         status="RUNNING",
-        total_bonds=len(bonds),
+        total_bonds=len(by_bond_id),
         matched=0,
         variances=0,
         missing=0,
@@ -695,40 +718,33 @@ async def run_reconciliation(user_id: str, period_id: str) -> dict:
     if run is None:
         raise RuntimeError("Failed to create reconciliation run")
 
-    sources_by_bond: dict[str, list] = {}
-    for b in bonds:
-        sources_by_bond[b.id] = await BondSourceRecords.get_by_bond_record(b.id)
-
     matched = 0
     variances = 0
     missing = 0
     items_to_insert: list[ReconciliationItemForm] = []
 
-    for b in bonds:
-        srcs = sources_by_bond.get(b.id, [])
-        bloomberg = next((s for s in srcs if (s.source_type or "").lower() in {"bloomberg", "ubs_excel"}), None)
-        custodian = next((s for s in srcs if (s.source_type or "").lower() in {"custodian", "lgi_pdf", "lgi"}), None)
+    for bond_id, group in by_bond_id.items():
+        ubs: Optional[Any] = group.get("UBS")
+        lgi: Optional[Any] = group.get("LGI")
+        schedule: Optional[Any] = group.get("SCHEDULE")
 
-        def _fv(s):
-            return (s.raw_data or {}).get("face_value") if isinstance(s.raw_data, dict) and s else None
+        ubs_value = ubs.market_value if ubs else None
+        lgi_value = lgi.market_value if lgi else None
+        schedule_value = schedule.market_value if schedule else None
 
-        def _mv(s):
-            return (s.raw_data or {}).get("market_value") if isinstance(s.raw_data, dict) and s else None
-
-        ubs_value = _fv(bloomberg) or b.face_value
-        lgi_value = _fv(custodian) or b.book_value
-        try:
+        is_missing = ubs is None or lgi is None
+        variance_amount = 0.0
+        variance_percent = 0.0
+        if not is_missing:
             variance_amount = float(ubs_value or 0) - float(lgi_value or 0)
-            variance_percent = (variance_amount / float(ubs_value) * 100.0) if abs(float(ubs_value or 0)) > 1e-9 else 0.0
-        except (TypeError, ValueError):
-            variance_amount = 0.0
-            variance_percent = 0.0
+            variance_percent = (
+                (variance_amount / float(ubs_value) * 100.0) if abs(float(ubs_value or 0)) > 1e-9 else 0.0
+            )
 
-        is_missing = not bloomberg or not custodian
         if is_missing:
             missing += 1
             status = "MISSING_SOURCE"
-        elif abs(variance_amount) < 0.01 and abs((_mv(bloomberg) or 0) - (_mv(custodian) or 0)) < 0.01:
+        elif abs(variance_amount) < 0.01:
             matched += 1
             status = "MATCHED"
         else:
@@ -737,17 +753,17 @@ async def run_reconciliation(user_id: str, period_id: str) -> dict:
 
         items_to_insert.append(ReconciliationItemForm(
             reconciliation_run_id=run.id,
-            bond_id=b.bond_id or b.id,
-            isin=b.isin,
+            bond_id=bond_id,
+            isin=group.get("isin"),
             status=status,
-            ubs_value=float(ubs_value or 0),
-            lgi_value=float(lgi_value or 0),
-            schedule_value=float(b.book_value or 0),
-            previous_value=float(b.market_value or 0),
+            ubs_value=float(ubs_value) if ubs_value is not None else None,
+            lgi_value=float(lgi_value) if lgi_value is not None else None,
+            schedule_value=float(schedule_value) if schedule_value is not None else None,
+            previous_value=None,
             variance_amount=float(variance_amount),
             variance_percentage=float(variance_percent),
-            field_name="face_value",
-            reason="reconciliation diff",
+            field_name="market_value",
+            reason="Missing UBS or LGI source" if is_missing else "reconciliation diff",
             ai_explanation=None,
         ))
 
@@ -772,7 +788,7 @@ async def run_reconciliation(user_id: str, period_id: str) -> dict:
         "task_id": run.id,
         "period_id": period_id,
         "status": completed.status if completed else "COMPLETED",
-        "total_bonds": len(bonds),
+        "total_bonds": len(by_bond_id),
         "matched": matched,
         "variances": variances,
         "missing": missing,
