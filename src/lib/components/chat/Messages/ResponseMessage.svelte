@@ -53,6 +53,8 @@
 	import Citations from './Citations.svelte';
 	import CodeExecutions from './CodeExecutions.svelte';
 	import ContentRenderer from './ContentRenderer.svelte';
+	import DynamicForm from './DynamicForm.svelte';
+	import ResultCard from './ResultCard.svelte';
 	import { KokoroWorker } from '$lib/workers/KokoroWorker';
 	import FileItem from '$lib/components/common/FileItem.svelte';
 	import FollowUps from './ResponseMessage/FollowUps.svelte';
@@ -906,6 +908,52 @@
 
 							{#if message.code_executions}
 								<CodeExecutions codeExecutions={message.code_executions} />
+							{/if}
+
+							{#if message?.data?.type === 'FORM'}
+								<DynamicForm
+									formId={message.data.formId}
+									formInstanceId={message.data.formInstanceId}
+									status={message.data.status}
+									payload={message.data.payload}
+									onSubmit={async (values) => {
+										history.messages[message.id].data = {
+											...message.data,
+											status: 'SUBMITTED'
+										};
+										await updateChat();
+
+										const summaryLines = Object.entries(values)
+											.map(([key, value]) => `- ${key}: ${JSON.stringify(value)}`)
+											.join('\n');
+										const prompt = `Submitted "${message.data.payload?.title ?? message.data.formId}":\n${summaryLines}\n\n\`\`\`json\n${JSON.stringify(
+											{
+												eventType: 'FORM_SUBMITTED',
+												formId: message.data.formId,
+												formInstanceId: message.data.formInstanceId,
+												data: values
+											},
+											null,
+											2
+										)}\n\`\`\``;
+
+										submitMessage(message.id, prompt);
+									}}
+									onCancel={async () => {
+										history.messages[message.id].data = {
+											...message.data,
+											status: 'CANCELLED'
+										};
+										await updateChat();
+									}}
+								/>
+							{:else if message?.data?.type === 'RESULT'}
+								<ResultCard
+									result={message.data.result}
+									onRunAgain={() => {
+										submitMessage(message.id, 'Please run the diagnostics again.');
+									}}
+								/>
 							{/if}
 						</div>
 					</div>

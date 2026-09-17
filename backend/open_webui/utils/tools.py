@@ -102,6 +102,12 @@ from open_webui.tools.builtin import (
     view_skill,
     write_note,
 )
+from open_webui.tools.forms import (
+    run_diagnostics,
+    show_form,
+    show_result,
+    update_active_form,
+)
 from open_webui.tools.finance_copilot import (
     generate_analysis as finance_generate_analysis,
     get_audit_progress as finance_get_audit_progress,
@@ -598,6 +604,9 @@ async def get_builtin_tools(
 
     if is_builtin_tool_enabled('agentic_forms', True):
         builtin_functions.extend([create_job, schedule_interview])
+
+    if is_builtin_tool_enabled('dynamic_forms', True):
+        builtin_functions.extend([show_form, update_active_form, show_result, run_diagnostics])
 
     metadata = extra_params.get('__metadata__') or {}
     chat_files = metadata.get('files') or extra_params.get('__files__') or []
