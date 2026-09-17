@@ -54,7 +54,11 @@
 	const CONSULT_LANDING_EMAILS = [
 		'naveen.pattathil@dbizsolution.com',
 		'chandrukhasan.ramachandran@dbizsolution.com',
-		'durga.prasad@dbizsolution.com'
+		'durga.prasad@dbizsolution.com',
+		'princy.jala@dbizsolution.com',
+		'chandru@northvale.health',
+		'naveen@northvale.health',
+		'valen@northvale.health'
 	];
 
 	const getDefaultLandingPath = (userEmail?: string | null): string | null => {
