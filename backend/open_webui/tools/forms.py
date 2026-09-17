@@ -169,14 +169,17 @@ async def show_form(
 ) -> str:
     """
     Render an interactive structured form inside the chat for the user to fill in, based on a
-    registered form definition. Use this whenever completing the user's request requires several
-    pieces of structured information (e.g. diagnosing an application error). Do not ask the
-    required fields one by one in chat -- call this tool and let the form collect them.
+    registered form definition. Call this FIRST, before any diagnostic/business tool, whenever the
+    user reports a problem or request that this system has a matching form for (e.g. an application
+    error, outage, or 5xx/4xx error -> form_id "diagnose_application") -- even if they already gave
+    some details in their message; prefill what you know and let the form collect the rest. Do not
+    ask the required fields one by one in chat, and do not skip straight to running a diagnostic or
+    business tool without showing this form first.
     Currently supported form_id values: "diagnose_application".
 
     :param form_id: The registered form id to render.
     :param prefill: Any field values already known from the conversation, to pre-fill the form. Omit unknown fields.
-    :return: A short status string. The user's answers will arrive as a normal follow-up chat message once they submit -- do not wait synchronously for them.
+    :return: A short status string. The user's answers will arrive as a normal follow-up chat message once they submit -- do not wait synchronously for them, and do not call run_diagnostics until that follow-up message arrives.
     """
     try:
         definition = FORM_REGISTRY.get(form_id)
@@ -318,9 +321,11 @@ async def run_diagnostics(
     __chat_id__: str = None,
 ) -> str:
     """
-    Run a (mocked) diagnostic check against an application/service and return findings. Call this
-    after the user has submitted the "Diagnose Application" form, using the values from their
-    submission message.
+    Run a (mocked) diagnostic check against an application/service and return findings. Do NOT call
+    this directly from the user's initial report -- you must call show_form("diagnose_application")
+    first and wait for the user's submission message. Calling this before the form has been shown
+    in this chat will fail. After you get findings back, call show_result to present them as a
+    result card -- do not just describe them in a plain text reply.
 
     :param environment: Deployment environment, e.g. "production", "staging".
     :param service: The service to diagnose, e.g. "api-gateway".
@@ -328,12 +333,24 @@ async def run_diagnostics(
     :param started: When the issue started, e.g. "15_minutes".
     :param recent_deployment: Whether there was a recent deployment.
     :param checks: The checks to run, e.g. ["logs", "service_health", "gateway"].
-    :return: JSON with mocked diagnostic findings.
+    :return: JSON with mocked diagnostic findings, or an error asking you to show the form first.
     """
     try:
         instance_id = _ACTIVE_FORM_BY_CHAT.get(__chat_id__)
         instance = _FORM_INSTANCES.get(instance_id) if instance_id else None
-        stored = instance['data'] if instance else {}
+        if not instance:
+            return JSONCodec.dumps(
+                {
+                    'status': 'error',
+                    'error': (
+                        'No "diagnose_application" form has been shown in this chat yet. '
+                        'Call show_form("diagnose_application") first and wait for the user to submit it '
+                        'before calling run_diagnostics.'
+                    ),
+                },
+                ensure_ascii=False,
+            )
+        stored = instance['data']
 
         environment = environment or stored.get('environment')
         service = service or stored.get('service')
