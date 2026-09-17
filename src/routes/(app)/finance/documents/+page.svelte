@@ -49,7 +49,7 @@
 		{ value: 'TEMPLATE', label: 'Template' }
 	];
 
-	const acceptedExtensions = ['.xlsx', '.xls', '.pdf'];
+	const acceptedExtensions = ['.xlsx', '.xls', '.pdf', '.doc', '.docx'];
 
 	// --- Mount ---
 	onMount(async () => {
@@ -352,7 +352,7 @@
 							bind:this={fileInput}
 							type="file"
 							class="hidden"
-							accept=".xlsx,.xls,.pdf"
+							accept=".xlsx,.xls,.pdf,.doc,.docx"
 							multiple
 							on:change={handleFileSelect}
 						/>
@@ -370,7 +370,7 @@
 									{dragOver ? 'Drop files here' : 'Drag and drop files here or click to browse'}
 								</p>
 								<p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
-									Accepted formats: .xlsx, .xls, .pdf (max 50 MB)
+									Accepted formats: .xlsx, .xls, .pdf, .doc, .docx (max 50 MB)
 								</p>
 							</div>
 						</div>

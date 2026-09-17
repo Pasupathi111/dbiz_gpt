@@ -624,6 +624,150 @@ async def ask_user(
 
 
 # =============================================================================
+# AGENTIC FORM TOOLS (POC)
+#
+# Each entry below is a JSON Schema (a restricted vocabulary: string/number/
+# boolean properties, `enum` for select, `format: textarea|date` for wider
+# inputs) describing the structured input a given action needs. The frontend
+# renders ANY of these generically with one reusable DynamicFormCard
+# component -- adding a new agentic-form tool means adding a schema + a tiny
+# wrapper function here, not a new UI component.
+# =============================================================================
+
+AGENTIC_FORM_SCHEMAS: dict[str, dict] = {
+    'create_job': {
+        'title': 'Create Job',
+        'submitLabel': 'Create Job',
+        'type': 'object',
+        'required': ['job_title', 'department', 'location', 'experience', 'employment_type'],
+        'properties': {
+            'job_title': {'type': 'string', 'title': 'Job Title'},
+            'department': {
+                'type': 'string',
+                'title': 'Department',
+                'enum': ['Engineering', 'Product', 'Design', 'Sales', 'Marketing', 'HR', 'Operations'],
+            },
+            'location': {'type': 'string', 'title': 'Location'},
+            'experience': {
+                'type': 'string',
+                'title': 'Experience',
+                'enum': ['0-1 years', '1-3 years', '3-5 years', '5+ years'],
+            },
+            'employment_type': {
+                'type': 'string',
+                'title': 'Employment Type',
+                'enum': ['Full-time', 'Part-time', 'Contract', 'Internship'],
+            },
+            'description': {'type': 'string', 'title': 'Description', 'format': 'textarea'},
+            'remote': {'type': 'boolean', 'title': 'Remote'},
+        },
+    },
+    'schedule_interview': {
+        'title': 'Schedule Interview',
+        'submitLabel': 'Schedule Interview',
+        'type': 'object',
+        'required': ['candidate_name', 'position', 'date', 'time', 'interviewer', 'mode'],
+        'properties': {
+            'candidate_name': {'type': 'string', 'title': 'Candidate Name'},
+            'position': {'type': 'string', 'title': 'Position'},
+            'date': {'type': 'string', 'title': 'Date', 'format': 'date'},
+            'time': {'type': 'string', 'title': 'Time'},
+            'interviewer': {'type': 'string', 'title': 'Interviewer'},
+            'mode': {
+                'type': 'string',
+                'title': 'Mode',
+                'enum': ['In-person', 'Video Call', 'Phone'],
+            },
+        },
+    },
+}
+
+# In-memory POC "database" -- good enough to demonstrate the round trip;
+# not meant to survive a restart.
+_AGENTIC_FORM_RECORDS: dict[str, list[dict]] = {'create_job': [], 'schedule_interview': []}
+
+
+async def _open_agentic_form(
+    tool_name: str,
+    prefill: Optional[dict],
+    __event_call__: callable,
+) -> str:
+    schema = AGENTIC_FORM_SCHEMAS[tool_name]
+
+    if __event_call__ is None:
+        return JSONCodec.dumps(
+            {
+                'status': 'error',
+                'error': 'This action requires an active browser session with WebSocket connection.',
+            },
+            ensure_ascii=False,
+        )
+
+    output = await __event_call__(
+        {
+            'type': 'agentic_form',
+            'data': {
+                'tool': tool_name,
+                'title': schema['title'],
+                'submitLabel': schema.get('submitLabel', 'Submit'),
+                'schema': schema,
+                'prefill': prefill or {},
+            },
+        }
+    )
+
+    if not isinstance(output, dict):
+        return JSONCodec.dumps({'status': 'error', 'error': 'Invalid form response.'}, ensure_ascii=False)
+    if output.get('status') == 'cancelled':
+        return JSONCodec.dumps({'status': 'cancelled'}, ensure_ascii=False)
+
+    values = output.get('values') or {}
+    record_id = f'{tool_name}-{len(_AGENTIC_FORM_RECORDS[tool_name]) + 1}'
+    record = {'id': record_id, **values}
+    _AGENTIC_FORM_RECORDS[tool_name].append(record)
+
+    return JSONCodec.dumps({'status': 'created', **record}, ensure_ascii=False)
+
+
+async def create_job(
+    prefill: Optional[dict] = None,
+    __event_call__: callable = None,
+) -> str:
+    """
+    Open a form for the user to fill in the details of a new job posting.
+    Use this whenever the user asks to create, post, or open a new job/role/position.
+    Do not ask the required fields one by one in chat -- call this tool and let the form collect them.
+
+    :param prefill: Any field values already known from the conversation (job_title, department, location, experience, employment_type, description, remote), to pre-fill the form. Omit unknown fields.
+    :return: JSON with the created job's id and fields, or {"status": "cancelled"} if the user cancelled.
+    """
+    try:
+        return await _open_agentic_form('create_job', prefill, __event_call__)
+    except Exception as e:
+        log.exception(f'create_job error: {e}')
+        return JSONCodec.dumps({'status': 'error', 'error': str(e)}, ensure_ascii=False)
+
+
+async def schedule_interview(
+    prefill: Optional[dict] = None,
+    __event_call__: callable = None,
+) -> str:
+    """
+    Open a form for the user to schedule a candidate interview.
+    Use this whenever the user asks to schedule, book, or set up an interview.
+    Do not ask the required fields one by one in chat -- call this tool and let the form collect them.
+
+    :param prefill: Any field values already known from the conversation (candidate_name, position, date, time, interviewer, mode), to pre-fill the form. Omit unknown fields.
+    :return: JSON with the scheduled interview's id and fields, or {"status": "cancelled"} if the user cancelled.
+    """
+    try:
+        return await _open_agentic_form('schedule_interview', prefill, __event_call__)
+    except Exception as e:
+        log.exception(f'schedule_interview error: {e}')
+        return JSONCodec.dumps({'status': 'error', 'error': str(e)}, ensure_ascii=False)
+
+
+# =============================================================================
 # CODE INTERPRETER TOOLS
 # =============================================================================
 

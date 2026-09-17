@@ -107,6 +107,7 @@
 	import ValvesModal from '../workspace/common/ValvesModal.svelte';
 	import Note from '../icons/Note.svelte';
 	import AskUserCard from './AskUserCard.svelte';
+	import DynamicFormCard from './DynamicFormCard.svelte';
 	import { goto } from '$app/navigation';
 	import InputModal from '../common/InputModal.svelte';
 	import Expand from '../icons/Expand.svelte';
@@ -164,8 +165,24 @@
 		onCancel: () => {}
 	};
 
+	export let agenticForm: {
+		show: boolean;
+		title?: string;
+		submitLabel?: string;
+		schema?: any;
+		prefill?: Record<string, any>;
+		onConfirm: (values: Record<string, any>) => void;
+		onCancel: () => void;
+	} = {
+		show: false,
+		schema: { properties: {} },
+		onConfirm: (_values: Record<string, any>) => {},
+		onCancel: () => {}
+	};
+
 	$: isActive =
 		!askUser?.show &&
+		!agenticForm?.show &&
 		((taskIds && taskIds.length > 0) ||
 			(history.currentId && history.messages[history.currentId]?.done != true) ||
 			generating);
@@ -1746,6 +1763,24 @@
 									}}
 									on:cancel={() => {
 										askUser.onCancel();
+									}}
+								/>
+							</div>
+						{/if}
+
+						{#if agenticForm?.show}
+							<div class="mx-1">
+								<DynamicFormCard
+									show={agenticForm.show}
+									title={agenticForm.title}
+									submitLabel={agenticForm.submitLabel}
+									schema={agenticForm.schema}
+									prefill={agenticForm.prefill}
+									on:confirm={(e) => {
+										agenticForm.onConfirm(e.detail);
+									}}
+									on:cancel={() => {
+										agenticForm.onCancel();
 									}}
 								/>
 							</div>

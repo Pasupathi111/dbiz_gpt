@@ -1,0 +1,2652 @@
+================================================================================
+                        DBIZLABS PRIVATE LIMITED
+                    EMPLOYEE HANDBOOK VERSION 4.2
+                    Effective Date: 1 August 2026
+            Headquarters: Marina One West Tower, Level 22
+                  10 Marina Boulevard, Singapore 018961
+              CEO: Siva Pasupathi | COO: Divya Muthu
+          CTO: Amala Appathurai | CFO: Karthiga Rajoo
+                CPO: Narmadha Sivakumar
+================================================================================
+
+DOCUMENT CONTROL
+--------------------------------------------------------------------------------
+Version  | Date        | Author               | Description
+---------|-------------|----------------------|-------------------------------
+1.0      | 15-Jan-2023 | HR Team              | Initial handbook launch
+2.1      | 10-Aug-2023 | People Operations    | Added remote work policy
+3.0      | 12-Feb-2024 | Narmadha Sivakumar   | ESOP and L&D fund updates
+4.0      | 05-Nov-2025 | Divya Muthu          | AI Act compliance + ethics
+4.1      | 18-May-2026 | People & Culture     | Pay matrix refresh (bands)
+4.2      | 01-Aug-2026 | Divya Muthu (COO)    | FY2026 Q3 revised; expanded
+         |             |                      | leave, D&I, mental health,
+         |             |                      | Singapore AI Gov Act cross-ref
+--------------------------------------------------------------------------------
+
+WELCOME MESSAGE FROM THE CEO
+--------------------------------------------------------------------------------
+Dear Team Member,
+
+On behalf of the entire leadership team at DBizLabs, it gives me immense pleasure
+to welcome you to our rapidly growing family of AI builders, product innovators,
+and customer champions. Since our founding in 2021, we have been on a mission to
+embed trustworthy domain-specific AI into every mission-critical workflow — from
+the manufacturing floor with Meiji MES, to the bond trading desk with Bond Copilot,
+to the human resources office with Hirethm.
+
+This Handbook (Version 4.2) is designed to be your trusted companion as you navigate
+your journey with us. It contains everything you need to know about how we work,
+what we believe in, and the support we offer every member of the DBizLabs team.
+Please read it carefully, keep it accessible, and reach out to People Operations
+at people-ops@dbizlabs.ai whenever you have a question.
+
+As we scale from 317 people today to 500+ by end of FY2027, our culture — built on
+curiosity, customer obsession, radical candor, and doing the right thing even when
+no one is watching — will remain our most important asset. Thank you for bringing
+your best self to DBizLabs every day. The work we do matters.
+
+With warm regards,
+
+Siva Pasupathi
+Chief Executive Officer
+DBizLabs Private Limited
+
+================================================================================
+TABLE OF CONTENTS
+================================================================================
+
+SECTION 1: EMPLOYMENT TYPES ................................................ L001
+SECTION 2: ONBOARDING & PROBATION ......................................... L030
+SECTION 3: WORKING HOURS, ATTENDANCE & FLEXIBILITY ......................... L058
+SECTION 4: LEAVE ENTITLEMENTS ............................................. L092
+SECTION 5: COMPENSATION & BENEFITS ....................................... L145
+SECTION 6: PERFORMANCE MANAGEMENT, PROMOTION & PIP ....................... L218
+SECTION 7: ETHICS, INTEGRITY & CODE OF CONDUCT ........................... L276
+SECTION 8: HEALTH, SAFETY, WELLNESS & BUSINESS CONTINUITY ................ L355
+
+APPENDIX A: PAY MATRIX TABLE (SALARY BANDS BY GRADE) ..................... L430
+APPENDIX B: NOTICE PERIODS & SEVERANCE ................................... L445
+APPENDIX C: FREQUENTLY ASKED QUESTIONS (FAQ) ............................. L455
+APPENDIX D: USEFUL CONTACTS & ESCALATION PATHS ........................... L478
+
+ACKNOWLEDGEMENT FORM ..................................................... L492
+
+================================================================================
+SECTION 1: EMPLOYMENT TYPES
+================================================================================
+
+1.1 Purpose and Scope
+This section defines the five categories of engagement recognised by DBizLabs
+and sets out the rights, entitlements, and obligations applicable to each.
+Classification is determined at the time of offer by the hiring manager in
+consultation with People Operations and is reflected in the individual's
+letter of employment or service contract.
+
+1.2 Full-Time Employment (Permanent)
+A Full-Time Permanent Employee is one who is engaged on an indefinite-term
+employment contract to work the standard working hours specified in Section 3
+for the Company. This is the default employment type for all roles from Grade
+A through Grade E+ and carries the full suite of entitlements described in
+this Handbook.
+
+Rights and entitlements include:
+  (a) All leave entitlements in Section 4 (Annual, Sick, Maternity, etc.)
+  (b) Full compensation and benefits package under Section 5
+  (c) Eligibility for AWS, bonuses, and ESOPs (per Section 5)
+  (d) Participation in performance management cycle (Section 6)
+  (e) CPF contributions (Singapore citizens and PRs only)
+  (f) Access to company L&D funds, wellness programmes, and insurance
+
+1.3 Part-Time Employment
+A Part-Time Employee is one who works fewer than 35 hours per week on a
+regular and recurring basis, typically under a formal part-time employment
+contract. This arrangement is most common in administrative support,
+customer success, and certain training roles.
+
+Part-Time employees are entitled to:
+  (a) Annual leave, sick leave, and other leave types pro-rated to actual
+      contracted hours vs. a standard 44-hour week
+  (b) Access to medical and dental benefits on a pro-rated basis
+  (c) CPF contributions where applicable (minimum S$50/month salary threshold)
+  (d) AWS on a pro-rated basis if employed for the full calendar year
+  (e) Performance management participation (simplified half-year cycle)
+
+Part-Time employees are NOT eligible for:
+  - ESOP option grants (unless specifically approved by the CEO)
+  - Housing loan benefit under Section 5.14
+  - Full L&D lifetime fund (pro-rated S$5,000 lifetime cap)
+
+1.4 Contract Employment (Fixed-Term)
+A Contract Employee is one who is engaged under a fixed-term contract for a
+specified period (minimum 3 months, maximum 24 months) and a defined scope of
+work. Fixed-term contracts are typically used for:
+  - Project-based roles with a clearly defined deliverable and end date
+  - Maternity or long-service leave coverage
+  - Specialist skills required for a limited engagement period
+
+Contract Employees are entitled to:
+  (a) Annual leave pro-rated at a rate of 7% of gross hourly rate (or as
+      specified in the employment contract)
+  (b) Sick leave pro-rated (minimum 5 days for contracts >= 6 months)
+  (c) CPF contributions (Singapore citizens/PRs where statutory)
+  (d) Access to office facilities, equipment, and training necessary for role
+  (e) Workers' compensation insurance as required by law
+
+Contract Employees are NOT eligible for:
+  - AWS, performance bonuses, or ESOP grants
+  - Medical, dental, or wellness reimbursements
+  - Housing loan or study leave benefits
+  - Notice of non-renewal (contract expires automatically on end date)
+
+Note: Contract Employees who have completed 24 months of continuous contract
+service may be considered for conversion to full-time permanent status at the
+discretion of the hiring manager and People Operations. Conversion rates over
+the past 24 months have averaged 38%.
+
+1.5 Internship Programme
+An Intern is a student or recent graduate engaged on a short-term basis
+(typically 10 to 24 weeks) primarily for training and development purposes.
+DBizLabs runs two structured internship cohorts annually:
+  - Summer Internship: May–August (applications open February)
+  - Winter Internship: November–February (applications open August)
+
+Intern entitlements and working conditions:
+  (a) Monthly internship allowance:
+      - Undergraduate interns (Year 1–3): S$1,800 per month
+      - Final-year undergraduates / Masters students: S$2,400 per month
+      - PhD candidates (research internships): S$3,200 per month
+  (b) Working hours: 9:00–18:00 Monday to Friday (strictly no overtime)
+  (c) Leave: 1 day of personal leave per month of internship (pro-rated)
+  (d) Equipment: Company laptop (MacBook Air 13" or equivalent) for duration
+  (e) Access: All internal systems (email, Slack, Jira, Confluence) with
+      role-based access controls; no access to production environments
+  (f) Insurance: Work-injury coverage only; no group medical insurance
+  (g) Mentorship: Assigned full-time technical/business mentor + 1:1 with
+      People Operations every 2 weeks
+  (h) Stipend: S$20 per day meal and transport allowance (in addition to above)
+
+All interns are required to present a final project showcase to their team
+and People Operations on the last day of their internship. Outstanding interns
+may receive a return offer for full-time employment or a subsequent internship.
+
+1.6 Temporary Employment
+A Temporary Employee is one who is engaged on a short-term ad-hoc basis via
+an approved third-party staffing agency. This employment type is strictly
+limited to:
+  - Covering short absences (< 3 months) such as short sick leave or
+    unexpected departures while permanent recruitment is in progress
+  - Event-based roles such as conference staffing, DBiz Academy training
+    assistants, or campus recruitment drives
+  - One-off administrative, data entry, or research support projects
+
+Temporary employees are not DBizLabs employees; they remain employees of the
+relevant staffing agency and are subject to that agency's terms and conditions
+of employment. DBizLabs has no employment relationship, liability, or
+obligation beyond the contractual arrangement with the staffing firm.
+
+Managers wishing to engage temporary staff must submit a Form STA-01 to
+Finance and People Operations at least 10 business days in advance. No
+temporary staff may be engaged via verbal arrangements or without an approved
+purchase order in place. Rates payable to staffing agencies are capped by
+the rate card published in the Finance Portal.
+
+1.7 Employment Type Transitions
+Requests to change employment type (e.g. from Part-Time to Full-Time, or
+Contract to Permanent) must be initiated by the line manager via Form ET-02
+submitted to People Operations. All transitions require:
+  - Written justification from the line manager
+  - Endorsement from the relevant department head (D-grade or above)
+  - Approval from People Operations and the CFO (for permanent headcount budget)
+  - A minimum of 6 months of satisfactory performance in the current role
+
+Transitions are effective on the first day of the calendar month following
+approval unless otherwise agreed. Leave balances, benefits, and compensation
+are adjusted from the transition date; there is no retro-active adjustment.
+
+1.8 Correct Classification
+It is the responsibility of both managers and employees to ensure that the
+employment classification reflects the actual nature of the working
+arrangement. Any employee who believes that their classification is
+incorrect or does not match their role should raise the matter with
+People Operations for a confidential review. DBizLabs is committed to full
+compliance with the Singapore Employment Act and all applicable regulations
+in every jurisdiction where we operate. Misclassification audits are
+conducted semi-annually by Internal Audit and the external auditors.
+
+1.9 Employment Act Coverage
+All Full-Time, Part-Time, and Contract employees earning a monthly salary
+of S$4,500 or below are covered under Part IV of the Singapore Employment
+Act. Employees earning above S$4,500 per month are not covered under Part IV
+(Rest Days, Hours of Work, Overtime) but remain covered under all other
+parts of the Act. This Handbook provides terms that are, in all cases, at
+least as favourable as the statutory minimums required under the Employment
+Act and any other applicable legislation.
+
+1.10 Records of Employment
+DBizLabs maintains an official employee file (both physical and electronic)
+for each employee for the duration of employment and for a minimum of 7 years
+following cessation. Employees may request access to their own personnel file
+by submitting Form PR-07 to People Operations. Files may be inspected in the
+presence of a People Operations staff member; copies of documents may be
+requested subject to applicable fees and data privacy regulations under the
+Personal Data Protection Act (PDPA).
+
+================================================================================
+SECTION 2: ONBOARDING & PROBATION
+================================================================================
+
+2.1 Pre-Employment Requirements
+Before your official start date at DBizLabs, you will be required to complete
+a number of pre-employment checks and provide the following documentation
+to People Operations. Failure to complete these requirements may result in
+a delayed or cancelled start date.
+
+Pre-employment checklist:
+  (a) Signed and returned Letter of Offer or Contract of Service
+  (b) Signed Confidentiality, Non-Disclosure and IP Assignment Agreement
+  (c) Singapore NRIC (front and back) or Passport + Employment Pass / S Pass /
+      Work Permit (for foreigners)
+  (d) Educational certificates (highest qualification + professional certs)
+  (e) Proof of past employment (last 2 years of CPF statements, or payslips)
+  (f) Latest passport-sized photograph (digital copy, minimum 400x514px)
+  (g) Completed Medical Declaration Form (MED-01)
+  (h) Results of pre-employment medical check-up (for roles Grade C and above,
+      or roles with access to customer production data or financial systems)
+  (i) Emergency contact details (name, relationship, mobile number, email)
+  (j) Bank account details for payroll disbursement (Singapore DBS/POSB/OCBC/UOB
+      preferred; other banks require Finance approval)
+
+Criminal declaration: All candidates are required to declare any prior criminal
+convictions, whether spent or unspent under the Registration of Criminals Act.
+Failure to declare a material conviction may be grounds for immediate dismissal
+without notice. DBizLabs conducts pre-employment screening via a licensed
+vendor for all roles at Grade C+ and above, and for all roles in Finance,
+Legal, Internal Audit, and Customer Engineering with access to production data.
+
+2.2 Day One Onboarding Experience
+On your official start date, please report to the Level 22 Reception Desk at
+Marina One West Tower no later than 09:45. The Day One programme runs from
+09:45 to approximately 17:30 and includes:
+
+Morning Session (09:45 – 12:00):
+  - Welcome coffee and introduction with People Operations team
+  - Completion of any remaining paperwork (tax forms, CPF nomination, etc.)
+  - Collection of company equipment (laptop, monitor, accessories, ID badge)
+  - IT account setup: email, Slack, Jira, Confluence, 1Password, Okta SSO
+  - Office tour: workstations, meeting rooms, nursing room, prayer room,
+    cafeteria, pantry, first-aid station, emergency exits
+
+Lunch (12:00 – 13:30):
+  - Team welcome lunch at a nearby restaurant (expensed by the hiring manager)
+  - No official business is conducted during lunch; please enjoy the meal
+
+Afternoon Session (13:30 – 17:30):
+  - Company orientation: Mission, values, strategy, FY2026 plan (by HRBP)
+  - Overview of this Employee Handbook Version 4.2
+  - Introduction to the Performance Management framework (Section 6)
+  - Compliance and code of conduct training (Section 7)
+  - Data privacy and information security training
+  - 30-minute 1:1 with your direct manager to discuss first-week priorities
+  - Meet-and-greet with your immediate team members and cross-functional peers
+
+By end of Day One you should have:
+  (a) Working laptop and all required systems access
+  (b) Assigned desk or hot-desk booking access
+  (c) A clear list of tasks and objectives for your first week
+  (d) Your onboarding buddy's contact details
+
+2.3 The First 30 Days (Buddy System)
+Every new joiner is assigned an Onboarding Buddy during the first week. The
+Buddy is typically a peer in the same or adjacent team who has been at
+DBizLabs for at least 12 months and volunteered for the role. Your Buddy's
+responsibilities include:
+
+  - Checking in with you informally at least twice per week for the first month
+  - Explaining team-specific processes, norms, and "unwritten rules"
+  - Introducing you to key stakeholders inside and outside the team
+  - Helping you navigate the office, understand tooling, and find documentation
+  - Being a safe sounding board for questions you may not want to ask your manager
+
+If after two weeks you have not been assigned a Buddy, or if the Buddy
+arrangement is not working well, please contact your HR Business Partner
+(HRBP) who will arrange an alternative.
+
+2.4 Probation Period Overview
+All new employees (Full-Time and Part-Time permanent) serve a probation
+period at the beginning of their employment. The purpose of probation is to:
+  - Give the employee a fair opportunity to learn the role and integrate into
+    the team and company culture
+  - Allow the manager to assess the employee's fit against role expectations
+  - Provide a structured feedback mechanism with clear goals and check-ins
+  - Establish a foundation for long-term success within the organisation
+
+Probation periods vary by employee grade:
+  - Grade A:  3 calendar months from start date
+  - Grade B:  3 calendar months from start date
+  - Grade C:  3 calendar months from start date
+  - Grade C+: 6 calendar months from start date
+  - Grade D:  6 calendar months from start date
+  - Grade E:  6 calendar months from start date
+  - Grade E+: 6 calendar months from start date (and CEO approval required
+              for confirmation)
+
+For Part-Time employees, the probation period is extended proportionally to
+reflect the reduced number of working hours. For example, a Grade B employee
+working 3 days per week (60%) will serve a 5-month probation period.
+
+Interns and temporary employees do not serve probation; the engagement period
+is itself treated as an evaluation window. Contract employees serving
+contracts of 12 months or longer serve a 3-month probationary period at the
+beginning of the contract, regardless of grade.
+
+2.5 Probation Goals and Check-Ins
+Within the first 5 business days of joining, your manager must create a
+Probation Plan document in Lattice (our HR platform) containing:
+  (a) 3–5 specific, measurable goals aligned to the role description
+  (b) Clear success criteria for each goal (what "good" looks like)
+  (c) Key stakeholders to collaborate with
+  (d) Any required training, certifications, or shadowing
+
+Mandatory formal check-ins during probation:
+  - End of Week 2: Informal 30-minute touch base (manager + employee)
+  - Mid-probation (50% of period elapsed): Formal 60-minute documented
+    review using Form PB-03. Must include written progress notes against
+    each goal and an overall rating: On Track / Needs Improvement / At Risk
+  - Final review (2 weeks before probation end): Formal 90-minute discussion
+    with a clear recommendation: Confirm / Extend / Terminate
+
+2.6 Confirmation, Extension, or Termination
+No later than 5 working days before the scheduled end of the probation
+period, the line manager must submit Form PB-05 to People Operations
+containing one of three recommendations:
+
+Option 1: CONFIRM in role (Passed Probation)
+  - This is the default outcome for the majority of employees.
+  - When confirmed, the employee moves to permanent status and all
+    entitlements in this Handbook apply retroactively from the start date
+    (except ESOP cliff, which follows the standard ESOP agreement).
+  - A written Confirmation Letter is issued by People Operations within
+    5 working days.
+
+Option 2: EXTEND probation period
+  - Probation may be extended by up to one additional period of the same
+    length (3 or 6 months). Extensions are permitted only once per employee
+    and require written justification.
+  - Common grounds for extension: extended leave taken during probation,
+    significant project delays that prevented fair evaluation, or an
+    "At Risk" mid-point review followed by genuine improvement.
+  - A written Extension Letter is required, signed by both the manager and
+    HRBP, with clear milestones for the extension period.
+
+Option 3: TERMINATE employment during or at end of probation
+  - Termination may occur if, despite adequate support and feedback, the
+    employee is unable to meet the minimum requirements of the role.
+  - During probation, the notice period is 14 calendar days (or payment
+    in lieu thereof) from either party. See Appendix B for full details.
+  - All termination decisions during probation must be reviewed and approved
+    by both People Operations and Legal before being communicated.
+
+2.7 Internal Transfers and Probation
+If an employee transfers to a new role or department internally within
+DBizLabs, they may be required to serve a secondary "probation" (typically
+3 months) in the new role. This does not affect permanent status, salary,
+or benefits, but provides a structured evaluation period for the new role.
+Unsuccessful completion of an internal probation will result in either a
+return to the previous role (if available) or the beginning of a 30-day
+outplacement support period.
+
+2.8 Offboarding for Non-Confirmed Employees
+Employees who do not pass probation are entitled to:
+  - Salary and applicable allowances up to the last working day
+  - Pro-rated annual leave (if any accrued but untaken) paid as salary
+  - CPF contributions up to the last working day
+  - Return of all personal property submitted pre-employment
+  - Option to collect a Certificate of Service upon request
+
+Non-confirmed employees are not eligible for AWS, bonuses, or pro-rated
+ESOP vesting. Access to all systems is revoked on the last working day.
+
+2.9 Continuous Employment
+For the avoidance of doubt, the probation period counts towards continuous
+employment for all purposes including leave calculation, severance pay,
+ESOP cliff vesting, and the 2-year qualifying period for the Housing Loan
+benefit in Section 5.14.
+
+================================================================================
+SECTION 3: WORKING HOURS, ATTENDANCE & FLEXIBILITY
+================================================================================
+
+3.1 Standard Core Working Hours
+The official working week for DBizLabs Singapore Headquarters office is:
+
+  MONDAY to FRIDAY:  09:00 to 18:00
+  LUNCH BREAK:       1 hour (any time between 12:00 and 14:00)
+
+This represents a standard 40-hour working week excluding the lunch break.
+Teams operating in other regions (Japan, India, UK, UAE, US, Germany) follow
+local working hours as communicated by the country manager and HRBP. These
+regional standards will always be at least as favourable as local statutory
+requirements (e.g. the UK Working Time Regulations 1998).
+
+3.2 Core Hours and Flexi-Time (Flexible Working Hours Policy)
+DBizLabs operates a flexi-time policy to accommodate individual preferences,
+caregiving responsibilities, and commuting arrangements. Flexi-time works as
+follows:
+
+CORE HOURS (when physical or virtual presence is mandatory for meetings,
+collaboration, and ceremonies):
+  10:00 – 12:00 (morning window)
+  14:30 – 16:30 (afternoon window)
+
+Flexible arrival window: Employee may start any time between 08:00 and 10:00.
+Flexible departure window: Employee may finish any time between 17:00 and 19:00.
+
+However, a deviation of more than +/- 1 hour from the standard 09:00 start
+requires prior written approval from the line manager via Form FL-01.
+
+Examples:
+  (a) Employee wishes to come in at 08:00 and leave at 17:00. This is within
+      the +/- 1 hour band — no approval required. The employee simply ensures
+      their calendar shows "Out of Office: Flexible Hours" before 09:00.
+  (b) Employee wishes to come in at 11:00 and leave at 20:00. This is +2 hours
+      from the standard start. Requires line manager approval via Form FL-01
+      submitted minimum 2 days in advance.
+
+Approval should be granted where the arrangement does not impair teamwork,
+client meetings, or core business operations. Managers are encouraged to
+approve reasonable flexi-time requests and to model work-life balance.
+
+3.3 Remote and Hybrid Work Policy
+Effective 1 August 2026, DBizLabs operates a hybrid working model. All
+employees are permitted to work remotely from their home address on file
+for up to 2 days per week. This is commonly known as "2D/3W" (2 days from
+home, 3 days in the office).
+
+Key rules:
+  (a) 2 remote days per week is the default maximum. Employees are required
+      to be present in the office on at least 3 days per calendar week
+      (Monday–Friday).
+  (b) The 3 office days are determined by team agreement and published in
+      advance. Most teams have a fixed pattern (e.g. Tue/Wed/Thu in office).
+  (c) Individual employees may vary which specific days they work remotely
+      from week to week, provided the 3-day minimum office presence is met
+      and team meetings are attended.
+  (d) Remote days must be logged in the Desk Booking System (DBizBook) by
+      23:59 the previous Sunday. This is to ensure correct office capacity
+      planning for meeting rooms, desks, and catering.
+  (e) During remote days, employees must:
+      - Be reachable on Slack and phone within 15 minutes during core hours
+      - Maintain a suitable, safe work area (see Section 8 on Home Safety)
+      - Use the company VPN when accessing internal systems or customer data
+      - Have camera switched on for all meetings of 3 or more people
+      - Not engage in unrelated full-time or part-time employment
+
+Exceptions requiring HRBP approval (Form FL-03):
+  - Temporary increased remote work (up to 4 days/week) for a max 4 weeks
+    per year for medical, caregiving, or relocation reasons
+  - Fully remote roles (less than 1 day per month in the office) — these are
+    limited to specific job families (e.g. some specialist engineering roles
+    in regions outside Singapore) and require CFO + COO sign-off. As of the
+    publication of this Handbook, 14 people hold fully remote agreements.
+
+3.4 Attendance Tracking and Tardiness
+DBizLabs operates a trust-based model for attendance; there is no physical
+punch-card system. However, accurate records of attendance are maintained
+through:
+  - Desk booking system (DBizBook) records in-office vs. remote days
+  - Calendar data (for core-hours meeting attendance)
+  - Manager-led spot checks and observation
+
+Employees who are going to be late arriving (either physically or virtually)
+must notify their line manager via Slack SMS no later than 09:15 on the day.
+Repeated tardiness (defined as 3+ occurrences in any 30-day window, each
+being 15 minutes or more beyond agreed start time) will be addressed through
+the informal feedback channel and may be escalated to formal counselling or
+a performance improvement plan if not corrected.
+
+3.5 Overtime and Compensatory Time Off (CTO)
+For employees covered under Part IV of the Singapore Employment Act
+(monthly salary <= S$4,500, typically Grade A and entry-level Grade B):
+  - Overtime work is authorised at time-and-a-half (1.5x) of the hourly
+    basic rate of pay.
+  - The maximum permissible overtime is 72 hours per month.
+  - Overtime must be pre-approved by the line manager via Form OT-01.
+  - Unpaid overtime is not permitted for EA-covered employees.
+
+For employees NOT covered under Part IV (all Grade C+ and above, and most
+Grade B employees earning above S$4,500/month):
+  - Overtime compensation is provided via Compensatory Time Off (CTO) at a
+    rate of 1 hour CTO per 1 hour of approved overtime, rounded up to the
+    nearest half hour.
+  - CTO must be approved by the manager in advance (exceptions apply for
+    genuine emergency out-of-hours work such as incident response).
+  - CTO must be taken within 90 days of being accrued; any CTO not taken
+    within 90 days is forfeited.
+  - There is no cash payment in lieu of CTO for non-EA employees except in
+    the case of employment termination, when all accrued CTO (up to a max
+    of 40 hours) is paid out at basic salary.
+
+3.6 Public Holidays
+DBizLabs observes all gazetted public holidays in Singapore as published by
+the Ministry of Manpower each year. For FY2026 the following 11 public
+holidays are observed:
+
+  1. New Year's Day       – Thu 1 Jan 2026
+  2. Chinese New Year     – Tue 17 Feb 2026
+  3. Chinese New Year     – Wed 18 Feb 2026
+  4. Good Friday          – Fri 3 Apr 2026
+  5. Labour Day           – Fri 1 May 2026
+  6. Vesak Day            – Fri 1 May 2026 (merged; additional lieu day given)
+  7. Hari Raya Puasa      – Wed 13 May 2026
+  8. National Day         – Mon 10 Aug 2026
+  9. Hari Raya Haji       – Sun 13 Sep 2026 (mon 14 Sep in lieu)
+ 10. Deepavali            – Sat 17 Oct 2026 (mon 19 Oct in lieu)
+ 11. Christmas Day        – Fri 25 Dec 2026
+
+Where a public holiday falls on a Saturday, the following Monday is
+designated as a day off in lieu. Where it falls on a Sunday, the following
+Monday is designated as a public holiday (per gazette).
+
+Employees required to work on a public holiday (must be approved in advance
+by the department head) are entitled to either:
+  (a) One additional day of paid leave per public holiday worked, OR
+  (b) 2.0x basic hourly rate of pay for hours worked (EA-covered employees)
+
+Employees in regional offices observe local public holidays in their country
+of employment; Singapore public holidays do not apply to overseas offices.
+
+3.7 Business Travel
+Employees travelling for business purposes must submit a Travel Request
+Form (TR-01) a minimum of 7 days in advance (21 days for international
+travel) for approval by the line manager and Finance. The Travel Policy
+(Finance Handbook Section 3) governs booking classes, per-diem rates, and
+allowances. The key principles are:
+
+Flights:
+  - Economy for flights < 6 hours duration
+  - Premium Economy or Business for flights >= 6 hours (manager discretion)
+  - Business Class for Grade D and above on all flights >= 4 hours
+
+Accommodation:
+  - Standard single room at approved corporate hotel partners
+  - Maximum nightly rate: S$250 Singapore / APAC; S$300 EMEA / Americas
+
+Per diems (incidentals, meals, local transport):
+  - S$80 per day Singapore
+  - S$120 per day APAC (major cities)
+  - S$150 per day EMEA / Americas
+
+All travel must be booked through the corporate travel agent (Travelstop).
+Personal extensions to business travel are permitted at the employee's own
+expense, subject to not impacting business commitments and line manager
+approval. Travel insurance is provided automatically for all business trips
+via the company's group travel policy with AIG Asia.
+
+3.8 Leave-of-Absence (Unpaid)
+Employees may apply for unpaid leave of absence for up to 3 months for
+reasons including (but not limited to) personal development, study, caregiving,
+volunteering, or extended travel. Applications must be made on Form LUA-01
+at least 30 days in advance and require:
+  - Line manager endorsement
+  - Department head (Grade D+) approval
+  - Final sign-off by People Operations
+
+During unpaid leave:
+  - Salary is suspended; no AWS or bonus pro-rating accrues
+  - CPF contributions are not made by either party
+  - Leave entitlements (annual, sick) do not accrue
+  - ESOP vesting continues (per ESOP agreement)
+  - Group insurance cover continues for up to 3 months
+
+Employment seniority is preserved during periods of approved unpaid leave
+less than 6 months per rolling 24-month period.
+
+================================================================================
+SECTION 4: LEAVE ENTITLEMENTS
+================================================================================
+
+4.1 Leave Framework Overview
+DBizLabs provides a generous and comprehensive leave programme designed to
+support work-life balance, rest, recovery, and major life events. All leave
+entitlements below are minimums; individual managers may, at their sole
+discretion, approve additional unpaid leave beyond these statutory and
+company minima.
+
+Leave is administered via the Workday HCM platform. Employees are responsible
+for submitting leave requests in advance where possible and for ensuring
+appropriate handover and coverage before going on leave.
+
+For every leave type, the following ground rules apply:
+  (a) Leave requests must be submitted via Workday by the employee.
+  (b) Leave of 2 days or less requires line manager approval.
+  (c) Leave of 3–9 days requires line manager + department head approval.
+  (d) Leave of 10+ days requires line manager + department head + HRBP.
+  (e) Any leave concurrent with critical business periods (e.g. financial
+      year-end, product launches, major customer go-live) additionally
+      requires CFO or COO sign-off.
+  (f) Retroactive leave requests (submitted after the absence has begun)
+      require written justification and HRBP approval.
+  (g) All leave balances are available on the Workday Employee Self-Service
+      portal and are updated daily.
+
+4.2 Annual Leave Entitlement
+Annual leave entitlement varies by employee grade as at the beginning of the
+leave year (1 January) and is as follows:
+
+Grade A  : 18 working days per calendar year
+Grade B  : 22 working days per calendar year
+Grade C  : 25 working days per calendar year
+Grade C+ : 25 working days per calendar year
+Grade D  : 28 working days per calendar year
+Grade E  : 30 working days per calendar year
+Grade E+ : 30 working days per calendar year (plus additional 5 days at
+           the CEO's discretion, managed outside Workday)
+
+Note that the calendar year is used for annual leave (not the fiscal year).
+Part-Time employees receive a pro-rata portion of the above based on
+contracted weekly hours / 44 hours. Contract employees receive 7% of gross
+annual salary as leave encashment (per the Employment Act) unless their
+contract specifies otherwise.
+
+4.3 Long-Service Annual Leave Enhancement
+In addition to the base annual leave entitlement above, employees who have
+completed 5 years of continuous service with DBizLabs (or with a predecessor
+company acquired by DBizLabs, at the company's discretion) receive:
+  - +5 days of additional annual leave, effective 1 January following the
+    5-year anniversary.
+
+Thereafter, the additional leave balance increases by +1 day per completed
+year of service (so 6 years = +6 days, 7 years = +7 days, etc.) up to a
+maximum additional cap of 30 additional days.
+
+In practical terms this means:
+  - A Grade B employee at 5 years: 22 + 5 = 27 days
+  - A Grade B employee at 10 years: 22 + 10 = 32 days
+  - A Grade B employee at 25+ years: 22 + 30 = 52 days (maximum cap)
+
+Long-service leave additions are automatic and applied by People Operations
+in January of each year; no application is required.
+
+4.4 Annual Leave Carry-Forward and Encashment Policy
+Leave year: 1 January to 31 December.
+
+Up to 50% of annual leave entitlement may be carried forward to the next
+year, subject to a maximum carry-forward cap of:
+  - Grade A:  9 days carry-forward cap
+  - Grade B:  11 days carry-forward cap
+  - Grade C:  13 days carry-forward cap
+  - Grade C+: 13 days carry-forward cap
+  - Grade D:  14 days carry-forward cap
+  - Grade E:  15 days carry-forward cap
+  - Grade E+: 15 days carry-forward cap
+
+Any annual leave above this cap that has not been taken by 31 December will
+be automatically encashed in the first payroll of January at the employee's
+current basic daily rate of pay. Encashment is subject to CPF deductions
+(where applicable) and normal income tax.
+
+Managers are responsible for ensuring that their team members take adequate
+leave throughout the year. The HR team publishes leave utilisation reports
+quarterly; any employee who has taken fewer than 5 days of annual leave by
+30 June will be contacted by their HRBP to discuss and encourage leave
+planning. "Use-it-or-lose-it" does not apply within the 50% cap, but
+encouraging rest is a cultural priority.
+
+4.5 Sick Leave Entitlement
+All Full-Time and Part-Time permanent employees are entitled to:
+
+  (a) Outpatient Sick Leave: 14 days per calendar year, with no waiting
+      period from the date of joining.
+  (b) Hospitalisation Sick Leave: Up to 60 working days per calendar year,
+      of which the first 30 days are paid at 100% of basic salary, and the
+      remaining 30 days at 66.67% of basic salary. Hospitalisation leave
+      includes quarantine orders and day surgeries.
+
+Sick leave may be used for:
+  - Personal illness, injury, or medical appointments that cannot be
+    scheduled outside working hours
+  - Quarantine orders (SHN) issued by MOH or equivalent overseas authority
+  - Accompanying a child or spouse for a hospital admission or surgery
+    (maximum 5 days per year; considered "caregiver sick leave" and drawn
+    from the 14-day outpatient pool)
+
+Medical certificates are required:
+  - For any sick leave of 2 days or more in a row
+  - For any sick leave taken on a Monday or Friday (to avoid long-weekend
+    abuse — although the policy is applied with common sense; HR may waive
+    this requirement at its discretion)
+  - For any hospitalisation leave regardless of duration
+
+MCs must be submitted via Workday within 3 working days of the absence.
+Uncertified sick leave (no MC) of 1 day per month is permitted on a
+self-declaration basis via Form SL-01. Employees exceeding 6 self-declared
+sick days per year will be required to attend a meeting with the HRBP and
+company-appointed panel doctor.
+
+4.6 Maternity Leave
+All female employees (regardless of nationality, employment pass status, or
+length of service) are entitled to 16 weeks of paid Maternity Leave, which
+is a benefit above and beyond the statutory 16 weeks mandated under the
+Singapore Employment Act for eligible citizens. Government-Paid Maternity
+Benefit (GPMB) rules apply where the employee is eligible (Singapore citizen
+mothers, 3rd+ children etc.).
+
+Distribution of the 16 weeks:
+  - Minimum 4 weeks must be taken immediately after confinement
+  - Remaining 12 weeks may be taken flexibly within 12 months of the birth
+    date, subject to manager approval and child-care arrangements
+  - Flexi-taking must be pre-approved via Form ML-02 and clearly documented
+
+Maternity Leave is paid at the employee's current gross monthly salary
+(DBizLabs tops up the GPMB amount to ensure full salary continuity).
+
+Pre-natal leave: 2 days of paid pre-natal examination leave per pregnancy,
+available from the 2nd trimester onwards, in addition to the 16-week
+entitlement. These 2 days are not drawn from annual leave or sick leave.
+
+Pregnancy loss / stillbirth: Up to 8 weeks of paid leave for miscarriage
+occurring after week 12 of pregnancy, or 2 weeks of paid leave for early
+pregnancy loss before week 12. Supported by a doctor's letter.
+
+4.7 Paternity Leave
+All male employees (regardless of nationality) are entitled to 2 weeks of
+paid Paternity Leave following the birth of their child. This must be taken
+within 16 weeks of the birth date and may be:
+  - Taken as a single 2-week block, OR
+  - Split into 10 individual days taken flexibly within 12 months of birth,
+    subject to manager approval via Form PL-01
+
+Paternity Leave is paid at 100% of gross monthly salary. Government-Paid
+Paternity Benefit (GPPB) applies for Singaporean fathers where eligible;
+DBizLabs tops up the balance to ensure no loss of salary.
+
+4.8 Adoption Leave and Surrogacy
+Adoptive parents are entitled to:
+  - Primary adopter: 12 weeks of paid leave (matching maternity framework
+    where applicable)
+  - Secondary adopter: 2 weeks of paid leave (matching paternity framework)
+
+Leave is available following official court placement order and may be used
+for bonding and settling-in period. Supported by adoption court documents.
+Surrogacy arrangements are treated on a case-by-case basis by People
+Operations with reference to the Adoption of Children Act and any applicable
+Ministry of Social and Family Development guidelines.
+
+4.9 Compassionate Leave (Bereavement Leave)
+In the unfortunate event of the death of an immediate family member,
+employees are entitled to 5 working days of paid Compassionate Leave per
+occurrence. Immediate family is defined as:
+  - Spouse / civil partner / de-facto partner
+  - Children (biological, adopted, step, foster)
+  - Parents and parents-in-law
+  - Siblings (biological, adopted, step, half, in-law)
+  - Grandparents and grandparents-in-law
+
+In the event of the death of a grandchild, aunt, uncle, niece, nephew, or
+cousin, employees are entitled to 3 working days of paid compassionate leave.
+Additional unpaid leave may be granted upon request at the manager's
+discretion.
+
+Compassionate leave does not require a death certificate as a condition of
+approval; however, a copy may be requested after the fact for audit purposes.
+Managers are instructed to be generous and flexible in granting additional
+time where the employee needs it; the company's values always take precedence
+over strict policy interpretation.
+
+4.10 Marriage Leave
+Employees getting married (to any gender, any jurisdiction) are entitled to
+5 working days of paid Marriage Leave per marriage, to be taken within
+6 months of the date of the registered marriage (as evidenced by the
+marriage certificate). Marriage leave may be combined with annual leave for
+an extended honeymoon. Second or subsequent marriages are eligible; there
+is no lifetime cap. However, marriage leave cannot be taken retroactively
+for marriages that occurred before the employee joined DBizLabs.
+
+4.11 Bereavement Leave Structure Summary
+To avoid ambiguity between "Compassionate" and "Bereavement" leave, the
+following consolidated table applies. All leave is paid and does not draw
+from annual leave.
+
+Bereavement for (per event):
+
+Category 1 (5 days paid):
+  - Parent, Father-in-law, Mother-in-law
+  - Spouse / Partner / Civil Partner
+  - Child (natural, adopted, step, foster, pregnancy loss after 12 weeks)
+
+Category 2 (3 days paid):
+  - Grandparent (including in-law grandparents)
+  - Sibling (including in-law, step, half, adopted)
+  - Grandchild
+  - Aunt / Uncle (blood or marriage)
+  - Niece / Nephew
+  - Cousin
+
+4.12 Study Leave (Paid Educational Leave)
+Employees in Grades A through E+ are entitled to up to 10 working days of
+paid Study Leave per calendar year to support formal education and
+professional development programmes.
+
+Eligibility criteria:
+  (a) Course of study must be related to the employee's current role or a
+      reasonable future career path within DBizLabs
+  (b) Programme must result in a formal qualification, certification, or
+      continuing professional development (CPD) credits
+  (c) Employee must have completed at least 12 months of continuous service
+      with DBizLabs at the time of application
+  (d) Employee must pass the course with a minimum grade of 70% (or
+      equivalent, e.g. Merit in UK system, B+ in US system). If the minimum
+      grade is not achieved, the leave will be retrospectively converted to
+      annual leave or unpaid leave at the employee's election.
+
+Approved courses include (non-exhaustive):
+  - Professional certifications (CFA, ACCA, PMP, AWS/GCP certifications,
+    SHRM, CIPM, Certified Scrum Master, etc.)
+  - University degree programmes (Bachelors, Masters, MBA, PhD) — subject
+    to additional approval from the L&D Committee
+  - Executive education programmes (INSEAD, NUS, Wharton, London Business
+    School etc.)
+  - Technical deep-dive bootcamps and vendor-specific academies
+
+Study leave applications must be made via Form STL-01 at least 30 days in
+advance and require line manager + HRBP approval, with additional L&D
+Committee sign-off for programmes exceeding S$5,000 in fees or 5 days of
+leave. Study leave may be combined with the Learning & Development Budget
+in Section 5.12.
+
+4.13 National Service / Reservist Leave
+Singapore Citizens and Permanent Resources who are Operationally Ready
+National Servicemen (NSmen) are entitled to paid reservist leave as
+required under the Enlistment Act. All days of official reservist training,
+ICT, mobilisation, and medical examinations are paid at full salary; the
+company claims reimbursement from MINDEF via the NSmark / NS Pay system.
+Employees should notify their line manager and HR as soon as reservist
+notices are received, typically 6 months in advance.
+
+4.14 Voting, Jury Service, and Public Duties
+Employees who are eligible to vote in Singapore General Elections or
+Presidential Elections are entitled to paid time off to cast their vote,
+without deduction from leave balance. Where polling day falls on a workday
+(which it typically does), the entire day is treated as paid election leave.
+
+Jury Service (Singapore: Jurors Act): Employees summoned for jury duty or
+as witnesses in court proceedings are entitled to the full duration of the
+summons as paid leave, with any court attendance allowance received from
+the courts being paid directly to DBizLabs Finance (to avoid double recovery).
+Similar rules apply to service as Justices of the Peace or grassroots office
+bearers.
+
+4.15 Other Leave Types
+Additional leave types available (full details in the People Operations
+Policy Portal):
+  (a) Volunteer Leave: 3 days per calendar year of paid leave for
+      volunteering work with a registered charity, IPC, or social service
+      agency. Pre-approval via Form VOL-01 required.
+  (b) Blood Donor Leave: 0.5 days of paid leave for each blood donation
+      appointment (up to 2 donations per year = 1 day total) with proof of
+      donation.
+  (c) Childcare Leave: As per the Employment Act for Singapore Citizen
+      children under 7 years of age (6 days per parent, paid).
+  (d) Infant Care Leave: As per the Employment Act (2 days per parent, paid,
+      for Singapore Citizen children under 2 years of age).
+  (e) Time off for dependants: Up to 5 days unpaid per year for caring for a
+      sick child or elderly dependant; drawn from last resort.
+  (f) Sabbatical Leave: Every 5 years of completed continuous service,
+      employees are eligible to apply for a 4-week (Grade C and below) or
+      8-week (Grade D and above) fully paid sabbatical. Requires 2 months
+      of handover planning and CEO sign-off. 8 sabbaticals have been taken
+      since launch of the programme in 2024.
+
+================================================================================
+SECTION 5: COMPENSATION & BENEFITS
+================================================================================
+
+5.1 Total Compensation Philosophy
+DBizLabs believes in a total rewards philosophy that:
+  - Pays at the 75th percentile of the market for equivalent roles in the
+    SaaS / AI software sector (based on Aon Hewitt and Radford surveys)
+  - Provides strong differentiation between high performers and solid
+    performers to reward excellence
+  - Balances fixed cash, short-term incentives, and long-term equity so
+    that employees across all levels share in the company's success
+  - Offers a broad, flexible benefits menu that meets the diverse needs of
+    a multicultural and multi-generational workforce
+
+The full pay matrix for each grade is reproduced in Appendix A of this
+Handbook. The following sub-sections detail each component of the total
+rewards package.
+
+5.2 Base Salary and Pay Cycles
+Base salary is paid monthly, in arrears, on the 25th day of each month.
+Where the 25th falls on a weekend or public holiday, salary is paid on the
+last preceding working day. Salary is disbursed by GIRO to a Singapore
+bank account (DBS, POSB, OCBC, UOB preferred) and accompanied by an
+electronic payslip issued via Workday.
+
+Payslips contain the following breakdown:
+  - Basic Salary (fixed component)
+  - Any allowances (mobile, transport, shift, etc.)
+  - One-time payments (bonus, AWS, overtime, CTO encashment, etc.)
+  - Statutory deductions (CPF employee portion, SINDA / CDAC / MBMF / ECF
+    contributions, tax clearance if applicable)
+  - Voluntary deductions (charity giving via SHARE programme, flexible
+    benefits elections, salary continuance insurance)
+  - Net pay amount
+
+Employees who wish to change their bank account must notify Payroll via
+Form PAY-04 at least 10 working days before the next payroll cycle.
+
+5.3 13th Month Bonus (Annual Wage Supplement — AWS)
+DBizLabs provides a 13th-month bonus, more commonly known as the Annual
+Wage Supplement (AWS). The AWS is pro-rated for employees who joined or
+left during the calendar year, based on the number of complete calendar
+months in employment. The formula is:
+
+  AWS = (Monthly Base Salary as at December) × (Completed Months / 12)
+
+Where the company's full-year financial performance is above internal plan,
+the AWS may be increased from 1.0 month to a maximum of 2.0 months at the
+discretion of the Board of Directors. AWS is paid together with the
+December payroll on or about 20 December each year. Employees who resign
+or are terminated before 1 December of the relevant year are NOT eligible
+for a pro-rated AWS.
+
+5.4 Performance Bonus Scheme (Annual Variable Component)
+In addition to the AWS, DBizLabs operates a performance-based Annual
+Variable Bonus plan (commonly referred to as the "Performance Bonus")
+targeting between 0 and 3 additional months of base salary. Actual payout
+is determined by a combination of:
+
+  (a) COMPANY PERFORMANCE (40% of the weighting): Based on achievement of
+      full-year revenue, EBITDA, and strategic milestones as approved by
+      the Board at the beginning of the year.
+      - Exceeds plan (110%+): Company factor = 1.5x
+      - Meets plan (95–109%): Company factor = 1.0x
+      - Below plan (80–94%): Company factor = 0.5x
+      - Significantly below (<80%): Company factor = 0x
+
+  (b) INDIVIDUAL PERFORMANCE (60% of the weighting): Based on the
+      individual's annual performance rating (see Section 6).
+      - Rating 5 (Exceptional): Individual factor = 2.0x
+      - Rating 4 (Exceeds Expectations): Individual factor = 1.3x
+      - Rating 3 (Meets Expectations): Individual factor = 1.0x
+      - Rating 2 (Needs Improvement): Individual factor = 0.25x
+      - Rating 1 (Unsatisfactory / PIP): Individual factor = 0x
+
+Final bonus (in months of base salary):
+
+  Target Bonus  ×  Company Factor ×  Individual Factor
+
+Target bonus by grade (months of base):
+  Grade A  :  1.5 months target
+  Grade B  :  2.0 months target
+  Grade C  :  2.5 months target
+  Grade C+ :  3.0 months target
+  Grade D  :  3.0 months target
+  Grade E  :  3.0 months target (higher via Long-Term Incentive scheme)
+  Grade E+ :  Discretionary scheme approved separately by RemCo
+
+Example: Grade C employee with target bonus of 2.5 months, company meets plan
+(1.0x), individual Rating 4 (1.3x) → 2.5 × 1.0 × 1.3 = 3.25 months bonus.
+
+The performance bonus is paid together with the March payroll of the
+following year, subject to the employee being active on the payroll on the
+date of payment. Employees who resign or are terminated before the payment
+date are not eligible for the performance bonus (except in cases of
+redundancy, where the Board may approve a pro-rated amount).
+
+5.5 Sales Commission Plan (Go-To-Market Roles Only)
+Employees in Business Development, Account Management, Sales Engineering,
+and Channel Sales roles operate under a separate Sales Commission Plan
+document (Plan SCP-FY2026-V2) which replaces the performance bonus scheme
+above with an on-target earnings (OTE) mix of approximately 60% base to
+40% variable. Full details of the commission scheme, accelerators, claw-
+backs, and SPIFs are set out in that document. Commission plans are
+reviewed annually and published in Q4 of each fiscal year for the next
+year's plan.
+
+5.6 Medical Insurance (Outpatient and Inpatient)
+DBizLabs provides comprehensive medical insurance coverage under a group
+policy with AIA Singapore (policy number GLI-2026-88421-DBIZ) for all
+full-time permanent employees and, where applicable, their dependants.
+
+OUTPATIENT COVERAGE:
+  - Annual limit: S$1,500 per employee per policy year (1 Apr – 31 Mar)
+  - Coverage: General practitioner (GP) consultations, specialist
+    consultations, prescribed medications, X-rays, lab tests, physiotherapy
+    (up to S$50 per visit, 20 visits per year)
+  - Panel clinics: Visit any AIA panel GP or specialist; no out-of-pocket
+    payment required when using the company health card (SingHealth,
+    Raffles Medical, Healthway Medical, and AIA panels are accepted)
+  - Non-panel reimbursement: 80% of usual & customary charges up to the
+    annual limit, subject to a S$25 co-payment per visit
+  - Pre-existing conditions: Covered after a 12-month waiting period for
+    employees who have declared them at the time of joining
+
+INPATIENT / HOSPITALISATION COVERAGE:
+  - Annual limit: S$30,000 per employee per policy year (as-charged basis)
+  - Coverage: Ward charges (up to S$300/day standard single room in
+    restructured / private hospitals), surgical fees, anaesthetist fees,
+    implants, chemotherapy, radiotherapy, intensive care, ambulance
+  - Pre-admission and post-discharge follow-up consultations (up to 30 days
+    before / after hospitalisation)
+  - No co-insurance or deductible for inpatient claims
+  - Pre-existing conditions: Covered after 12 months of continuous cover
+
+Employees may add dependants (spouse and children) to the group policy at
+their own expense via payroll deduction. Premium rates are published on
+the People Operations Benefits Portal in Workday and are reviewed annually.
+
+5.7 Dental Insurance
+Dental coverage is provided under the same AIA group policy with an annual
+limit of S$500 per employee per policy year. Coverage includes:
+  - Routine check-ups and consultations (100% covered, max 2 per year)
+  - Scaling and polishing (100% covered, max 2 per year)
+  - Fillings, root canals, extractions, crowns, bridges, dentures (80%
+    covered up to S$500 annual cap)
+  - Orthodontics / braces are NOT covered under the standard plan; a
+    voluntary top-up is available at a cost of S$360/year for a S$3,000
+    lifetime orthodontic benefit.
+
+5.8 Wellness Benefit (Flexible Wellness Allowance)
+The Wellness Benefit is a quarterly stipend of S$800 (S$3,200 per year)
+provided to every full-time permanent employee, to be spent on activities
+and products that support physical, mental, or emotional wellbeing. The
+benefit is reimbursed via Workday upon submission of a receipt, with no
+taxable benefit-in-kind implication for the employee.
+
+Eligible expenses include but are NOT limited to:
+  (a) Gym memberships, personal training, CrossFit, Pilates, yoga studios
+  (b) Sport registration fees (marathons, triathlons, football leagues, etc.)
+  (c) Sports equipment (running shoes, weights, bicycles up to S$1,500/year)
+  (d) Mindfulness apps and subscriptions (Headspace, Calm, Waking Up)
+  (g) Mental health therapy / counselling sessions (see also Section 8.10)
+  (h) Massage and spa treatments (max S$200 per quarter under wellness)
+  (i) Healthy meal delivery subscriptions (e.g. WhyQ, SaladStop, Grain)
+  (j) Vitamins, supplements, and health monitoring devices
+  (k) Pet therapy sessions and pet care (S$100 per quarter sub-limit)
+
+Ineligible expenses include:
+  - Luxury watches, jewellery, designer handbags, alcohol, tobacco
+  - Expenses for family members (must be for the employee's personal use)
+  - Rent, utility bills, groceries (unless a registered meal subscription)
+  - Any expense not supporting wellbeing (expenses will be audited randomly)
+
+Unused quarterly allowance expires at the end of each calendar quarter; it
+does not roll forward. The quarterly reset occurs on 1 Jan, 1 Apr, 1 Jul,
+1 Oct each year.
+
+5.9 Mobile Phone Allowance
+All full-time employees receive a mobile phone allowance of S$200 per month,
+paid with salary, to cover the cost of a mobile phone subscription and
+device financing. The allowance is:
+  - Taxable in Singapore (IRAS considers it a benefit-in-kind for employees
+    earning > S$200,000 per year; DBizLabs withholds tax via payroll at
+    the marginal rate)
+  - Payable regardless of whether the employee uses a company-provided
+    phone, a personal phone, or a hybrid arrangement
+  - Available from Day 1 of employment; no waiting period
+  - Not pro-rated for part-month joiners / leavers (full month allowance
+    if the employee is on active payroll for any day in the month)
+
+Additionally, for Grade C+ and above, the company provides a complimentary
+smartphone upgrade every 24 months with a device cost cap of:
+  - Grade C+ / D: S$1,800 per cycle
+  - Grade E / E+: S$2,500 per cycle
+
+5.10 Learning & Development Budget (Annual and Lifetime)
+DBizLabs is committed to the continuous learning and professional growth of
+every employee. To support this, we offer a two-tier L&D budget structure:
+
+ANNUAL L&D BUDGET (per calendar year):
+  - Grade A:        S$1,500 per year
+  - Grade B:        S$2,000 per year
+  - Grade C:        S$2,500 per year
+  - Grade C+:       S$3,500 per year
+  - Grade D:        S$5,000 per year
+  - Grade E / E+:   S$8,000 per year
+
+LIFETIME L&D FUND (cumulative across entire tenure with DBizLabs):
+  - Grade A / B:    S$6,000 lifetime cap
+  - Grade C / C+:   S$10,000 lifetime cap
+  - Grade D / E:    S$15,000 lifetime cap
+  - Grade E+:       S$25,000 lifetime cap
+
+The annual budget is used for day-to-day learning; the lifetime fund is for
+larger programmes such as university degrees, MBAs, INSEAD executive
+education, and long-format bootcamps.
+
+Eligible expenses:
+  - Tuition fees for formal education programmes
+  - Professional certification exam fees and preparatory courses
+  - Conference tickets and workshops (tech conferences, HR summits, etc.)
+  - Books, e-learning platform subscriptions (Coursera, Udemy Business,
+    O'Reilly, Educative, DataCamp, Brilliant, etc.)
+  - Language courses (English, Mandarin, Tamil, Japanese, German — where
+    relevant to job function or regional business needs)
+  - Coaching and mentoring programmes (external executive coaches for
+    Grade D+ — HRBP approval required)
+
+5.11 Central Provident Fund (CPF) Contributions
+For employees who are Singapore Citizens or Singapore Permanent Residents,
+DBizLabs makes statutory CPF contributions in accordance with the prevailing
+CPF Act and CPF Board contribution rates.
+
+As of publication of this Handbook (FY2026), the employer CPF contribution
+rate is 17% of gross monthly salary for employees under the age of 55, with
+lower rates applying for older age groups. The employee contribution rate
+is 20% for those under 55. CPF contributions are capped at the Ordinary
+Wage Ceiling (OWC) of S$6,000 per month of ordinary wages and the Additional
+Wage Ceiling (AWC) of S$102,000 per calendar year of additional wages
+(bonuses, AWS, etc.). Full contribution rate tables are available on the
+CPF Board website at www.cpf.gov.sg.
+
+5.12 Group Term Life and Personal Accident Insurance
+DBizLabs provides Group Term Life insurance coverage of 2x the employee's
+annual base salary (rounded up to the nearest S$10,000) under a group
+policy with Great Eastern Life, with no medical underwriting for joiners
+below age 65.
+
+Coverage amounts:
+  - Annual base salary S$48,000 → 2x cover = S$96,000 → rounded S$100,000
+  - Annual base salary S$120,000 → 2x cover = S$240,000 (no rounding needed)
+  - Maximum cap on coverage: S$2,000,000 per employee
+
+In addition, the Group Personal Accident policy provides:
+  - Accidental death and permanent disablement: 2x annual base salary
+  - Medical expenses from accidents: up to S$15,000 per event
+  - Weekly temporary total disablement benefit: up to S$5,000/week × 104 weeks
+  - Infectious disease cover (Dengue, Zika, COVID-19 etc.): S$5,000 lump sum
+    on hospitalisation diagnosis
+
+5.13 Critical Illness and Hospital Income
+As a supplement to the medical insurance, employees may elect additional
+voluntary cover via payroll deduction:
+  - Critical Illness (37 CI definitions): S$50,000 / S$100,000 / S$200,000
+    coverage options at age-banded premiums
+  - Hospital Income: S$200 / S$400 / S$600 per day of hospital confinement
+    for up to 365 days per illness
+  - Premiums for voluntary cover are 100% employee-paid; the company does
+    not subsidise these optional benefits.
+
+5.14 Housing Loan Benefit (Down-Payment Interest-Free Loan)
+After completing 24 months of continuous service with DBizLabs, full-time
+permanent employees in Grade B and above are eligible to apply for an
+interest-free housing loan to assist with the down-payment on their first
+HDB flat or private residential property in Singapore.
+
+Key terms of the Housing Loan Benefit:
+  (a) Maximum loan amount: S$15,000 (one-time, lifetime benefit per employee)
+  (b) Interest rate: 0% per annum, no processing fees, no hidden charges
+  (c) Repayment period: 60 months (5 years) via equal monthly deductions
+      from the employee's salary, beginning 3 months after loan disbursement
+  (d) Eligible property type: HDB BTO / resale flat, EC, or private condo
+      purchased as the employee's primary residence. Investment properties
+      and overseas property are excluded.
+  (e) Security: Loan is typically unsecured, but the company reserves the
+      right to register a caveat against the property if the loan exceeds
+      S$10,000 and the employee has less than 4 years of service.
+  (f) Early repayment: Permitted at any time without penalty.
+  (g) On resignation or termination: The full outstanding loan balance
+      becomes immediately due and payable from final salary. If the final
+      salary is insufficient, the employee must settle the balance within
+      30 days.
+  (h) Application process: Form HL-03, HRBP endorsement, CFO sign-off,
+      disbursement within 21 business days of signed loan agreement.
+
+5.15 Employee Stock Option Plan (ESOP)
+DBizLabs operates the DBizLabs 2023 Employee Stock Option Plan (the "ESOP
+Plan"), under which eligible employees may be granted options to subscribe
+for ordinary shares in the capital of DBizLabs Pte. Ltd. (the "Company").
+
+Eligibility:
+  - Full-time permanent employees in Grade C and above are eligible for
+    ESOP grants upon promotion or at the discretion of the Remuneration
+    Committee (RemCo).
+  - All employees, regardless of grade, become eligible for a "10-Year
+    Cliff Grant" upon completing 10 years of continuous service. The
+    10-year cliff grant is 0.03% of total issued shares (post-money) and
+    is subject to standard vesting terms.
+
+Vesting Schedule (standard grant terms):
+  - 25% of the granted options vest on the first anniversary of the grant
+    date ("one-year cliff").
+  - Thereafter, the remaining 75% vests in equal monthly installments over
+    the subsequent 36 months (3 years), such that 100% of the grant is
+    vested after exactly 4 years from the grant date.
+  - Vesting is contingent on the employee remaining in continuous employment
+    with DBizLabs on each vesting date.
+
+Exercise Price: Determined by the Board based on the latest independent
+valuation of the Company conducted by an approved valuer (typically
+Duff & Phelps / Kroll or Deloitte) in compliance with IRAS tax guidelines.
+The exercise price is typically set at Fair Market Value (FMV) at grant,
+which minimises the taxable benefit for the employee.
+
+Tax Treatment: ESOP gains are subject to income tax in Singapore at the
+point of exercise. Employees are encouraged to participate in the IRAS
+Equity Remuneration Plan (ERP) where applicable to defer taxation. DBizLabs
+provides ESOP tax briefings annually in Q1; the next briefing is scheduled
+for 14 February 2027 at Marina One, Level 22 Great Room.
+
+Leaving events:
+  - Voluntary resignation: Vested options may be exercised within 90 days
+    of last working day. Unvested options are immediately cancelled.
+  - Termination for cause: All options (vested and unvested) are cancelled
+    with immediate effect and may not be exercised.
+  - Redundancy / restructuring: RemCo may, in its discretion, accelerate
+    vesting of the next 6 months' worth of unvested options, and extend
+    the post-termination exercise window to 180 days.
+  - Death or permanent disability: 100% of all granted options (whether
+    vested or unvested) automatically vest and become exercisable by the
+    employee's legal personal representative within 12 months.
+
+5.16 Recognition Programmes and Spot Awards
+In addition to structured compensation, DBizLabs operates several
+recognition programmes to celebrate outstanding contributions:
+
+  (a) Spot Awards: Managers may grant on-the-spot awards of S$250, S$500,
+      or S$1,000 to any employee for extraordinary work on a project,
+      saving the company from a major risk, going above and beyond for a
+      customer, or exemplifying one or more DBizLabs values. S$1,000 awards
+      require department head sign-off. Paid with the following month's
+      payroll. 327 spot awards were given in FY2025.
+  (b) Peer-to-Peer Recognition: Via the Bonusly platform, every employee
+      is allocated 100 "DBizPoints" per month (1 point = S$1) to give to
+      peers in recognition of helpful collaboration. Points are redeemable
+      in the Bonusly catalog for vouchers, experiences, and products.
+  (c) DBizLabs Excellence Awards: Annual awards ceremony in March for
+      categories including: Rookie of the Year, Customer Champion,
+      Engineering Excellence, Innovation of the Year, Culture & Values
+      Champion, and the most prestigious: Siva Pasupathi CEO Award (S$10,000
+      cash prize plus a 3-night stay at any Marina Collection property
+      globally).
+  (d) Referral Bonus: S$4,000 for a successful Grade A/B hire (stays > 6
+      months), S$8,000 for Grade C/C+, and S$15,000 for Grade D and above.
+      For specialised engineering and executive roles, the recruitment team
+      may escalate to a S$20,000+ referral bonus with CFO sign-off.
+
+5.17 Miscellaneous Benefits
+Additional benefits offered:
+  (a) Pantry & Catering: The Marina One office pantry is fully stocked with
+      complimentary coffee, tea, soft drinks, bottled water, fresh fruits,
+      snacks, cup noodles, bread, and spreads. Catered lunch is provided on
+      Tuesdays and Wednesdays (in-office days) for all staff present.
+      Monthly team lunches are budgeted at S$60 per head per team.
+  (b) Season Parking: S$260 per month parking allowance for employees who
+      drive to the Marina One office (Grade C+ and above, or by exception).
+  (c) Corporate Membership: Complimentary Marina Bay Fitness Centre
+      membership for Grade D and above (value S$380/month); subsidised
+      membership for Grade C and below at S$80/month via payroll deduction.
+  (d) Employee Assistance Programme (EAP): 24/7, 365-day confidential
+      counselling support via the AIA Health at Hand programme. Accessible
+      by phone, chat, or app. Up to 8 complimentary sessions per concern
+      per year. See Section 8 for more.
+  (e) Team Building Budget: S$150 per head per quarter for team building
+      activities (escape rooms, dinners, hiking, etc.). Rolling 2 quarters
+      may be combined for a larger activity.
+  (f) Home Office Allowance: For remote work set-up, new joiners receive a
+      S$300 one-time stipend to purchase a desk chair, monitor stand,
+      keyboard/mouse, or similar ergonomic equipment. Receipts required.
+  (g) Birthday Benefit: S$100 F&B or retail voucher of the employee's
+      choice, sent on the Friday before the employee's birthday (or the
+      last Friday before a public holiday / weekend birthday).
+
+================================================================================
+SECTION 6: PERFORMANCE MANAGEMENT, PROMOTION & PIP
+================================================================================
+
+6.1 Performance Management Philosophy
+The performance management system at DBizLabs is designed to:
+  - Align individual goals with team, department, and company OKRs
+  - Provide continuous, timely, and actionable feedback — not a once-a-year
+    compliance exercise
+  - Support employee growth, career development, and promotion
+  - Differentiate compensation fairly based on impact delivered
+  - Identify underperformance early and provide structured support
+
+6.2 Quarterly Check-Ins
+Formal performance conversations occur every quarter, on the following
+schedule:
+  - Q1 Check-in: Mid-April (covers Jan–Mar)
+  - Q2 Check-in: Mid-July (covers Apr–Jun)
+  - Q3 Check-in: Mid-October (covers Jul–Sep)
+  - Q4 Annual Review: Mid-January (covers full calendar year; weighting
+    applies — see below)
+
+In addition to these formal sessions, managers are expected to hold weekly
+1:1 meetings with each direct report (minimum 30 minutes per week, with
+agenda set collaboratively between manager and employee). Skipped 1:1s are
+tracked by the People Analytics team and flagged to HR if a manager has
+fewer than 40% of scheduled 1:1s in any given month.
+
+6.3 Annual Review Weighting
+The Q4 Annual Review aggregates performance across the full year. The
+weighting applied to each quarter's performance in determining the final
+annual rating is:
+
+  Q1 (January–March):   30% weighting
+  Q2 (April–June):      20% weighting
+  Q3 (July–September):  20% weighting
+  Q4 (October–December): 30% weighting
+
+This structure intentionally gives heavier weight to the first and last
+quarters (typically when goals are set and when annual outcomes are
+realised) while acknowledging the mid-year contribution of Q2 and Q3.
+
+6.4 Performance Rating Scale (1–5)
+The annual performance is rated on a 5-point scale:
+
+Rating 5: EXCEPTIONAL
+  - Consistently and significantly exceeds expectations across all
+    dimensions of the role. Delivers impact that is 2–3x the level
+    expected for the grade. Often transforms the team or product area.
+  - Typically achieved by less than 8% of employees in any given cycle.
+  - Automatic short-listing for promotion (if eligible) and maximum bonus.
+
+Rating 4: EXCEEDS EXPECTATIONS
+  - Consistently delivers above the expectations of the role across most
+    or all dimensions. Quality of work is high, and there is evidence of
+    proactivity, ownership, and stretch.
+  - Typically achieved by 22–28% of employees.
+  - Eligible for strong bonus, accelerated L&D budget, and promotion
+    consideration if maintained for 2+ cycles.
+
+Rating 3: MEETS EXPECTATIONS
+  - Fully meets the requirements of the role. Work is delivered on time,
+    to the required standard, without the need for excessive supervision.
+    "Meets Expectations" is a solid, good rating reflecting a reliable
+    performer who is doing their job well.
+  - Typically the largest cohort: 50–60% of employees.
+  - Eligible for full target bonus, standard annual salary adjustment,
+    and normal L&D budget.
+
+Rating 2: NEEDS IMPROVEMENT
+  - Performance in some areas falls below the expectations of the role.
+    While there are positive contributions, there are gaps in quality,
+    delivery, impact, or behaviour that require focused attention.
+  - Typically 8–12% of employees.
+  - Triggers the creation of a 90-day Performance Improvement Plan (PIP)
+    if not already in place; bonus may be significantly reduced or zero.
+
+Rating 1: UNSATISFACTORY (on PIP or equivalent)
+  - Performance is materially and consistently below the requirements of
+    the role, with little or no improvement despite feedback and support.
+    Alternatively, there is a serious single incident of misconduct or
+    negligence that warrants immediate disciplinary action.
+  - Typically 2–4% of employees.
+  - Active PIP in place with documented performance goals. If the PIP is
+    not passed, the employment relationship will be terminated.
+
+6.5 Calibration and Forced Distribution
+Managers meet at the end of each cycle in a calibration session facilitated
+by the HRBP to ensure consistency of ratings across teams and departments.
+A loose forced-distribution guideline is applied at the department level:
+
+  Rating 5:  5–10%
+  Rating 4:  20–30%
+  Rating 3:  50–65%
+  Rating 2:  5–12%
+  Rating 1:  1–5%
+
+These bands are guidance, not rigid rules. The Remuneration Committee may
+approve exceptions for high-performing departments or specific mission-
+critical teams.
+
+6.6 Promotion Criteria Matrix
+Promotions follow a structured assessment framework. The minimum time in
+current grade before being eligible for promotion is:
+
+  Grade A  → B  : 18 months at A (or 12 months with Rating 5 x2)
+  Grade B  → C  : 24 months at B (or 18 months with Rating 5 x2)
+  Grade C  → C+ : 24 months at C (with at least 1 Rating 5 and 1 Rating 4)
+  Grade C+ → D  : 30 months at C+ (with at least 2 Rating 4 and 1 Rating 5)
+  Grade D  → E  : 36 months at D (with RemCo approval; headcount-limited)
+  Grade E  → E+ : Discretion of CEO and Chairman (no fixed schedule)
+
+The Promotion Assessment Criteria matrix (Form PRO-09) covers 5 dimensions:
+
+Dimension 1: TECHNICAL / FUNCTIONAL EXPERTISE
+  - Evidence of expertise in the core skills of the role
+  - Contribution to knowledge sharing, documentation, and up-skilling others
+  - Reputation as a go-to person within the function or domain
+
+Dimension 2: IMPACT AND BUSINESS RESULTS
+  - Quantitative metrics demonstrating impact (OKR achievement, revenue
+    contributed, products shipped, incidents resolved, etc.)
+  - Scope of impact: team-level → department-level → company-level
+
+Dimension 3: LEADERSHIP AND COLLABORATION
+  - Ability to lead projects and initiatives (even without formal reports)
+  - Influence across teams and functions
+  - Mentorship and development of more junior team members
+  - Exemplification of DBizLabs cultural values
+
+Dimension 4: STRATEGIC THINKING AND JUDGEMENT
+  - Ability to see the big picture and make decisions aligned with long-term
+    company interests
+  - Quality of judgement under uncertainty and with incomplete information
+  - Understanding of trade-offs between speed, cost, quality, and risk
+
+Dimension 5: COMMUNICATION AND STAKEHOLDER MANAGEMENT
+  - Clarity of written and verbal communication
+  - Ability to communicate with executives, customers, and cross-functional
+    stakeholders
+  - Ability to persuade and influence without authority
+
+Each dimension is scored 1–5 with a required minimum of "4" on the primary
+dimensions for promotion to the next grade. Full scoring rubrics with
+behavioural indicators are available on the People Portal in Workday.
+
+6.7 Performance Improvement Plan (PIP)
+Where an employee's performance is rated at 1 or has been at 2 for 2
+consecutive cycles with insufficient progress, the manager, in consultation
+with the HRBP and Legal, will initiate a Performance Improvement Plan (PIP).
+
+The standard PIP duration is 90 calendar days from the date of the PIP
+kick-off meeting. A PIP document will set out in writing:
+  (a) The specific areas of underperformance (with examples and evidence)
+  (b) Clearly defined, measurable, and time-bound performance objectives
+      (typically 3–5 SMART goals)
+  (c) The support, resources, and training that will be provided by the
+      manager and the company (e.g. a dedicated mentor, targeted training,
+      reduced scope of work to focus on development, weekly check-ins)
+  (d) The frequency and format of formal check-ins (minimum weekly 1:1
+      with manager, bi-weekly with HRBP)
+  (e) The consequences of not meeting the PIP goals, which will typically
+      be termination of employment with appropriate notice or pay in lieu.
+
+At the end of the 90-day PIP period, one of three outcomes occurs:
+  (a) PASS: Performance has improved to "Meets Expectations" (Rating 3) or
+      above. The PIP is closed and the employee returns to the standard
+      performance management cycle. A follow-up review at 6 months is
+      recommended to ensure sustained improvement.
+  (b) EXTEND: Significant and genuine progress has been made, but more time
+      is needed to fully meet all objectives. Extension is permitted ONCE
+      for up to 30 additional days, with RemCo sign-off.
+  (c) FAIL: Performance has not improved to the required standard. The
+      employment relationship is terminated in accordance with the notice
+      period set out in Appendix B. Termination payments and any severance
+      will be handled in strict compliance with the Employment Act.
+
+6.8 Salary Adjustments
+Base salary adjustments are considered annually as part of the Q1
+compensation review cycle (effective 1 April each year). Adjustments are
+driven by:
+  (a) Performance rating in the preceding calendar year
+  (b) Position of current salary within the grade band (Appendix A)
+  (c) External market movement based on Radford/Aon surveys
+  (d) Promotion (effective from first day of the month following approval)
+
+Mid-cycle salary adjustments (outside the April cycle) are permitted only
+in the following exceptional circumstances:
+  - Internal promotion (see above)
+  - Counter-offer retention in the face of a documented external offer
+    (CFO approval required)
+  - Major change in role or scope of responsibilities
+  - Correction of a documented pay inequity (HRBP + Legal sign-off)
+
+6.9 Career Pathing and Dual Ladders
+DBizLabs maintains dual career ladders: the Individual Contributor (IC)
+track and the People Manager (leadership) track. Employees may progress
+equivalently through either track without being required to manage people
+if that is not their strength or preference.
+
+IC track levels map to grades:
+  Junior IC → Grade A
+  Senior IC → Grade B
+  Staff IC → Grade C
+  Senior Staff IC → Grade C+
+  Principal IC → Grade D
+  Distinguished IC → Grade E
+  Fellow → Grade E+
+
+People Manager track maps to grades:
+  Team Lead (4–8 reports) → Grade C / C+
+  Department Head (15–40 reports) → Grade D
+  VP / CXO (50+ reports, P&L owner) → Grade E / E+
+
+Internal mobility across tracks and teams is actively encouraged; 21% of
+employees changed teams internally in FY2025, and the company targets 25%
+internal mobility in FY2026.
+
+================================================================================
+SECTION 7: ETHICS, INTEGRITY & CODE OF CONDUCT
+================================================================================
+
+7.1 Our Commitment to Doing Business the Right Way
+Integrity is the first of DBizLabs's five core values. We are committed to
+conducting business ethically, transparently, and in full compliance with
+all applicable laws, regulations, and professional standards in every
+jurisdiction where we operate — including, without limitation, the Singapore
+Prevention of Corruption Act (POCA), the US Foreign Corrupt Practices Act
+(FCPA), the UK Bribery Act 2010, and the Singapore AI Governance Act 2026.
+
+This Section 7 sets out standards of ethical behaviour for every employee,
+contractor, director, and agent of DBizLabs. Breaches of this Code of
+Conduct may result in disciplinary action up to and including termination
+of employment, reporting to the relevant authorities, and civil or criminal
+proceedings as appropriate. There is zero tolerance for retaliation against
+any employee who raises a genuine concern in good faith.
+
+7.2 Anti-Bribery and Anti-Corruption Policy
+DBizLabs strictly prohibits the offering, promising, giving, requesting,
+or accepting of any bribe, kickback, or improper payment in any form,
+whether in dealings with government officials, private sector counterparts,
+customers, suppliers, or any third party.
+
+7.2.1 Gifts, Hospitality, and Entertainment
+The following framework applies to gifts, meals, hospitality, and
+entertainment given or received by any employee in the course of business.
+The key principle is "no strings attached" — any benefit given or received
+must be a normal business courtesy, proportionate, and clearly not intended
+to influence any business decision.
+
+THRESHOLD 1: Below S$150 per occurrence (per individual, per event)
+  - Automatically acceptable. No pre-approval required.
+  - Must still be recorded in the Gifts & Hospitality Register
+    (Form GHR-01) within 5 business days if value > S$100, or if given/
+    received from a government official at any value.
+  - Examples: Coffee with a vendor (S$8), box of cookies from a customer
+    during Deepavali (S$65), client lunch at a hawker centre (S$35/pax).
+
+THRESHOLD 2: S$150.01 to S$1,000 per occurrence
+  - Permitted ONLY with the PRIOR WRITTEN APPROVAL of the employee's line
+    manager.
+  - Must be recorded in the Gifts & Hospitality Register within 5 business
+    days of the event.
+  - Typical examples: Client dinner at a restaurant (S$280/person), tickets
+    to a local football match (S$420/ticket), conference registration
+    sponsored by a vendor (S$890).
+
+THRESHOLD 3: Above S$1,000 per occurrence
+  - Permitted ONLY with the PRIOR WRITTEN APPROVAL of the CHIEF FINANCIAL
+    OFFICER (Karthiga Rajoo) or, in their absence, the Chief Operating
+    Officer (Divya Muthu).
+  - Must be recorded in the Gifts & Hospitality Register and additionally
+    reported to the Audit & Risk Committee at its next meeting.
+  - Examples: Overseas conference sponsorship including flights (S$2,200),
+    premium Singapore Grand Prix hospitality package (S$5,800/pax),
+    speaking engagement fee (S$3,000 honorarium).
+
+7.2.2 Facilitation Payments and "Grease" Payments
+DBizLabs prohibits facilitation payments (also called "grease payments"),
+i.e. small payments to low-level government officials to speed up routine,
+non-discretionary actions (such as customs clearance, visa processing, or
+utility connections). If an employee is placed in a situation where a
+facilitation payment appears to be demanded, the employee must:
+  (a) Decline the demand firmly but politely;
+  (b) Immediately escalate to Legal (Santhana Krishnan, Head of Legal) and
+      the CFO;
+  (c) Document the interaction in full;
+  (d) Under no circumstances make the payment personally and seek
+      reimbursement, as doing so constitutes a policy breach.
+
+If personal safety is threatened, the employee may make the payment under
+duress but must report the incident to Legal within 24 hours for proper
+reporting and remediation.
+
+7.2.3 Gifts and Hospitality to Government Officials
+Any gift given to or received from a government official (including
+employees of statutory boards, government-linked companies with >=20%
+government shareholding, public universities, and political office-holders
+or political parties) must be escalated to Legal for sign-off REGARDLESS
+OF VALUE. The legal team will assess whether the transaction is compliant
+with POCA, the FCPA, and the UK Bribery Act before the gift may be given
+or accepted.
+
+7.3 Gifts Register (Declaration Requirement)
+All gifts, hospitality, and entertainment (whether given or received) that
+meet any of the following criteria must be declared in the central Gifts &
+Hospitality Register maintained by the Finance Operations team via Form
+GHR-01 within 5 business days of the event:
+  (a) Value exceeds S$100 per person per occurrence
+  (b) Involves a government official, political party, or candidate for
+      political office (at any value, even a S$5 coffee)
+  (c) Is part of a pattern of multiple small gifts to the same person or
+      organisation aggregating to more than S$300 in any calendar quarter
+  (d) Takes place outside the employee's home country (any value)
+
+The register is reviewed quarterly by Internal Audit and semi-annually by
+the Audit & Risk Committee. Failure to declare a reportable gift or
+hospitality event is a disciplinary offence, regardless of the value or
+intent of the gift.
+
+7.4 Conflicts of Interest
+Every employee, contractor, and director of DBizLabs has a duty to act in
+the best interests of the company and to avoid situations where a personal
+interest, relationship, or outside activity conflicts — or could reasonably
+appear to conflict — with the interests of DBizLabs.
+
+7.4.1 Annual Disclosure Requirement
+All employees (Grade A through E+) must complete and submit the Conflict
+of Interest Annual Declaration (Form COI-01) via Workday by 31 January of
+each year, covering the preceding calendar year. The form requires
+disclosure of:
+  (a) Any directorship, partnership, or shareholding (>=5%) held in any
+      other company, whether public or private
+  (b) Any paid or unpaid outside employment, consultancy, advisory role,
+      or board membership
+  (c) Any close personal relationship (family member, domestic partner,
+      close friend) with any supplier, customer, competitor, or job
+      candidate involved in a decision the employee may influence
+  (d) Any personal transaction or financial relationship with DBizLabs
+      (including the Housing Loan benefit)
+  (e) Any ownership of real property or other assets that could create a
+      conflict with DBizLabs activities
+
+New joiners must complete an initial COI declaration as part of Day 1
+onboarding. Any material change to circumstances during the year must be
+reported via an amended Form COI-01 within 10 business days of the change.
+
+7.4.2 Examples of Conflicts Requiring Disclosure and Management
+  - An engineer contributing open-source code to a project owned by a
+    direct competitor of DBizLabs (e.g. another MES vendor, another HR
+    SaaS platform)
+  - A procurement specialist whose sibling is the Sales Director of a
+    software vendor bidding on a DBizLabs RFP
+  - A Sales Executive who moonlights on weekends selling a CRM product
+    that competes indirectly with Hirethm's capabilities
+  - A Finance manager with a S$80,000 investment in a cryptocurrency fund
+    that is also a potential Bond Copilot customer
+  - A Recruiter whose spouse is a candidate for a Senior Data Scientist
+    position on a team where the Recruiter is the recruiter of record
+
+In all such cases, the conflict does not necessarily prevent the employee
+from continuing in their role; appropriate management strategies (such as
+recusal from relevant decisions, information barriers, or reassignment of
+responsibilities) will be put in place by the HRBP and Legal. Deliberate
+non-disclosure of a material conflict, however, is a serious disciplinary
+offence.
+
+7.5 Anti-Harassment, Anti-Discrimination, and Dignity at Work
+DBizLabs is committed to maintaining a workplace that is free from
+harassment, discrimination, bullying, and victimisation. We treat this as
+both a legal obligation and a cultural imperative. This policy applies
+equally to conduct between employees, and to conduct by or directed at
+customers, contractors, visitors, and members of the public in connection
+with work.
+
+Prohibited conduct includes (but is not limited to):
+  (a) SEXUAL HARASSMENT: Unwelcome sexual advances, requests for sexual
+      favours, and other verbal or physical conduct of a sexual nature,
+      whether explicit or implicit, including the creation of a hostile
+      work environment.
+  (b) VERBAL AND PHYSICAL HARASSMENT: Insults, slurs, epithets, name-
+      calling, threatening or intimidating behaviour, physical touching,
+      blocking movement, or abusive language.
+  (c) BULLYING: Persistent, unreasonable, and aggressive behaviour
+      directed at an individual or group, including excessive micromanage-
+      ment, setting up for failure, spreading rumours, or social exclusion.
+  (d) DISCRIMINATION: Less favourable treatment on the basis of any of the
+      protected characteristics listed in Section 7.9 below.
+
+7.5.1 Reporting and Escalation Paths for Harassment
+An employee who experiences, witnesses, or becomes aware of conduct that
+they believe may constitute harassment or bullying should take action as
+soon as possible. Any of the following channels may be used, based on the
+employee's comfort:
+
+  (a) Informal resolution with the perpetrator (only if the employee feels
+      safe doing so): A direct, respectful conversation stating the impact
+      of the behaviour and requesting it stop.
+  (b) Line manager: If trust exists. Managers are required to escalate all
+      reports to HR within 24 hours regardless of the manager's personal
+      view of the situation.
+  (c) HR Business Partner (HRBP): The primary confidential channel. All
+      reports made to HR are treated confidentially to the extent possible
+      while ensuring a fair and thorough investigation.
+  (d) Whistleblower Channel (Section 7.7): For cases involving senior
+      management, directors, or where the employee fears retaliation for
+      reporting via other channels.
+  (e) External agencies (Tafep, MOM, police) where the conduct constitutes
+      a criminal offence.
+
+All reports are investigated promptly, thoroughly, and impartially by a
+trained investigator (typically an external third-party for reports
+involving Grade D+ or where there are perceived conflicts of interest).
+Retaliation against any person who makes a good-faith report is strictly
+prohibited and will itself be subject to disciplinary action up to and
+including termination.
+
+7.6 Confidentiality and Non-Disclosure Obligations
+Every employee has an obligation to protect the confidential information
+of DBizLabs, its customers, its suppliers, and its partners. This
+obligation arises both under this Handbook and the signed Confidentiality,
+Non-Disclosure, and IP Assignment Agreement executed as a pre-condition
+of employment.
+
+Confidential information includes, without limitation:
+  (a) Financial information: Revenue, margins, customer ACV, funding
+      status, projections, bonus figures, individual salaries
+  (b) Customer information: Customer lists, pipeline, contract terms,
+      customer usage data, support tickets, complaints, pricing
+  (c) Technical information: Source code, product roadmap, model weights,
+      RAG architecture, agent design, API keys, database schemas
+  (d) Strategic information: M&A plans, joint ventures, product launch
+      dates, competitive positioning, pricing changes
+  (e) Personnel information: Employee personal data, performance ratings,
+      compensation, disciplinary records (except where the law requires
+      disclosure)
+  (f) Third-party confidential information received under NDA
+
+7.6.1 Perpetual Obligation
+The confidentiality obligation survives termination of employment for ANY
+reason, for the maximum duration permitted by law. Employees are not
+permitted to retain any copies of confidential information (digital or
+physical) after the last day of employment, and all access is revoked as
+described in Section 8.8.
+
+7.6.2 Data Classification and Handling
+All DBizLabs data is classified into four tiers:
+  - TIER 0 (PUBLIC): Marketing materials, public website content, press
+      releases. No special handling required.
+  - TIER 1 (INTERNAL): Internal documentation, general policy, team chat
+      not containing sensitive data. May be shared internally; do not post
+      publicly.
+  - TIER 2 (CONFIDENTIAL): Customer data, financial data below Board
+      level, individual performance data. Access on a need-to-know basis
+      only; no external sharing without a signed NDA.
+  - TIER 3 (RESTRICTED): Board papers, individual salary data, source
+      code access to DBiz GPT platform, customer production credentials,
+      trade secrets. Strict role-based access; logging and monitoring on
+      all access; external sharing only with CEO / CFO sign-off.
+
+7.7 Whistleblower Policy
+DBizLabs encourages employees, contractors, customers, and other
+stakeholders to report any actual or suspected wrongdoing, illegal
+activity, breach of this Code, or other serious concern promptly. The
+Whistleblower Policy ensures that reports can be made safely, confidenti-
+ally, and without fear of retaliation.
+
+7.7.1 Reporting Channels
+The primary Whistleblower channel is a dedicated, confidential hotline
+administered by an independent third-party provider (Deloitte Forensics).
+Reports may be made 24/7, 365 days a year, with optional anonymity:
+
+  Online portal: https://dbizlabs.ethicspoint.deloitte.com
+  Phone (Singapore): +65 6224 5788 (toll-free during office hours)
+  Post: DBizLabs Whistleblower Office, c/o Deloitte, 6 Shenton Way, #20-01,
+        OUE Downtown 2, Singapore 068809
+  Direct to Chairman: For whistleblower reports specifically concerning
+      the CEO, CFO, or other members of the Executive Team, employees may
+      escalate directly to Dr. Lingeswaran Arunasalam, Chairman of the
+      Board, at chairman-confidential@dbizlabs.ai, or by post to his
+      home address as recorded with the company secretary.
+
+7.7.2 Investigation and Outcome
+All whistleblower reports are acknowledged within 5 business days and
+investigated by Internal Audit (or external investigators where the report
+concerns members of Internal Audit or the executive team). The investigator
+will:
+  (a) Establish the scope of the investigation
+  (b) Collect evidence and interview witnesses
+  (c) Reach conclusions and prepare a report with recommendations
+  (d) Communicate the outcome (high-level, without breaching
+      confidentiality of the parties) to the reporter where possible
+
+Retaliation against a Whistleblower who acted in good faith is a separate
+disciplinary offence punishable by termination even where the underlying
+allegation is ultimately not substantiated.
+
+7.8 Social Media Guidelines
+Employees are personally responsible for the content they publish on
+social media (LinkedIn, Facebook, Twitter/X, Instagram, Threads, TikTok,
+Bluesky, WeChat, Telegram, and any other platform whether named or not),
+regardless of whether they post from personal or company accounts, and
+whether during or outside working hours.
+
+All employees must adhere to the following guidelines:
+
+  (a) DO NOT SPEAK FOR DBIZLABS UNLESS AUTHORISED: Only the CEO, COO, and
+      the official DBizLabs Corporate Communications team are authorised
+      to make official statements on behalf of the company. If you wish to
+      comment publicly on any matter relating to DBizLabs, competitors,
+      customers, or partners, you must add a clear disclaimer that views
+      are your own. Example profile disclaimer on LinkedIn: "Views are my
+      own and do not represent my employer DBizLabs."
+  (b) RESPECT CONFIDENTIALITY: Never post, share, or hint at confidential
+      or proprietary information — including upcoming product launches,
+      customer logos not yet public, financial information, internal
+      politics, or personnel matters. When in doubt, do not post.
+  (c) RESPECT COLLEAGUES, CUSTOMERS, AND PARTNERS: Do not post content
+      that could reasonably be considered bullying, harassment, or
+      discriminatory towards any identifiable person or group. Do not
+      post screenshots of internal Slack/Teams conversations, Zoom calls,
+      or office environments without explicit permission.
+  (d) EXERCISE GOOD JUDGEMENT: Remember that as an employee of DBizLabs,
+      your public online behaviour reflects — fairly or unfairly — on
+      the company's reputation. Even postings made on pseudonymous accounts
+      can be traced back. Avoid extremist content, hate speech, and illegal
+      content of any kind.
+  (e) GUIDELINES FOR OFFICIAL BRAND AMBASSADORS: Employees who are
+      appointed as official DBizLabs brand advocates or who are listed on
+      the company website as team members have an additional obligation to
+      present a professional public image. Such employees must have
+      separate work and personal social media accounts and must route
+      proposed DBizLabs-related posts through Corporate Communications at
+      social@dbizlabs.ai 48 hours in advance of publication.
+
+Violations of the social media guidelines will be addressed through the
+standard disciplinary process; repeated or serious breaches may result in
+termination.
+
+7.9 Anti-Discrimination and Protected Classes
+DBizLabs strictly prohibits discrimination in any employment decision
+including recruitment, hiring, promotion, compensation, training,
+discipline, or termination, on the basis of any of the following
+characteristics, in compliance with the Singapore Constitution, the
+Employment Act, the Tripartite Guidelines on Fair Employment Practices
+(Tafep), and analogous laws in all operating jurisdictions:
+
+PROTECTED CHARACTERISTICS (Singapore context; additional protections apply
+in other regions):
+  (1) Race, ethnicity, or national origin
+  (2) Colour or skin tone
+  (3) Religion or religious belief (including conscientious atheism and
+      agnosticism)
+  (4) Sex, gender, or gender identity (including transgender, non-binary,
+      gender queer, and intersex identities)
+  (5) Sexual orientation or marital status
+  (6) Pregnancy, childbirth, or related medical conditions
+  (7) Age (18 and above)
+  (8) Disability, including physical, sensory, invisible, learning, and
+      psycho-social disabilities
+  (9) Nationality or citizenship status (where consistent with MOM rules)
+ (10) Family responsibility or caregiving status
+ (11) Membership or non-membership in a trade union
+ (12) HIV or Hepatitis B status (per Tafep guidelines)
+ (13) Any other protected characteristic under applicable local law
+
+DBizLabs is a proud Equal Opportunity Employer. As of the date of this
+Handbook, 42% of engineering roles are held by women, 51% of the global
+workforce are women, 5 of 7 Board members are independent or women, and
+the company is committed to a 2027 target of 45% women in senior technical
+roles (Principal Engineer and above). The company provides reasonable
+accommodations for employees with disabilities and for religious
+observance; please contact People Operations with any accommodation request.
+
+7.10 Intellectual Property (IP) Assignment
+All employees are required to execute the DBizLabs Confidentiality and
+Intellectual Property Assignment Agreement as a pre-condition of joining.
+The key provisions of that agreement are summarised below; the signed
+agreement on file is the legally binding document.
+
+7.10.1 What IP is Assigned?
+All inventions, discoveries, improvements, developments, works of
+authorship, source code, documentation, designs, trade secrets, know-how,
+data, domain names, trademarks, mask works, and any other intellectual
+property rights that are:
+  (a) Conceived, developed, created, reduced to practice, or authored by
+      the employee, either alone or with others, during the employment
+      term; AND
+  (b) Made within the scope of the employee's duties for DBizLabs; OR
+  (c) Made using DBizLabs time, facilities, equipment, networks, or
+      confidential information (regardless of whether within the stated
+      scope of duties)
+
+This includes, without limitation:
+  - Source code written for the DBiz GPT platform, Meiji MES, Bond Copilot,
+    Hirethm, and the Open WebUI fork
+  - Architecture documents, product designs, UI/UX mockups
+  - Prompt engineering templates, RAG configuration, agent workflows
+  - Training data sets, evaluation harnesses, benchmark results
+  - Customer implementations, custom modules, and professional services
+    deliverables produced for clients
+
+7.10.2 Employee-Owned Inventions (Side Projects)
+The IP assignment does NOT apply to inventions that qualify fully under ALL
+of the following conditions (commonly known as the "hold-out" clause):
+  (a) Developed entirely on the employee's personal time (no use of work
+      hours, paid leave, or company events)
+  (b) Developed without using any DBizLabs equipment, tools, facilities,
+      networks, data, or confidential information (no company laptop, no
+      company VPN, no Slack conversations about the project)
+  (c) Not related to DBizLabs's current or demonstrably anticipated lines
+      of business (so not an alternative MES, fixed-income AI, or HR SaaS
+      product, not an LLM chat platform, not an agentic framework)
+  (d) Not the result of any work performed for DBizLabs or any of its
+      customers
+
+To be absolutely clear: An employee working on an industrial manufacturing
+AI tool on their personal laptop on a Sunday evening would STILL be subject
+to IP assignment, because the subject matter is directly related to Meiji
+MES, a current DBizLabs business line. If in doubt about whether a side
+project is yours or the company's, submit Form IP-02 to Legal for a formal
+determination before investing significant time. The company will confirm
+in writing; the process takes 10 business days.
+
+7.11 Additional Code Topics (Fusion Summaries)
+For brevity, the following key topics are cross-referenced to their full
+policy locations on the internal policy portal (https://policy.dbizlabs.ai)
+but are summarised here:
+
+  7.11.1 Competition and Restraint: During employment, employees may not
+      work for a competitor, solicit DBizLabs customers or employees on
+      behalf of another organisation, or divert business opportunities
+      that properly belong to DBizLabs. Post-termination non-solicitation
+      and non-compete covenants apply to Grade C+ and above per the signed
+      Service Agreement.
+
+  7.11.2 Records Management and Document Retention: All business records
+      (emails, chat logs, contracts, invoices, meeting minutes, audit
+      logs) must be retained in accordance with the DBizLabs Records
+      Retention Schedule, which is aligned to statutory requirements
+      (7 years minimum for financial records, 5 years for employment
+      records, etc.). Intentional destruction of records under audit hold
+      is a serious offence.
+
+  7.11.3 Anti-Money Laundering (AML) and Sanctions: DBizLabs is subject to
+      Singapore's MAS Notice 626 on Prevention of Money Laundering and
+      Countering the Financing of Terrorism. Employees in Finance, Sales,
+      and Customer Onboarding roles are required to complete annual AML
+      training and to report any suspicious transactions or behaviour to
+      the MLRO (Money Laundering Reporting Officer, Head of Legal
+      Santhana Krishnan) within 24 hours. We do not do business with any
+      person or entity sanctioned by UN Security Council, MAS, OFAC, or
+      HM Treasury.
+
+  7.11.4 Export Controls: Certain DBizLabs technologies (particularly the
+      DBiz GPT platform, strong encryption modules, and manufacturing
+      automation algorithms) are subject to Singapore's Strategic Goods
+      (Control) Act and analogous export regulations in the US, EU, and
+      other jurisdictions. No technology, software, or encryption keys may
+      be exported, transferred, or disclosed to any person in a sanctioned
+      or embargoed country without the prior written approval of the
+      Export Compliance Officer (Head of Legal) and, where required, a
+      valid export permit from Enterprise Singapore.
+
+7.12 Disciplinary Procedure
+Alleged breaches of this Code of Conduct, company policy, or the terms of
+employment will be dealt with using the following graduated disciplinary
+procedure (except in cases of serious misconduct where summary dismissal
+is warranted):
+
+Step 1: Verbal Counselling. Informal feedback from the line manager or HRBP.
+  Documented only in the manager's notes, not the permanent personnel file.
+
+Step 2: Written Warning. A formal letter setting out the breach, required
+  improvements, and a timeline (typically 30–60 days) for improvement.
+  Countersigned by the employee and HRBP. Placed on the personnel file and
+  active for 12 months.
+
+Step 3: Final Written Warning. Issued if a breach is repeated within the
+  active period of a written warning, or for a more serious first offence.
+  States that any further breach may result in termination. Active for
+  24 months.
+
+Step 4: Termination of Employment. With appropriate notice or pay in lieu
+  (Appendix B) for breaches that are not sufficiently serious for summary
+  dismissal, or for failure to improve following a Final Written Warning.
+
+Serious misconduct (including but not limited to: fraud, theft, physical
+assault, deliberate breach of the anti-bribery policy, intentional misuse
+of customer data, material breach of the NDA, or unlawful discrimination)
+warrants immediate summary dismissal without notice or severance, and
+where applicable reporting to the relevant law enforcement authorities.
+
+Employees have the right to be accompanied at formal disciplinary hearings
+by a fellow employee or trade union representative of their choice.
+
+================================================================================
+SECTION 8: HEALTH, SAFETY, WELLNESS & BUSINESS CONTINUITY
+================================================================================
+
+8.1 Our Commitment to Workplace Safety and Health
+The health, safety, and wellbeing of every DBizLabs team member — whether
+working in the office, from home, at customer sites, or on business travel
+— is a fundamental priority for the company. DBizLabs fully complies with
+the Singapore Workplace Safety and Health Act (WSHA), and we maintain a
+workplace safety and health management system (WSHMS) aligned to ISO 45001.
+
+The overall responsibility for WSH policy rests with the COO, Divya Muthu,
+supported by the WSH Committee which meets monthly (see Section 8.4). The
+target is zero workplace fatalities, zero cases of occupational disease,
+and an LTIR (Lost Time Injury Rate) of < 0.5 per 100 full-time employees
+per year. As of Q3 FY2026, the 3-year rolling LTIR is 0.18, which is well
+below the industry benchmark for software companies.
+
+8.2 Marina One West Tower Office Emergency Procedures
+
+OFFICE LOCATION: Level 22, Marina One West Tower, 10 Marina Boulevard,
+Singapore 018961. The office occupies the entire 22nd floor (approx.
+12,400 sq ft / 1,152 sqm) with a maximum approved occupancy of 145 persons
+and a typical daily headcount of 95–115.
+
+Emergency exit locations on Level 22:
+  - Emergency Stairwell A (Main): West side of the floor, near Pantry 1
+  - Emergency Stairwell B (Backup): East side of the floor, near Server
+    Room 1 (Rack Row B)
+  - Emergency lifts are NOT to be used in the event of a fire or bomb
+    threat; they are reserved for SCDF and building management personnel.
+
+8.2.1 Fire Alarm and Emergency Evacuation
+In the event of a fire alarm activation:
+
+  (a) IMMEDIATE ACTIONS upon hearing the continuous general alarm:
+      - Stop all work immediately. Do NOT collect personal belongings,
+        laptop, or bag. Do NOT use the lifts.
+      - Proceed calmly but promptly to the nearest emergency stairwell.
+      - Follow the green illuminated exit signage.
+      - Staff requiring mobility assistance should proceed to the Area of
+        Refuge on Level 22 (located next to Stairwell A) and alert the
+        Floor Warden, who will coordinate evacuation with SCDF via the
+        dedicated refuge intercom.
+      - Floor Wardens (bright orange vests) will perform a sweep of all
+        rooms to confirm no one remains. Do not re-enter any area.
+
+  (b) ASSEMBLY AREA: The designated assembly point for Marina One West
+      Tower is Marina Bay Event Plaza (MBEP) Zone B, located on the
+      ground level approximately 300 metres from the main tower entrance,
+      opposite The Fullerton Bay Hotel. Look for the DBizLabs flag (navy
+      blue, with the DBiz GPT logo) held by the Floor Warden.
+
+  (c) HEADCOUNT PROCESS: Each Floor Warden carries a tablet with the
+      real-time desk booking data from DBizBook. On arrival at the
+      assembly point, employees must check in with their team's warden.
+      Employees who are working remotely on the day of an evacuation are
+      NOT required to be at the assembly point but are requested to mark
+      "Safe" on the emergency SMS / WhatsApp check-in broadcast sent by
+      the COO's office.
+
+  (d) RE-ENTRY: Re-entry to the building is only permitted after:
+      - The SCDF officer-in-charge has given formal clearance
+      - The Building Management Office (BMO) has broadcast the "all-clear"
+      - The COO or appointed WSH representative has authorised DBizLabs
+        employees to return to Level 22
+
+8.2.2 First Aid Facilities and First Aiders
+First Aid Station Location: Pantry 2 (mid-North of Level 22). A second
+travel-sized first aid kit is located at the Reception Desk and in the
+Server Room 1 ante-chamber.
+
+DBizLabs maintains a roster of 6 certified Occupational First Aiders on
+Level 22 as of the date of this Handbook. All 6 have completed the MOM-
+approved WSQ Occupational First Aid Course (3 days + 1 day refresher
+every 3 years):
+
+  1. Ms. Pavithra Nair      (Executive Assistant to CEO)     — Ext. 2201
+  2. Mr. Tan Zhong Liang    (Senior DevOps Engineer)         — Ext. 2244
+  3. Dr. Sujatha Raman      (Principal AI Safety Researcher) — Ext. 2287
+  4. Ms. Amelia Chua        (Customer Success Manager APAC)  — Ext. 2265
+  5. Mr. Vikram Raju        (Sales Engineering Lead Bond)    — Ext. 2238
+  6. Ms. Sharifah Aisha     (People Operations Associate)    — Ext. 2219
+
+Serious injuries or medical emergencies must also trigger an immediate
+call to 995 for SCDF ambulance. The panel hospital is Singapore General
+Hospital (SGH), Accident & Emergency, Outram Road (5 minutes drive via
+Central Expressway at off-peak times).
+
+8.2.3 SCDF Drills and Exercise Schedule
+Marina One West Tower complies with the Fire Safety Act (Chapter 109) and
+conducts a full-scale evacuation drill for all tenants every quarter.
+DBizLabs additionally conducts its own internal SCDF-coordinated drills
+as follows:
+
+  - Full building SCDF drill (mandatory): Last working Friday of January,
+    April, July, and October, at 10:00 SGT sharp. Q4 2026 drill is
+    scheduled for Friday 30 October 2026 at 10:00 SGT.
+  - Internal tabletop exercise: Monthly (WSH Committee), covering
+    scenarios including fire, bomb threat, active threat, cyber incident,
+    and prolonged building power outage.
+  - CPR+AED refreshers: Offered every 6 months on-site; 49 employees have
+    completed certification to date.
+
+All drills are timed and the total evacuation time for Level 22 (Last
+Person Out, LPO) is tracked. Q3 2026 drill LPO time: 4 minutes 42 seconds
+(target: < 6 minutes). Any employee who does not evacuate during a drill
+(without a pre-approved exemption, e.g. a critical customer bridge) will
+receive a written reminder from the WSH Committee; 2 non-compliances in
+any 12-month period trigger a mandatory WSH re-training module.
+
+8.3 Office Ergonomics and DSE (Display Screen Equipment) Assessments
+Prolonged use of display screen equipment (laptops, monitors, etc.) can
+cause musculoskeletal disorders, eye strain, and fatigue if the workspace
+is not properly set up. DBizLabs provides every in-office employee with a
+fully ergonomic workstation, including:
+  - Height-adjustable electric sit-stand desk (min 65cm / max 130cm)
+  - Herman Miller Aeron or equivalent ergonomic office chair (fully
+    adjustable lumbar, seat depth, armrest height, and recline)
+  - 27-inch 4K display at minimum (most engineers have dual 32" 4K)
+  - Wrist rest, keyboard tray, monitor arm, and document holder on
+    request via Form ERG-01
+
+All employees are required to complete an online DSE Self-Assessment
+questionnaire within the first month of joining, and annually thereafter,
+via the People Operations portal. Employees who report pain, discomfort,
+or a diagnosed ergonomic condition are entitled to a one-on-one ergonomic
+assessment with a certified external workplace ergonomist at the company's
+expense. Reasonable ergonomic accommodations are always approved, even if
+they exceed the standard equipment budget.
+
+8.3.1 Micro-Breaks and Rest Breaks
+Employees are strongly encouraged to take a 5–10 minute micro-break every
+hour (stand, stretch, walk, drink water, look at a distant object to rest
+the eyes) and a 15–20 minute "recharge break" away from the desk every
+3 hours. The office has dedicated quiet/meditation rooms (Room 22-N and
+Room 22-S) fitted with comfortable recliners, weighted blankets, and
+dimmable lighting for rest breaks and prayer use.
+
+8.4 WSH Committee Meetings
+The DBizLabs Workplace Safety & Health Committee is a legally required
+body under the WSHA that meets at least once a month (typically the first
+Wednesday of each month at 11:00 SGT in the Level 22 Great Room). The
+committee comprises:
+
+  - Divya Muthu (COO): WSH Chairperson (Management Representative)
+  - 4 Management Representatives (from Engineering, ProServe, Sales,
+    Facilities)
+  - 4 Non-Management Employee Representatives (elected by the workforce
+    annually; term 2 years)
+  - 1 External WSH Auditor (Mr. Marcus Tan, Safetyhub Consultants Pte Ltd)
+  - Secretary: Sharifah Aisha (People Operations)
+
+Agenda of each WSH meeting covers:
+  (a) Incident and near-miss reports of the preceding month
+  (b) LTIR, number of training hours completed, audit observations
+  (c) Follow-up of action items from the prior meeting
+  (d) Review of any risk assessments updated in the month
+  (e) Upcoming drills, inspections, and regulatory changes
+  (f) Budget proposals for WSH programmes and equipment
+
+Minutes of all WSH Committee meetings are published on the company intranet
+within 5 working days and are available for inspection by MOM inspectors.
+
+8.5 Remote Work Safety Checklist (Home Office Safety)
+Employees working remotely (up to 2 days per week per Section 3.3) are
+responsible for ensuring their home workspace is safe and ergonomic. The
+following checklist must be self-completed by each remote employee at the
+start of employment and reconfirmed annually:
+
+8.5.1 Electrical Safety
+  - Desk and equipment are positioned away from water sources (kitchen
+    sinks, water dispensers, bathrooms)
+  - No loose or damaged electrical cords, overloaded power sockets, or
+    daisy-chained multiplugs (use surge-protected power strips only)
+  - Laptop and charger are placed on a hard, flat surface — never on a
+    bed, sofa, or pile of clothing (which can block vents and cause
+    overheating or fire risk)
+  - Smoke detector and, where applicable, circuit breaker for the home
+    office area are in working order
+
+8.5.2 Ergonomics (Home Office)
+  - Chair provides adequate back support (lumbar) and is set at a height
+    such that the employee's elbows are at 90 degrees when typing
+  - Feet are flat on the floor or supported by a footrest
+  - Top of the monitor is at or just below eye level, approximately 50cm
+    from the face.
+  - Keyboard and mouse are positioned close to the employee to avoid
+    over-reaching
+  - Adequate lighting to avoid glare and reflections on the screen
+
+8.5.3 Slips, Trips, and Falls
+  - Cables and wires are routed along the wall or secured with cable
+    ties; no cables crossing walkways where someone might trip
+  - Floor is clear of clutter, boxes, and loose rugs (particularly near
+    the work area and any escape route)
+  - Stairs (if any) are free from objects
+
+8.5.4 Fire and Escape
+  - Workspace has a clear, unobstructed escape route to the main exit of
+    the residence
+  - Smoke alarm present within 3 metres of the home office area, with
+    working batteries
+  - The employee knows the emergency evacuation procedure of the
+    residential building
+
+If an employee identifies an unsafe condition in their home workspace that
+cannot be resolved with a minor adjustment, they should:
+  1. Stop working from home immediately
+  2. Book a hot-desk in the Marina One office for the affected days
+  3. Notify People Operations for a remote safety assessment visit
+     (covered by the company)
+
+8.6 Information Security and Data Privacy (Remote Work)
+In addition to physical safety, employees working remotely must:
+  (a) Use ONLY the company-provided laptop or approved BYOD device for
+      work purposes. Personal laptops, tablets, and home PCs are strictly
+      prohibited from accessing DBizLabs Tier 2 and Tier 3 data.
+  (b) Connect to the company network via the corporate VPN (Palo Alto
+      GlobalProtect with multi-factor authentication) for any access to
+      internal systems, customer data, or production environments. Split
+      tunnelling is disabled by default.
+  (c) Never work on confidential materials in public spaces (cafes,
+      airports, co-working hot-desk floors) where a privacy screen is not
+      used and shoulder-surfing could occur.
+  (d) Never leave a laptop unlocked and unattended even for 30 seconds;
+      the laptop auto-lock policy is 2 minutes of inactivity, enforced
+      via Intune / JAMF.
+  (e) Hold work-related video calls only from a private area where
+      conversations cannot be overheard by household members or visitors.
+      Headsets with noise cancelling microphones must be used.
+
+8.7 Mental Health Support
+DBizLabs recognises that mental health is as important as physical health.
+We are committed to fostering a workplace where mental illness is
+discussed openly, without stigma, and where employees receive the support
+they need.
+
+8.7.1 Employee Assistance Programme (EAP)
+As referenced in Section 5.17, the AIA Health at Hand EAP provides:
+  - 24/7 confidential hotline: 1800 88 DBIZ (1800 88 3249)
+  - Up to 8 complimentary face-to-face, video, or telephone counselling
+    sessions per concern per year (with registered psychologists,
+    psychiatrists, and social workers)
+  - Support for stress, anxiety, depression, burnout, relationship issues,
+    grief and loss, substance use, financial stress, and any other mental
+    health or wellbeing concern
+  - No diagnosis or medical record is shared with DBizLabs; employees may
+    self-refer without informing anyone at the company. All usage is
+    100% confidential and de-identified before any aggregate reporting.
+
+8.7.2 Mental Health and Wellbeing Annual Budget
+On top of the Wellness Benefit (Section 5.8), every employee has access to
+a dedicated S$2,000 per calendar year Mental Health Budget that may be
+used for:
+  - Consultations with psychologists, psychiatrists, and counsellors
+    beyond the 8 free EAP sessions
+  - Mental health apps and programmes (beyond those covered under the
+    wellness benefit)
+  - Residential mental health programmes and retreats
+  - Neurodiversity assessments (ADHD, autism spectrum, dyslexia) and
+    associated support tools (text-to-speech, assistive technology etc.)
+  - Medical certificates and prescribed medication for mental health
+    conditions (if not fully covered by the group medical insurance)
+
+Reimbursement claims under the Mental Health Budget are processed directly
+by People Operations Director, not by the employee's manager, to preserve
+privacy. All claims are stored separately from the personnel file.
+
+8.7.3 Workplace Adjustments for Neurodiverse Employees
+DBizLabs is a neurodiversity-affirming employer and provides reasonable
+adjustments for employees with ADHD, autism spectrum condition, dyslexia,
+dyspraxia, Tourette syndrome, and other neurodivergent conditions.
+Examples of workplace adjustments:
+  - Noise-cancelling headphones and access to quiet single-person rooms
+    for deep-work periods
+  - Flexible working hours to accommodate circadian preferences
+  - Written agendas and recorded meetings with automated transcripts
+  - Extended time limits for non-critical tasks on request
+  - Clear, structured communication (avoiding ambiguous open-ended
+    requests such as "take a look when you have time")
+  - Task and project management coaching with the employee's manager
+
+Adjustments are confidential and agreed between the employee, the People
+Operations team, and the line manager on a case-by-case basis. There is no
+requirement to disclose a neurodivergent condition unless the employee
+wishes to request adjustments.
+
+8.8 Business Continuity Plan (BCP) and Disaster Recovery (DR)
+DBizLabs maintains a formal Business Continuity Plan (BCP), last updated
+and tested in the full Q2 2026 DR exercise (3–4 June 2026) with a
+Recovery Time Objective (RTO) of 4 hours and Recovery Point Objective
+(RPO) of 15 minutes for all production systems.
+
+The BCP covers a wide range of disruptive scenarios including:
+  - Pandemics, infectious disease outbreaks, and office-wide health
+    incidents (proven effective during the 2024 Deltacron wave when 38%
+    of the workforce was on sick leave simultaneously, with no customer
+    outages)
+  - Major power failures or water leaks at Marina One (alternate office
+    sites are pre-booked at The Work Project OUE Downtown 2 and at WeWork
+    Beach Centre within 3 km radius)
+  - Cyber attacks, ransomware incidents, data breaches, and denial of
+    service attacks (August 2026 ransomware drill recovery time: 3h 12m;
+    see Board Minutes 11 Sep 2026, Item 8)
+  - Critical cloud infrastructure outages in AWS Singapore / ap-southeast-1
+    (multi-region failover to us-east-1 or eu-west-1 is automated for
+    customer-facing systems; tested monthly)
+  - Regional transport disruptions (e.g. MRT network outage), civil
+    unrest, or terrorism incidents
+
+The BCP is the responsibility of the COO, Divya Muthu, supported by:
+  - Business Continuity Management Committee (meets bi-monthly)
+  - Six Crisis Management Teams (CMTs): Executive CMT, Technology CMT,
+    Customer Operations CMT, People & Comms CMT, Finance CMT, Legal &
+    Regulatory CMT
+  - Annual full-scope test plus quarterly tabletop or focused tests
+
+8.9 Data Privacy (Personal Data Protection Act — PDPA)
+DBizLabs is a Data Controller subject to the Singapore Personal Data
+Protection Act 2012 (PDPA, as amended 2020 and 2024), and additionally the
+EU GDPR for data of EEA-based employees and customers, and the California
+CPRA for California-based individuals. The Chief Data Protection Officer
+(CDPO) is Santhana Krishnan, Head of Legal, reachable at dpo@dbizlabs.ai.
+
+Key obligations of employees under PDPA:
+  (a) COLLECT ONLY WHAT YOU NEED: Collect only personal data that is
+      adequate, relevant, and necessary for the stated purpose. For
+      example, Hirethm recruiters do not need to collect information
+      about a candidate's religious beliefs or medical history for most
+      roles.
+  (b) NOTICE AND CONSENT: Individuals must be informed of the purpose(s)
+      for which their personal data is being collected, used, or disclosed
+      — either via a privacy policy, a recruitment privacy notice, or a
+      customer DPA. Explicit consent must be obtained for sensitive
+      personal data (race, religion, health, biometrics, sexual
+      orientation, etc.) unless an exception applies.
+  (c) PURPOSE LIMITATION: Do not use personal data for a purpose other
+      than the one for which it was originally collected, unless a new
+      consent is obtained or a PDPA exception applies. For example, a
+      customer's mobile phone number collected for billing purposes should
+      not be added to a marketing WhatsApp list.
+  (d) ACCESS AND CORRECTION: Individuals have the right to request access
+      to and correction of their personal data held by DBizLabs. All such
+      requests must be forwarded to the DPO within 24 hours; we have 30
+      days to respond (extendable to 60 days for complex requests).
+  (e) DATA BREACH NOTIFICATION: Any suspected or actual personal data
+      breach (unauthorised access, use, disclosure, copying, modification,
+      disposal, or loss of personal data) must be reported IMMEDIATELY to
+      the DPO. Notifiable data breaches (those likely to result in
+      significant harm or affect more than 500 individuals) must be
+      notified to PDPC within 3 calendar days.
+  (f) DATA RETENTION AND DISPOSAL: Do not retain personal data longer than
+      necessary for the purpose for which it was collected. Workday and
+      Salesforce are configured with automatic retention rules per the
+      Records Retention Schedule. Do not download and save personal data
+      to local drives, USB drives, or personal cloud storage.
+
+8.10 On-Site Visitors and Contractors
+All visitors to the Level 22 office must be:
+  - Pre-registered in the DBizLabs Visitor Management System (VMS) by
+    their host employee at least 1 business day in advance, with:
+      - Full name, NRIC/Passport number, company, purpose of visit
+      - Contact phone number and email
+  - Met at the Marina One Level 1 Security Concierge by the host after
+    collecting a physical visitor pass from building security
+  - Escorted at ALL TIMES while on Level 22; no visitor may be left
+    unaccompanied anywhere on the floor, including the pantry or restrooms
+  - Signed in and out using the tablet at the Level 22 Reception
+  - Required to wear a visible visitor pass sticker (red) at all times
+
+Non-employees working on site for more than 3 days (contractors,
+consultants, auditors) must additionally:
+  - Complete the same WSH and information security on-line training as
+    full-time employees
+  - Sign a contractor NDA, acceptable-use policy, and site safety form
+  - Be issued with a yellow contractor ID badge that expires on the
+    scheduled last day of the engagement
+
+8.11 Last Day / Offboarding Procedures
+The following steps apply on the last day of employment for every leaver
+(whether resignation, termination, or end of contract):
+
+  (a) Return ALL DBizLabs property: Laptops, chargers, monitors (if taken
+      home), YubiKeys, access badges, keys, company credit cards, mobile
+      phones, manuals, books, and any other equipment or documents.
+      Equipment is received by the IT Team on the morning of the last day.
+  (b) Manager verifies return and signs Form OFB-07.
+  (c) Employee conducts a handover meeting with the manager and a
+      designated successor; a written handover document (minimum 2 pages)
+      is deposited in the team drive.
+  (d) People Operations conducts a structured Exit Interview (in person
+      for SG office, videoconference for remote offices) covering:
+      reasons for leaving, feedback on culture, management, total rewards,
+      and any suggestions for improvement.
+  (e) All system access is revoked by 18:00 SGT on the last working day
+      (or immediately in the case of termination for cause). This includes
+      email forwarding, Slack deactivation, VPN, and all SaaS accounts.
+  (f) Final salary, pro-rated bonus (if applicable), encashment of unused
+      CTO up to 40 hours, and any leave encashment are paid on the
+      standard payroll cycle for the following month, or within 7 days of
+      termination (whichever is earlier per EA).
+  (g) CPF contribution for the final month is made in the usual CPF cycle.
+  (h) The employee signs a "Clearance Certificate" confirming that all
+      company property has been returned and all obligations are met.
+
+Post-employment obligations (NDA, IP Assignment, non-solicitation and, for
+C+ and above, non-compete covenants) continue in full force and effect in
+accordance with their respective terms. Former employees who have
+questions about their obligations should contact legal@dbizlabs.ai.
+
+================================================================================
+APPENDIX A: PAY MATRIX TABLE (SALARY BANDS BY GRADE)
+================================================================================
+All figures are monthly base salary in SINGAPORE DOLLARS (SGD), exclusive
+of allowances, bonus, AWS, ESOP, or other variable compensation.
+Each band has a 1.75x spread between the Band Minimum and the Band Maximum.
+
+| GRADE | TYPICAL JOB TITLES                                                                 | BAND MINIMUM (SGD/mth) | BAND MIDPOINT (SGD/mth) | BAND MAXIMUM (SGD/mth) |
+|-------|-------------------------------------------------------------------------------------|-------------------------|--------------------------|-------------------------|
+| A     | Junior Software Engineer, Junior Recruiter, Customer Success Associate, EA, Admin   | 4,000                   | 5,500                    | 7,000                   |
+| B     | Software Engineer, Recruiter, Customer Success Manager, Sales Development Rep,      | 7,000                   | 9,500                    | 12,000                  |
+|       | Marketing Associate, Finance Analyst                                                 |                         |                          |                         |
+| C     | Senior Software Engineer, Senior CSM, Account Executive, Product Manager,           | 12,000                  | 16,000                   | 20,000                  |
+|       | Engineering Manager, Finance Manager, Senior Product Designer                       |                         |                          |                         |
+| C+    | Staff Engineer, Principal Product Manager, Senior AE (Enterprise), Director CSM,    | 20,000                  | 24,000                   | 28,000                  |
+|       | Senior Finance Manager, Head of Marketing, Regional Sales Director                  |                         |                          |                         |
+| D     | Senior Staff / Principal Engineer, VP Product, VP Engineering, VP Sales, VP HR,     | 28,000                  | 34,000                   | 40,000                  |
+|       | Country GM, Group Financial Controller, VP Customer Success                         |                         |                          |                         |
+| E     | Distinguished Engineer, CFO, CTO, COO, CPO, CMO, CHRO, SVP Sales, Chief Architect,  | 40,000                  | 55,000                   | 70,000                  |
+|       | CEO                                                                                  |                         |                          |                         |
+| E+    | CEO (at Board discretion), Distinguished Fellow, Founding-level executives          | 70,000                  | 95,000                   | No stated cap (Board)   |
+
+Notes:
+  - Employees paid below the band minimum are on a Development Plan; every
+    effort is made to bring them within band within 12 months.
+  - Employees paid at or above 90% of band maximum are eligible for
+    promotion consideration, subject to the promotion criteria matrix in
+    Section 6.6.
+  - Overseas offices have country band multipliers published annually by
+    People Operations. Examples (FY2026): India x 0.42, Japan x 0.92, UK
+    x 1.08, US x 1.22, Germany x 1.05, UAE x 1.10.
+
+================================================================================
+APPENDIX B: NOTICE PERIODS & SEVERANCE
+================================================================================
+
+During Probation:
+  - Either party may terminate the employment by giving FOURTEEN (14)
+    CALENDAR DAYS' written notice, or salary in lieu thereof.
+  - Applies uniformly across all grades.
+
+Post-Probation (Confirmed Employees):
+
+| GRADE RANGE       | NOTICE PERIOD BY EMPLOYEE          | NOTICE PERIOD BY EMPLOYER          |
+|-------------------|-------------------------------------|-------------------------------------|
+| Grades A, B, C    | 30 Calendar Days (1 calendar month) | 30 Calendar Days (1 calendar month) |
+| Grades C+, D, E,  | 60 Calendar Days (2 calendar months)| 60 Calendar Days (2 calendar months)|
+|        E+         |                                     |                                     |
+
+Additional provisions:
+  - Notice given by the employer may be paid in lieu (PILON) at any time,
+    with or without cause. When PILON is paid, the employee's last working
+    day is the date of the letter; the employee does not need to attend
+    work and access is revoked immediately.
+  - Notice given by an employee must be in writing via Resignation Letter
+    submitted in Workday. Employees who fail to give the required notice
+    will have the shortfall deducted from final salary.
+
+Severance Pay on Redundancy:
+Where employment is terminated by reason of redundancy (not performance,
+not misconduct), an employee who has completed at least 2 years of
+continuous service is entitled to severance pay in addition to the
+required notice period, at the following rates:
+  - 2 to >3 years service:         1 week per year of service
+  - 3 to >5 years service:         1.5 weeks per year of service
+  - 5 to >10 years service:        2 weeks per year of service
+  - 10+ years service:             2.5 weeks per year of service,
+                                   capped at 25 weeks of base salary
+
+================================================================================
+APPENDIX C: FREQUENTLY ASKED QUESTIONS (FAQ)
+================================================================================
+
+C1. When should I expect my salary?
+    Salaries are disbursed on the 25th of each month, or the last business
+    day before if the 25th falls on a weekend or public holiday.
+
+C2. How do I change my bank account or personal details?
+    Submit Form PAY-04 (bank account) or Form PR-01 (personal details) via
+    Workday. Allow 10 working days before the next payroll for changes.
+
+C3. Can I borrow against my future leave or get a salary advance?
+    Salary advances of up to 50% of one month's base salary are available
+    once per calendar year for genuine emergencies (medical, bereavement,
+    natural disaster). Repayment is deducted equally over the following
+    3 months' payroll. Submit Form SADV-01 to Payroll.
+
+C4. What is the company's stance on office romances?
+    Consensual romantic or sexual relationships between employees are
+    permitted but must be disclosed to People Operations via Form REL-01
+    if either party reports to the other, or if one holds a position of
+    authority over the other (e.g. on the same hiring / promotion panel).
+    Undisclosed relationships in a reporting line are a disciplinary
+    matter.
+
+C5. Can I work for DBizLabs from another country for personal reasons?
+    Temporary remote work of up to 30 calendar days per calendar year from
+    an overseas jurisdiction is permitted with prior HRBP and Finance
+    approval (permanent tax and immigration implications are assessed on
+    a case basis). Longer periods require CFO approval.
+
+C6. Who owns the data and code I produce during Hackathon / Innovation Week?
+    All work produced during DBizLabs-sponsored events (hackathons,
+    innovation days, etc.) — whether during or outside work hours — is
+    the property of DBizLabs Pte. Ltd., regardless of whether it is
+    subsequently commercialised. Winning teams receive prizes but no
+    separate IP ownership.
+
+C7. What happens to my ESOPs if the company is acquired?
+    In the event of a "change of control" (acquisition, merger, sale of
+    substantially all assets), the Board and RemCo will determine, per
+    the ESOP Plan Rules, whether to accelerate vesting (commonly "single
+    trigger": 12 months acceleration, or "double trigger": acceleration
+    upon both change of control AND involuntary termination within
+    12 months). The default position is double-trigger acceleration.
+
+C8. How do I report a concern that I don't feel comfortable taking to my
+    manager or HRBP?
+    Use the independent Whistleblower Channel described in Section 7.7.
+    The channel is confidential, anonymous if preferred, and reports
+    directly to the Chairman of the Board / Audit & Risk Committee.
+
+C9. Can I use my DBizLabs email address for personal purposes?
+    Occasional personal use (e.g. sending a family photo, booking a
+    personal appointment) is acceptable so long as it does not: use
+    significant resources, create liability for the company, interfere
+    with job duties, or involve illegal activity. Do NOT use your
+    DBizLabs email on social media sign-ups, forums, or political
+    campaigns.
+
+C10. What is the pet policy for the Marina One office?
+     Dogs (small to medium breeds, fully vaccinated, house-trained,
+     leashed at all times) are permitted in the Level 22 office on
+     "Bring Your Dog to Work Day" — the last Friday of each month. A
+     maximum of 4 dogs per day; handlers must pre-register via Form
+     PET-01 with Facilities. Cats and other pets are not allowed. No
+     animals at any time in the server rooms, kitchen, or quiet rooms.
+
+================================================================================
+APPENDIX D: USEFUL CONTACTS & ESCALATION PATHS
+================================================================================
+
+D1. Key Departmental Contacts
+
+  Office Reception (Level 22 Marina One):     Ext. 2200
+  IT Service Desk (24/7):                     it-support@dbizlabs.ai
+                                              Phone: +65 6900 8801 (option 1)
+  People Operations (HR):                     people-ops@dbizlabs.ai
+                                              Phone: +65 6900 8801 (option 2)
+  Payroll Queries:                            payroll@dbizlabs.ai
+  Finance (Expenses, Travel, Procurement):    finance@dbizlabs.ai
+  Legal & Compliance:                         legal@dbizlabs.ai
+                                              DPO: dpo@dbizlabs.ai
+  Internal Audit:                             internal-audit@dbizlabs.ai
+  Corporate Communications:                   comms@dbizlabs.ai
+  InfoSec (Cyber incidents, phishing):        security@dbizlabs.ai
+                                              (phishing reports: phish@dbizlabs.ai)
+  Whistleblower Hotline (Deloitte):           +65 6224 5788
+                                              https://dbizlabs.ethicspoint.deloitte.com
+  EAP Counselling (24/7):                     1800 88 DBIZ (1800 88 3249)
+  CEO Office Direct (Siva Pasupathi):         ceo-office@dbizlabs.ai
+  Chairman of the Board (confidential):       chairman-confidential@dbizlabs.ai
+
+D2. Executive Team (Level 22, Great Room Wing)
+
+  Siva Pasupathi      CEO & Executive Director          Ext. 2280
+  Amala Appathurai    Chief Technology Officer          Ext. 2281
+  Karthiga Rajoo      Chief Financial Officer           Ext. 2282
+  Divya Muthu         Chief Operating Officer           Ext. 2283
+  Narmadha Sivakumar  Chief Product Officer             Ext. 2284
+
+D3. Non-Executive Directors
+
+  Dr. Lingeswaran Arunasalam   Chairman / Independent Director
+  Nandhini Sivakumar           Independent Director
+
+D4. Escalation Paths
+
+  Day-to-day work issue:
+      Self → Team peer / Buddy → Line Manager → Department Head → HRBP
+
+  Performance or behavioural concern (about a peer):
+      Self → Line Manager (discreet) → HRBP → Department Head
+
+  Performance or behavioural concern (about a manager):
+      Self → HRBP → Department Head → COO (Divya Muthu) → Chairman
+
+  Ethics / misconduct / serious breach:
+      Self → HRBP + Head of Legal → COO → Chairman
+      OR (if the above are implicated): Whistleblower channel → Chairman
+      OR (criminal activity): Police 999 + Head of Legal concurrently
+
+  Medical emergency (office hours):
+      Call FIRST AIDER on duty (Ext. list by pantry) → 995 SCDF →
+      Notify Reception (2200) → COO and HRBP
+
+  Data breach / cyber security incident (ANY HOUR):
+      Incident Commander on call: see PagerDuty rotation →
+      security@dbizlabs.ai (or direct Slack #incident-response) →
+      CTO + Head of Legal (DPO) within 15 minutes
+
+  Customer system outage / Sev 1 incident:
+      Engineering on-call (P1 escalation) → CTO → Customer Success VP → COO
+
+================================================================================
+ACKNOWLEDGEMENT OF RECEIPT
+(TO BE COMPLETED BY EVERY EMPLOYEE UPON JOINING, AND UPON EACH MAJOR REVISION)
+================================================================================
+
+I, ______________________________________ (Full Name — PRINT),
+Employee ID: DBZ-__________,
+having joined DBizLabs Private Limited on ________________ (Date),
+
+HEREBY ACKNOWLEDGE AND CONFIRM THAT:
+
+  1. I have received a copy of the DBizLabs Employee Handbook Version 4.2
+     (effective 1 August 2026), either in hard copy or via access to the
+     Workday HCM electronic portal.
+
+  2. I have read and understood the contents of this Handbook and the
+     policies, procedures, guidelines, and rules set out herein, and
+     in the referenced companion documents available on the internal
+     policy portal (https://policy.dbizlabs.ai).
+
+  3. I agree to comply fully with all the terms of this Handbook and all
+     related policies as a condition of my employment with DBizLabs.
+
+  4. I understand that this Handbook is not a contract of employment,
+     that the terms of my Letter of Offer / Contract of Service prevail
+     over this Handbook in case of any inconsistency, and that DBizLabs
+     reserves the right to amend, replace, or withdraw any provision of
+     this Handbook at any time, with or without prior notice, subject
+     to statutory requirements.
+
+  5. I have completed the Day One Ethics & Compliance eLearning module
+     (Course COMP-101-V4-2026) and the Data Privacy & PDPA module
+     (Course DP-201) as evidenced in the LMS.
+
+  6. I will promptly refer any questions or concerns regarding the
+     interpretation or application of this Handbook to People Operations.
+
+Signed:  _______________________________    Date: ________________________
+
+Witness (People Operations Representative):
+         _______________________________    Date: ________________________
+         Name: __________________________    Title: _______________________
+
+End of Handbook v4.2 — Last printed 1 August 2026.
+This document lives electronically at: https://policy.dbizlabs.ai/handbook
+Controlled document. Uncontrolled when printed or downloaded.
+Copyright DBizLabs Private Limited, 2021–2026. All rights reserved.
