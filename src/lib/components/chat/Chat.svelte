@@ -1413,6 +1413,23 @@
 					agenticFormSchema = data?.schema ?? { properties: {} };
 					agenticFormPrefill = data?.prefill ?? {};
 					showAgenticForm = true;
+				} else if (type === 'FORM' || type === 'RESULT') {
+					// Generic dynamic agentic UI: the assistant message this event is
+					// attached to carries the interactive form/result card, rendered
+					// inline in ResponseMessage below the message text and persisted
+					// as part of the message so it survives a page refresh.
+					message.data = data;
+				} else if (type === 'FORM_UPDATE') {
+					// Targets an *earlier* message (the one that originally rendered
+					// the form), not the message this event is nominally attached to,
+					// so the same form card is patched in place instead of a new one
+					// being created.
+					const targetMessageId = data?.targetMessageId;
+					const target = targetMessageId ? history.messages[targetMessageId] : null;
+					if (target) {
+						target.data = data;
+						history.messages[targetMessageId] = target;
+					}
 				} else if (type.startsWith('terminal:')) {
 					terminalEventHandler(type, data);
 				} else {

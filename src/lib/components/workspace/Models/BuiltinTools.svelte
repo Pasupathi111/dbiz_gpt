@@ -21,6 +21,10 @@
 			label: $i18n.t('Agentic Forms'),
 			description: $i18n.t('Show a dynamic form for structured actions like creating a job or scheduling an interview')
 		},
+		dynamic_forms: {
+			label: $i18n.t('Dynamic Forms'),
+			description: $i18n.t('Render reusable JSON-Schema-driven forms and result cards inline in chat for structured actions (e.g. diagnosing an application error)')
+		},
 		memory: {
 			label: $i18n.t('Memory'),
 			description: $i18n.t('Search and manage user memories')
