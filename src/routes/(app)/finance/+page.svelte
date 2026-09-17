@@ -3,6 +3,7 @@
 	import { user } from '$lib/stores';
 	import { getFinanceDashboard, getReportingPeriods } from '$lib/apis/finance';
 	import Spinner from '$lib/components/common/Spinner.svelte';
+	import LiveIndicator from '$lib/components/common/LiveIndicator.svelte';
 	import { registerAssistantContext } from '$lib/assistant/context';
 
 	const i18n = getContext('i18n');
@@ -57,7 +58,10 @@
 		</div>
 		<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
 			<div>
-				<h1 class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">Finance Operations Dashboard</h1>
+				<div class="flex items-center gap-2">
+					<h1 class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">Finance Operations Dashboard</h1>
+					<LiveIndicator title="Dashboard reflects live pipeline data" />
+				</div>
 				<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
 					Bond reconciliation, movement analysis and monthly reporting
 				</p>

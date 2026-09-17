@@ -7,10 +7,12 @@
 		getFinanceDocuments,
 		getReportingPeriods,
 		processDocument,
-		deleteFinanceDocument
+		deleteFinanceDocument,
+		getFinanceDocumentPreviewUrl
 	} from '$lib/apis/finance';
 	import { toast } from 'svelte-sonner';
 	import Spinner from '$lib/components/common/Spinner.svelte';
+	import LiveIndicator from '$lib/components/common/LiveIndicator.svelte';
 	import { registerAssistantContext } from '$lib/assistant/context';
 
 	const i18n = getContext('i18n');
@@ -43,10 +45,10 @@
 	}
 
 	const docTypeOptions = [
-		{ value: 'UBS_EXCEL', label: 'UBS Excel' },
-		{ value: 'LGI_PDF', label: 'LGI PDF' },
-		{ value: 'PREVIOUS_SCHEDULE', label: 'Previous Schedule' },
-		{ value: 'TEMPLATE', label: 'Template' }
+		{ value: 'UBS_EXCEL', label: 'UBS Excel', disabled: false },
+		{ value: 'LGI_PDF', label: 'LGI PDF', disabled: false },
+		{ value: 'PREVIOUS_SCHEDULE', label: 'Previous Schedule', disabled: true },
+		{ value: 'TEMPLATE', label: 'Template', disabled: true }
 	];
 
 	const acceptedExtensions = ['.xlsx', '.xls', '.pdf', '.doc', '.docx'];
@@ -274,8 +276,45 @@
 		}
 	}
 
-	function handlePreview(doc: any) {
-		toast.info(`Preview not yet available for ${doc.filename}`);
+	// --- Preview ---
+	let previewOpen = false;
+	let previewLoading = false;
+	let previewDoc: any = null;
+	let previewUrl: string | null = null;
+	let previewContentType: string | null = null;
+	let previewError: string | null = null;
+
+	async function handlePreview(doc: any) {
+		previewDoc = doc;
+		previewOpen = true;
+		previewLoading = true;
+		previewError = null;
+		previewUrl = null;
+		previewContentType = null;
+
+		try {
+			const { url, contentType } = await getFinanceDocumentPreviewUrl(localStorage.token, doc.id);
+			previewUrl = url;
+			previewContentType = contentType;
+		} catch (err: any) {
+			previewError = err?.message || 'Failed to load preview';
+		} finally {
+			previewLoading = false;
+		}
+	}
+
+	function closePreview() {
+		previewOpen = false;
+		if (previewUrl) URL.revokeObjectURL(previewUrl);
+		previewUrl = null;
+		previewDoc = null;
+		previewError = null;
+	}
+
+	function isPreviewable(contentType: string | null, filename: string): boolean {
+		if (contentType === 'application/pdf' || filename?.toLowerCase().endsWith('.pdf')) return true;
+		if (contentType?.startsWith('image/')) return true;
+		return false;
 	}
 </script>
 
@@ -289,7 +328,10 @@
 		</div>
 		<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
 			<div>
-				<h1 class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">Document Management</h1>
+				<div class="flex items-center gap-2">
+					<h1 class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">Document Management</h1>
+					<LiveIndicator title="Uploads are processed against the live pipeline" />
+				</div>
 				<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
 					Upload and manage UBS, LGI and schedule documents for bond processing
 				</p>
@@ -331,7 +373,9 @@
 								bind:value={selectedDocType}
 							>
 								{#each docTypeOptions as opt}
-									<option value={opt.value}>{opt.label}</option>
+									<option value={opt.value} disabled={opt.disabled}>
+										{opt.label}{opt.disabled ? ' (unavailable)' : ''}
+									</option>
 								{/each}
 							</select>
 						</div>
@@ -571,7 +615,7 @@
 													{/if}
 													<button
 														class="p-1.5 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-														title="Preview document"
+														title="View / Preview document"
 														on:click={() => handlePreview(doc)}
 													>
 														<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -601,3 +645,57 @@
 		</div>
 	{/if}
 </div>
+
+<!-- Document Preview Modal -->
+{#if previewOpen}
+	<div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+		<div class="absolute inset-0 bg-black/40" on:click={closePreview}></div>
+		<div class="relative w-full max-w-3xl max-h-[85vh] flex flex-col bg-white dark:bg-gray-900 rounded-xl shadow-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+			<div class="px-5 py-3.5 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between flex-shrink-0">
+				<div class="min-w-0">
+					<h2 class="text-sm font-semibold text-gray-900 dark:text-white truncate">{previewDoc?.filename ?? 'Document Preview'}</h2>
+					<p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{formatFileSize(previewDoc?.file_size ?? 0)}</p>
+				</div>
+				<button
+					class="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-600 dark:hover:text-gray-300 transition-colors flex-shrink-0"
+					on:click={closePreview}
+					title="Close preview"
+				>
+					<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+					</svg>
+				</button>
+			</div>
+			<div class="flex-1 min-h-0 overflow-auto bg-gray-50 dark:bg-gray-950/40">
+				{#if previewLoading}
+					<div class="flex items-center justify-center h-64">
+						<Spinner />
+					</div>
+				{:else if previewError}
+					<div class="flex flex-col items-center justify-center h-64 text-center px-6">
+						<p class="text-sm text-red-500 dark:text-red-400">{previewError}</p>
+					</div>
+				{:else if previewUrl && isPreviewable(previewContentType, previewDoc?.filename ?? '')}
+					{#if previewContentType?.startsWith('image/')}
+						<img src={previewUrl} alt={previewDoc?.filename} class="max-w-full mx-auto" />
+					{:else}
+						<iframe title="Document preview" src={previewUrl} class="w-full h-[70vh] border-0"></iframe>
+					{/if}
+				{:else if previewUrl}
+					<div class="flex flex-col items-center justify-center h-64 text-center px-6 gap-3">
+						<p class="text-sm text-gray-500 dark:text-gray-400">
+							Inline preview isn't available for this file type.
+						</p>
+						<a
+							href={previewUrl}
+							download={previewDoc?.filename}
+							class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium transition-colors"
+						>
+							Download to view
+						</a>
+					</div>
+				{/if}
+			</div>
+		</div>
+	</div>
+{/if}
