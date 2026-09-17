@@ -3,7 +3,9 @@
 	import { goto } from '$app/navigation';
 	import { getContext } from 'svelte';
 	import { user, WEBUI_NAME } from '$lib/stores';
+	import { getLogoutRedirectUrl, userSignOut } from '$lib/apis/auths';
 	import GlobalAgenticAssistant from '$lib/components/assistant/GlobalAgenticAssistant.svelte';
+	import SignOut from '$lib/components/icons/SignOut.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -70,6 +72,19 @@
 
 	function getCurrentMonth(): string {
 		return new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+	}
+
+	let userMenuOpen = false;
+
+	async function handleSignOut() {
+		mobileMenuOpen = false;
+		userMenuOpen = false;
+		const res = await userSignOut().catch((error) => {
+			console.error(error);
+			return null;
+		});
+		localStorage.removeItem('token');
+		location.href = getLogoutRedirectUrl(res?.redirect_url);
 	}
 </script>
 
@@ -205,6 +220,16 @@
 					<span class="text-[13px] font-medium">Back to Chat</span>
 				{/if}
 			</button>
+			<button
+				class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-slate-400 hover:bg-slate-700/50 hover:text-white transition-colors"
+				on:click={handleSignOut}
+				title={sidebarCollapsed ? 'Sign Out' : ''}
+			>
+				<SignOut className="w-[18px] h-[18px] flex-shrink-0" strokeWidth="1.5" />
+				{#if !sidebarCollapsed}
+					<span class="text-[13px] font-medium">Sign Out</span>
+				{/if}
+			</button>
 		</div>
 
 		<!-- User -->
@@ -278,8 +303,32 @@
 
 				<!-- User Avatar -->
 				{#if $user}
-					<div class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-xs font-semibold text-white flex-shrink-0 cursor-pointer hover:ring-2 hover:ring-indigo-300 transition-all">
-						{($user.name || 'U').charAt(0).toUpperCase()}{($user.name || 'U').split(' ')[1]?.charAt(0)?.toUpperCase() || ''}
+					<div class="relative">
+						<button
+							class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-xs font-semibold text-white flex-shrink-0 cursor-pointer hover:ring-2 hover:ring-indigo-300 transition-all"
+							on:click={() => (userMenuOpen = !userMenuOpen)}
+							aria-label="User menu"
+						>
+							{($user.name || 'U').charAt(0).toUpperCase()}{($user.name || 'U').split(' ')[1]?.charAt(0)?.toUpperCase() || ''}
+						</button>
+						{#if userMenuOpen}
+							<!-- svelte-ignore a11y-click-events-have-key-events -->
+							<!-- svelte-ignore a11y-no-static-element-interactions -->
+							<div class="fixed inset-0 z-40" on:click={() => (userMenuOpen = false)}></div>
+							<div class="absolute right-0 top-full mt-2 z-50 w-44 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg py-1">
+								<div class="px-3 py-2 border-b border-gray-100 dark:border-gray-800">
+									<div class="text-sm font-medium text-gray-900 dark:text-white truncate">{$user.name}</div>
+									<div class="text-xs text-gray-400 truncate">{$user.email}</div>
+								</div>
+								<button
+									class="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+									on:click={handleSignOut}
+								>
+									<SignOut className="size-4 shrink-0" strokeWidth="1.5" />
+									<span>Sign Out</span>
+								</button>
+							</div>
+						{/if}
 					</div>
 				{/if}
 			</div>
