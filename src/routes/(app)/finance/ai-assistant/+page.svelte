@@ -161,7 +161,7 @@
 				{
 					id: `msg-${Date.now()}-assistant`,
 					role: 'assistant',
-					content: `Sorry, I couldn't reach the Bond Copilot backend: ${e?.message || e}`,
+					content: `Sorry, I couldn't reach the SCS Copilot backend: ${e?.message || e}`,
 					timestamp: new Date()
 				}
 			];
@@ -231,6 +231,45 @@
 		}
 	}
 
+	// Internal identifiers (task/period/object ids, raw UUIDs, timestamps) are
+	// useful for debugging but noisy for end users — keep tool-result cards to
+	// human-readable metrics only.
+	function isIdLikeKey(key: string): boolean {
+		return /(^id$|_id$|Id$)/.test(key) || /^started_at$|^created_at$|^updated_at$/.test(key);
+	}
+
+	function isUuid(v: any): boolean {
+		return (
+			typeof v === 'string' &&
+			/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v)
+		);
+	}
+
+	function toolSummaryEntries(data: any): [string, any][] {
+		if (!data || typeof data !== 'object') return [];
+		return Object.entries(data).filter(([k, v]) => {
+			if (typeof v === 'object' && v !== null) return false;
+			if (k === 'status' || k === 'message') return false;
+			if (isIdLikeKey(k)) return false;
+			if (isUuid(v)) return false;
+			return true;
+		});
+	}
+
+	function statusBadgeClass(status: string): string {
+		const s = String(status || '').toLowerCase();
+		if (['completed', 'success', 'done', 'approved'].includes(s)) {
+			return 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400';
+		}
+		if (['failed', 'error', 'rejected'].includes(s)) {
+			return 'bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400';
+		}
+		if (['pending', 'in_progress', 'processing', 'running'].includes(s)) {
+			return 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400';
+		}
+		return 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300';
+	}
+
 	function fmt(v: any): string {
 		if (v === null || v === undefined || v === '') return '—';
 		if (typeof v === 'number') return v.toLocaleString('en-SG');
@@ -275,7 +314,7 @@
 			</div>
 			<div class="min-w-0">
 				<div class="flex items-center gap-2">
-					<h1 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-white truncate">AI Bond Copilot</h1>
+					<h1 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-white truncate">AI SCS Copilot</h1>
 					<LiveIndicator title="Assistant is connected to live portfolio data" />
 				</div>
 				<p class="text-xs text-gray-500 dark:text-gray-400 hidden sm:block">Full-featured AI assistant for bond portfolio management</p>
@@ -421,7 +460,7 @@
 														<path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
 													</svg>
 												</div>
-												<span class="text-[10px] font-medium text-gray-500 dark:text-gray-400">AI Bond Copilot</span>
+												<span class="text-[10px] font-medium text-gray-500 dark:text-gray-400">AI SCS Copilot</span>
 												{#if selectedModelId}
 													<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-400">{availableModels.find(m => m.id === selectedModelId)?.name || selectedModelId}</span>
 												{/if}
@@ -464,15 +503,29 @@
 														{#if !data}
 															<p class="text-xs text-gray-500 dark:text-gray-400">No structured data returned.</p>
 														{:else}
-															<div class="space-y-1">
-																{#each Object.entries(data).slice(0, 8) as [k, v]}
-																	{#if typeof v !== 'object'}
-																		<div class="flex items-center justify-between text-[11px]">
-																			<span class="text-gray-400 capitalize">{k.replace(/_/g, ' ')}</span>
-																			<span class="font-mono text-gray-700 dark:text-gray-300">{fmt(v)}</span>
-																		</div>
-																	{/if}
-																{/each}
+															{@const entries = toolSummaryEntries(data)}
+															<div class="space-y-2">
+																{#if data.status}
+																	<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium capitalize {statusBadgeClass(data.status)}">
+																		{String(data.status).replace(/_/g, ' ')}
+																	</span>
+																{/if}
+																{#if data.message}
+																	<p class="text-xs text-gray-600 dark:text-gray-300">{data.message}</p>
+																{/if}
+																{#if entries.length > 0}
+																	<div class="grid grid-cols-2 gap-x-4 gap-y-2">
+																		{#each entries.slice(0, 8) as [k, v]}
+																			<div class="flex flex-col">
+																				<span class="text-[10px] text-gray-400 capitalize">{k.replace(/_/g, ' ')}</span>
+																				<span class="text-xs font-medium text-gray-700 dark:text-gray-300">{fmt(v)}</span>
+																			</div>
+																		{/each}
+																	</div>
+																{/if}
+																{#if !data.status && !data.message && entries.length === 0}
+																	<p class="text-xs text-gray-500 dark:text-gray-400">Completed.</p>
+																{/if}
 															</div>
 														{/if}
 													</div>

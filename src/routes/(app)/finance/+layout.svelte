@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
-	import { getContext, onMount } from 'svelte';
+	import { getContext } from 'svelte';
 	import { user, WEBUI_NAME } from '$lib/stores';
 	import GlobalAgenticAssistant from '$lib/components/assistant/GlobalAgenticAssistant.svelte';
 
@@ -63,12 +63,6 @@
 	let mobileMenuOpen = false;
 	let agenticPanelOpen = false;
 
-	onMount(() => {
-		if (window.innerWidth >= 1280) {
-			agenticPanelOpen = true;
-		}
-	});
-
 	function handleNavClick(href: string) {
 		mobileMenuOpen = false;
 		goto(href);
@@ -101,7 +95,7 @@
 					<path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
 				</svg>
 			</div>
-			<span class="text-sm font-semibold text-white">AI Bond Copilot</span>
+			<span class="text-sm font-semibold text-white">AI SCS Copilot</span>
 		</div>
 		<button
 			class="p-1.5 rounded-lg hover:bg-slate-700/50 transition-colors"
@@ -140,7 +134,7 @@
 							</svg>
 						</div>
 						<div class="min-w-0">
-							<div class="text-sm font-semibold text-white truncate">AI Bond Copilot</div>
+							<div class="text-sm font-semibold text-white truncate">AI SCS Copilot</div>
 							<div class="text-[10px] text-slate-400 truncate">Finance Intelligence</div>
 						</div>
 					</div>
