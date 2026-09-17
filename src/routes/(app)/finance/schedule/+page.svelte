@@ -189,20 +189,20 @@
 				<!-- Schedule Table -->
 				<div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
 					<div class="overflow-x-auto">
-						<table class="w-full text-sm">
+						<table class="min-w-full text-sm">
 							<thead>
 								<tr class="border-b border-gray-100 dark:border-gray-800">
-									<th class="text-left px-4 py-3 text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">Bond ID</th>
-									<th class="text-left px-4 py-3 text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">ISIN</th>
-									<th class="text-left px-4 py-3 text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">Issuer</th>
-									<th class="text-left px-4 py-3 text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">CCY</th>
-									<th class="text-right px-4 py-3 text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">Face Value</th>
-									<th class="text-right px-4 py-3 text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">Market Value</th>
-									<th class="text-center px-4 py-3 text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">Coupon</th>
-									<th class="text-left px-4 py-3 text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">Maturity</th>
-									<th class="text-right px-4 py-3 text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">Accrued Int.</th>
-									<th class="text-center px-4 py-3 text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">Movement</th>
-									<th class="text-center px-4 py-3 text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">Status</th>
+									<th class="text-left px-4 py-3 text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 whitespace-nowrap">Bond ID</th>
+									<th class="text-left px-4 py-3 text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 whitespace-nowrap">ISIN</th>
+									<th class="text-left px-4 py-3 text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 whitespace-nowrap">Issuer</th>
+									<th class="text-left px-4 py-3 text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 whitespace-nowrap">CCY</th>
+									<th class="text-right px-4 py-3 text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 whitespace-nowrap">Face Value</th>
+									<th class="text-right px-4 py-3 text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 whitespace-nowrap">Market Value</th>
+									<th class="text-center px-4 py-3 text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 whitespace-nowrap">Coupon</th>
+									<th class="text-left px-4 py-3 text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 whitespace-nowrap">Maturity</th>
+									<th class="text-right px-4 py-3 text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 whitespace-nowrap">Accrued Int.</th>
+									<th class="text-center px-4 py-3 text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 whitespace-nowrap">Movement</th>
+									<th class="text-center px-4 py-3 text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 whitespace-nowrap">Status</th>
 								</tr>
 							</thead>
 							<tbody>

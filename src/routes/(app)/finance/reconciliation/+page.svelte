@@ -438,17 +438,17 @@
 
 					<!-- Data Table -->
 					<div class="overflow-x-auto">
-						<table class="w-full text-sm">
+						<table class="min-w-full text-sm">
 							<thead>
 								<tr class="bg-gray-50 dark:bg-gray-800/50 sticky top-0 z-10">
 									<th
-										class="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-700 dark:hover:text-gray-200 select-none"
+										class="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-700 dark:hover:text-gray-200 select-none whitespace-nowrap"
 										on:click={() => toggleSort('bond_id')}
 									>
 										Bond ID {sortIcon('bond_id')}
 									</th>
 									<th
-										class="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-700 dark:hover:text-gray-200 select-none"
+										class="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-700 dark:hover:text-gray-200 select-none whitespace-nowrap"
 										on:click={() => toggleSort('isin')}
 									>
 										ISIN {sortIcon('isin')}
@@ -472,24 +472,24 @@
 										Schedule Value {sortIcon('schedule_value')}
 									</th>
 									<th
-										class="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-700 dark:hover:text-gray-200 select-none"
+										class="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-700 dark:hover:text-gray-200 select-none whitespace-nowrap"
 										on:click={() => toggleSort('variance')}
 									>
 										Variance {sortIcon('variance')}
 									</th>
 									<th
-										class="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-700 dark:hover:text-gray-200 select-none"
+										class="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-700 dark:hover:text-gray-200 select-none whitespace-nowrap"
 										on:click={() => toggleSort('variance_pct')}
 									>
 										Var % {sortIcon('variance_pct')}
 									</th>
 									<th
-										class="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-700 dark:hover:text-gray-200 select-none"
+										class="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-700 dark:hover:text-gray-200 select-none whitespace-nowrap"
 										on:click={() => toggleSort('status')}
 									>
 										Status {sortIcon('status')}
 									</th>
-									<th class="px-4 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+									<th class="px-4 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 whitespace-nowrap">
 										Action
 									</th>
 								</tr>

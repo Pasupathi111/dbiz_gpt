@@ -536,7 +536,7 @@
 						</div>
 					{:else}
 						<div class="overflow-x-auto">
-							<table class="w-full text-sm">
+							<table class="min-w-full text-sm">
 								<thead>
 									<tr class="border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
 										<th class="text-left px-6 py-3 text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 whitespace-nowrap">Document Type</th>

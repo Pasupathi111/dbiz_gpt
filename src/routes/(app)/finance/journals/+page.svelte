@@ -198,15 +198,15 @@
 
 								<!-- Journal Lines Table -->
 								<div class="overflow-x-auto">
-								<table class="w-full text-sm">
+								<table class="min-w-full text-sm">
 									<thead>
 										<tr class="border-b border-gray-100 dark:border-gray-800">
-											<th class="text-left py-2 text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">#</th>
-											<th class="text-left py-2 text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">Account</th>
-											<th class="text-left py-2 text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">Description</th>
-											<th class="text-right py-2 text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">Debit</th>
-											<th class="text-right py-2 text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">Credit</th>
-											<th class="text-left py-2 text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">Bond</th>
+											<th class="text-left py-2 text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 whitespace-nowrap">#</th>
+											<th class="text-left py-2 text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 whitespace-nowrap">Account</th>
+											<th class="text-left py-2 text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 whitespace-nowrap">Description</th>
+											<th class="text-right py-2 text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 whitespace-nowrap">Debit</th>
+											<th class="text-right py-2 text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 whitespace-nowrap">Credit</th>
+											<th class="text-left py-2 text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 whitespace-nowrap">Bond</th>
 										</tr>
 									</thead>
 									<tbody>
