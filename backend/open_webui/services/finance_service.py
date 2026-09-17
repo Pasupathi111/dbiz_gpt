@@ -768,6 +768,38 @@ async def run_reconciliation(user_id: str, period_id: str) -> dict:
     for item_form in items_to_insert:
         await ReconciliationItems.insert(item_form)
 
+    # Auto-promote reconciliation breaks into tracked exceptions so the
+    # Exception Management queue reflects what reconciliation actually found,
+    # instead of requiring a separate manual step that nothing ever triggers.
+    for item_form in items_to_insert:
+        if item_form.status == "MISSING_SOURCE":
+            await FinanceExceptions.insert(FinanceExceptionForm(
+                reporting_period_id=period_id,
+                category="DATA_MISSING",
+                severity="MEDIUM",
+                bond_id=item_form.bond_id,
+                description=(
+                    f"Bond {item_form.isin or item_form.bond_id} is missing from one of the "
+                    f"UBS/LGI sources for this period ({item_form.reason})."
+                ),
+                source_reference=run.id,
+            ))
+        elif item_form.status == "VARIANCE":
+            variance_pct = abs(item_form.variance_percentage or 0.0)
+            severity = "HIGH" if variance_pct >= 10 else "MEDIUM" if variance_pct >= 2 else "LOW"
+            await FinanceExceptions.insert(FinanceExceptionForm(
+                reporting_period_id=period_id,
+                category="RECONCILIATION_DIFF",
+                severity=severity,
+                bond_id=item_form.bond_id,
+                description=(
+                    f"Bond {item_form.isin or item_form.bond_id} market value differs between "
+                    f"UBS ({item_form.ubs_value:,.2f}) and LGI ({item_form.lgi_value:,.2f}) "
+                    f"by {item_form.variance_amount:,.2f} ({variance_pct:.1f}%)."
+                ),
+                source_reference=run.id,
+            ))
+
     duplicates = 0
     total_for_rate = max(matched + variances + missing, 1)
     match_rate = round(matched / total_for_rate * 100.0, 1)
@@ -954,6 +986,16 @@ async def analyze_movements(user_id: str, period_id: str) -> dict:
             mv = await BondMovements.insert(form)
             if mv:
                 created_movements.append(_to_dict(mv))
+
+    if created_movements:
+        # Surface the batch in the Review & Approval queue instead of leaving
+        # movement analysis as a dead-end write with nothing to approve.
+        await submit_for_review(user_id, {
+            "output_type": "movement",
+            "output_id": period_id,
+            "period_id": period_id,
+            "title": f"{len(created_movements)} bond movement(s) for review",
+        })
 
     return {
         "task_id": _new_id(),
@@ -1694,7 +1736,7 @@ async def approve_commentary(user_id: str, commentary_id: str, user: Any = None)
 async def submit_for_review(user_id: str, data: dict) -> dict:
     """Create a FINANCE_APPROVAL row with action=SUBMITTED as canonical record of review queue."""
     object_type_map = {"journal": "JOURNAL", "commentary": "COMMENTARY", "schedule": "SCHEDULE",
-                       "audit_schedule": "AUDIT_SCHEDULE", "period": "PERIOD"}
+                       "audit_schedule": "AUDIT_SCHEDULE", "period": "PERIOD", "movement": "MOVEMENT"}
     object_type = object_type_map.get((data.get("output_type") or "").lower(), data.get("output_type", "UNKNOWN").upper())
 
     existing_period = None
@@ -1988,9 +2030,9 @@ async def analyze_reconciliation_exceptions(user_id: str, period_id: str) -> dic
     if not exceptions:
         summary_text = (
             "No reconciliation exceptions are recorded for this period. "
-            "Note: exceptions are currently only created via manual review — "
-            "reconciliation variances are tracked separately and are not yet "
-            "auto-promoted into exceptions."
+            "Exceptions are auto-detected when reconciliation is run — "
+            "run reconciliation for this period to check for data mismatches "
+            "or missing sources."
         )
     else:
         parts = [f"{open_count} open exception(s) out of {len(exceptions)} total."]

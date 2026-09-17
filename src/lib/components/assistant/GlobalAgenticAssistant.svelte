@@ -406,7 +406,7 @@
 			<textarea
 				bind:value={inputValue}
 				on:keydown={handleKeydown}
-				placeholder="Ask the AI Bond Copilot anything..."
+				placeholder="Ask the AI SCS Copilot anything..."
 				rows="1"
 				class="flex-1 resize-none text-sm border border-gray-200 dark:border-gray-700 rounded-xl px-3.5 py-2.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-colors"
 			></textarea>

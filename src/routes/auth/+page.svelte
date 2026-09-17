@@ -44,6 +44,33 @@
 
 	let submitting = false;
 
+	// Email-based default landing pages, applied after login when no explicit
+	// `?redirect=` deep link is present.
+	const FINANCE_LANDING_EMAILS = ['pasupathi.shanmugam@dbizsolution.com'];
+	const CONSULT_LANDING_EMAILS = [
+		'naveen.pattathil@dbizsolution.com',
+		'chandrukhasan.ramachandran@dbizsolution.com',
+		'durga.prasad@dbizsolution.com'
+	];
+
+	const getDefaultLandingPath = (userEmail?: string | null): string | null => {
+		if (!userEmail) {
+			return null;
+		}
+
+		const normalizedEmail = userEmail.toLowerCase();
+
+		if (FINANCE_LANDING_EMAILS.includes(normalizedEmail)) {
+			return '/finance';
+		}
+
+		if (CONSULT_LANDING_EMAILS.includes(normalizedEmail)) {
+			return '/consult';
+		}
+
+		return null;
+	};
+
 	const setSessionUser = async (sessionUser, redirectPath: string | null = null) => {
 		if (sessionUser) {
 			console.log(sessionUser);
@@ -62,7 +89,10 @@
 			}
 
 			if (!redirectPath) {
-				redirectPath = $page.url.searchParams.get('redirect') || '/';
+				redirectPath =
+					$page.url.searchParams.get('redirect') ||
+					getDefaultLandingPath(sessionUser.email) ||
+					'/';
 			}
 
 			goto(redirectPath);
@@ -158,7 +188,7 @@
 		const logout = $page.url.searchParams.get('state') === 'logout';
 
 		if ($user && !logout) {
-			goto(redirectPath || '/');
+			goto(redirectPath || getDefaultLandingPath($user.email) || '/');
 		} else {
 			if (redirectPath) {
 				localStorage.setItem('redirectPath', redirectPath);
