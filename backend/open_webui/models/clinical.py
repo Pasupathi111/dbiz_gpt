@@ -27,9 +27,9 @@ log = logging.getLogger(__name__)
 CLINICAL_DEPARTMENT_UNKNOWN = 'Unknown'
 
 CLINICAL_IDENTITIES: dict[str, dict[str, str]] = {
-    'cardiology@dbiz.local': {'name': 'Dr. Chandru', 'department': 'Cardiology'},
-    'neurology@dbiz.local': {'name': 'Dr. Naveen', 'department': 'Neurology'},
-    'surgery@dbiz.local': {'name': 'Dr. Pasupathi', 'department': 'General Surgery'},
+    'chandru@northvale.health': {'name': 'Dr. Chandru', 'department': 'Cardiology'},
+    'naveen@northvale.health': {'name': 'Dr. Naveen', 'department': 'Neurology'},
+    'valen@northvale.health': {'name': 'Dr. Valen', 'department': 'General Surgery'},
 }
 
 

@@ -7,9 +7,9 @@ export interface Specialist {
 export const DEPARTMENTS = ['Cardiology', 'Neurology', 'General Surgery'] as const;
 
 export const SPECIALISTS: Specialist[] = [
-	{ email: 'cardiology@dbiz.local', name: 'Dr. Chandru', department: 'Cardiology' },
-	{ email: 'neurology@dbiz.local', name: 'Dr. Naveen', department: 'Neurology' },
-	{ email: 'surgery@dbiz.local', name: 'Dr. Pasupathi', department: 'General Surgery' }
+	{ email: 'chandru@northvale.health', name: 'Dr. Chandru', department: 'Cardiology' },
+	{ email: 'naveen@northvale.health', name: 'Dr. Naveen', department: 'Neurology' },
+	{ email: 'valen@northvale.health', name: 'Dr. Valen', department: 'General Surgery' }
 ];
 
 export const getSpecialistByEmail = (email?: string): Specialist | undefined =>
