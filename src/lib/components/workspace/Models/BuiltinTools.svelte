@@ -17,6 +17,10 @@
 			label: $i18n.t('Ask User'),
 			description: $i18n.t('Pause a response to ask the user a clarifying question')
 		},
+		agentic_forms: {
+			label: $i18n.t('Agentic Forms'),
+			description: $i18n.t('Show a dynamic form for structured actions like creating a job or scheduling an interview')
+		},
 		memory: {
 			label: $i18n.t('Memory'),
 			description: $i18n.t('Search and manage user memories')

@@ -177,6 +177,8 @@ export const getModels = async (
 		models = Object.values(modelsMap);
 	}
 
+	models = models.filter((m: any) => m?.owned_by !== 'ollama');
+
 	return models;
 };
 
