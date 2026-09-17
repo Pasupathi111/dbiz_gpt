@@ -197,11 +197,11 @@
 				<!-- Table -->
 				<div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
 					<div class="overflow-x-auto">
-						<table class="w-full text-sm">
+						<table class="min-w-full text-sm">
 							<thead>
 								<tr class="border-b border-gray-100 dark:border-gray-800">
 									{#each ['Bond ID', 'ISIN', 'Issuer', 'CCY', 'Face Value', 'Market Value', 'Coupon', 'Maturity', 'Status', 'Source', 'Confidence', 'Validated'] as h, i}
-										<th class="{i >= 4 && i <= 5 ? 'text-right' : i >= 6 ? 'text-center' : 'text-left'} px-4 py-3 text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">{h}</th>
+										<th class="{i >= 4 && i <= 5 ? 'text-right' : i >= 6 ? 'text-center' : 'text-left'} px-4 py-3 text-[10px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 whitespace-nowrap">{h}</th>
 									{/each}
 								</tr>
 							</thead>

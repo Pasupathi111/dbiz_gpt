@@ -178,7 +178,7 @@
 				<!-- Table -->
 				<div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
 					<div class="overflow-x-auto">
-						<table class="w-full text-sm">
+						<table class="min-w-full text-sm">
 							<thead>
 								<tr class="border-b border-gray-100 dark:border-gray-800">
 									{#each ['Bond ID', 'Opening', 'Purchases', 'Sales', 'Maturities', 'Transfers', 'Interest', 'FV Changes', 'Closing', 'Status'] as h}
