@@ -110,6 +110,8 @@
 				return { label: 'Processing', classes: 'bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400', icon: 'spinner' };
 			case 'PROCESSED':
 				return { label: 'Processed', classes: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400', icon: '' };
+			case 'EXTRACTED':
+				return { label: 'Extracted', classes: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400', icon: '' };
 			case 'WARNING':
 				return { label: 'Warning', classes: 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400', icon: '' };
 			case 'FAILED':
@@ -587,8 +589,8 @@
 											<!-- Size -->
 											<td class="px-6 py-3.5 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">{formatFileSize(doc.file_size)}</td>
 											<!-- Status -->
-											<td class="px-6 py-3.5">
-												<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium {statusBadge.classes}">
+											<td class="px-6 py-3.5 whitespace-nowrap">
+												<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium whitespace-nowrap {statusBadge.classes}">
 													{#if statusBadge.icon === 'spinner'}
 														<Spinner className="size-3" />
 													{:else if statusBadge.icon === 'check'}
