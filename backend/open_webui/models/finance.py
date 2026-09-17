@@ -6,9 +6,10 @@ import logging
 import time
 import uuid
 
-from open_webui.internal.db import Base, JSONField, get_async_db_context
+from open_webui.internal.db import Base, get_async_db_context
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy import (
+    JSON,
     BigInteger,
     Boolean,
     Column,
@@ -172,7 +173,7 @@ class FinanceDocument(Base):
     mime_type = Column(String)
     status = Column(String, index=True)  # UPLOADED, QUEUED, PROCESSING, EXTRACTED, VALIDATED, FAILED
     validation_status = Column(String, nullable=True)  # VALID, WARNING, ERROR
-    validation_messages = Column(JSONField, nullable=True)
+    validation_messages = Column(JSON, nullable=True)
     uploaded_by = Column(String)
     processed_at = Column(BigInteger, nullable=True)
     created_at = Column(BigInteger, index=True)
@@ -311,7 +312,7 @@ class ExtractionJob(Base):
     status = Column(String, index=True)  # QUEUED, RUNNING, COMPLETED, FAILED
     extraction_type = Column(String)  # EXCEL, PDF
     records_extracted = Column(Integer, default=0)
-    errors = Column(JSONField, nullable=True)
+    errors = Column(JSON, nullable=True)
     started_at = Column(BigInteger, nullable=True)
     completed_at = Column(BigInteger, nullable=True)
     created_at = Column(BigInteger, index=True)
@@ -654,11 +655,11 @@ class BondSourceRecord(Base):
     bond_record_id = Column(String, index=True)
     document_id = Column(String, index=True)
     source_type = Column(String)  # UBS, LGI, PREVIOUS_SCHEDULE
-    raw_data = Column(JSONField)
+    raw_data = Column(JSON)
     sheet_name = Column(String, nullable=True)
     row_number = Column(Integer, nullable=True)
     page_number = Column(Integer, nullable=True)
-    cell_references = Column(JSONField, nullable=True)
+    cell_references = Column(JSON, nullable=True)
     extraction_confidence = Column(Float, nullable=True)
     created_at = Column(BigInteger, index=True)
 
@@ -1327,7 +1328,7 @@ class BondScheduleLine(Base):
     variance = Column(Float, nullable=True)
     source_document_id = Column(String, nullable=True)
     validation_status = Column(String, nullable=True)  # VALID, WARNING, ERROR
-    validation_messages = Column(JSONField, nullable=True)
+    validation_messages = Column(JSON, nullable=True)
     created_at = Column(BigInteger, index=True)
     updated_at = Column(BigInteger)
 
@@ -1771,7 +1772,7 @@ class AuditScheduleEntry(Base):
     interest = Column(Float, nullable=True)
     fair_value_changes = Column(Float, nullable=True)
     closing_balance = Column(Float, nullable=True)
-    source_references = Column(JSONField, nullable=True)
+    source_references = Column(JSON, nullable=True)
     reconciliation_status = Column(String, nullable=True)
     created_at = Column(BigInteger, index=True)
     updated_at = Column(BigInteger)
@@ -2407,8 +2408,8 @@ class FinanceAuditLog(Base):
     action = Column(String, index=True)  # DOCUMENT_UPLOADED, DOCUMENT_PROCESSED, DATA_EXTRACTED, DATA_EDITED, RECONCILIATION_EXECUTED, etc.
     object_type = Column(String, nullable=True)
     object_id = Column(String, nullable=True)
-    previous_value = Column(JSONField, nullable=True)
-    new_value = Column(JSONField, nullable=True)
+    previous_value = Column(JSON, nullable=True)
+    new_value = Column(JSON, nullable=True)
     source = Column(String, nullable=True)
     ip_address = Column(String, nullable=True)
     details = Column(Text, nullable=True)

@@ -172,6 +172,12 @@
 	let askUserAllowOther = true;
 	let askUserTimeoutMs: number | null = null;
 
+	let showAgenticForm = false;
+	let agenticFormTitle = '';
+	let agenticFormSubmitLabel = '';
+	let agenticFormSchema: any = { properties: {} };
+	let agenticFormPrefill: Record<string, any> = {};
+
 	let selectedModels = [''];
 	let atSelectedModel: Model | undefined;
 	let selectedModelIds = [];
@@ -618,6 +624,22 @@
 		onCancel: () => {
 			showAskUserDialog = false;
 			eventCallback({ status: 'cancelled', answers: {} });
+		}
+	};
+
+	$: socketAgenticFormPrompt = {
+		show: showAgenticForm,
+		title: agenticFormTitle,
+		submitLabel: agenticFormSubmitLabel,
+		schema: agenticFormSchema,
+		prefill: agenticFormPrefill,
+		onConfirm: (formValues: Record<string, any>) => {
+			showAgenticForm = false;
+			eventCallback({ status: 'submitted', values: formValues });
+		},
+		onCancel: () => {
+			showAgenticForm = false;
+			eventCallback({ status: 'cancelled' });
 		}
 	};
 
@@ -1384,6 +1406,13 @@
 					askUserTimeoutMs =
 						typeof data?.timeout_ms === 'number' && data.timeout_ms > 0 ? data.timeout_ms : null;
 					showAskUserDialog = true;
+				} else if (type === 'agentic_form') {
+					eventCallback = cb;
+					agenticFormTitle = data?.title ?? '';
+					agenticFormSubmitLabel = data?.submitLabel ?? '';
+					agenticFormSchema = data?.schema ?? { properties: {} };
+					agenticFormPrefill = data?.prefill ?? {};
+					showAgenticForm = true;
 				} else if (type.startsWith('terminal:')) {
 					terminalEventHandler(type, data);
 				} else {
@@ -4459,6 +4488,7 @@
 										messageQueue={$chatRequestQueues[$chatId] ?? []}
 										{chatTasks}
 										askUser={savedAskUserPrompt ?? socketAskUserPrompt}
+										agenticForm={socketAgenticFormPrompt}
 										onQueueSendNow={sendQueuedMessageNow}
 										onQueueEdit={editQueuedMessage}
 										onQueueDelete={deleteQueuedMessage}
@@ -4551,6 +4581,7 @@
 										messageQueue={$chatRequestQueues[$chatId] ?? []}
 										{chatTasks}
 										askUser={savedAskUserPrompt ?? socketAskUserPrompt}
+										agenticForm={socketAgenticFormPrompt}
 										onQueueSendNow={sendQueuedMessageNow}
 										onQueueEdit={editQueuedMessage}
 										onQueueDelete={deleteQueuedMessage}
@@ -4602,6 +4633,7 @@
 									{onUpdate}
 									messageQueue={$chatRequestQueues[$chatId] ?? []}
 									askUser={savedAskUserPrompt ?? socketAskUserPrompt}
+									agenticForm={socketAgenticFormPrompt}
 									onQueueSendNow={sendQueuedMessageNow}
 									onQueueEdit={editQueuedMessage}
 									onQueueDelete={deleteQueuedMessage}

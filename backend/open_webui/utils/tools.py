@@ -50,6 +50,7 @@ from open_webui.tools.builtin import (
     calculate_timestamp,
     create_automation,
     create_calendar_event,
+    create_job,
     create_tasks,
     delegate_task,
     delete_automation,
@@ -76,6 +77,7 @@ from open_webui.tools.builtin import (
     read_memory_path,
     replace_memory_content,
     replace_note_content,
+    schedule_interview,
     search_calendar_events,
     search_channel_messages,
     search_channels,
@@ -593,6 +595,9 @@ async def get_builtin_tools(
 
     if is_builtin_tool_enabled('user_input', True):
         builtin_functions.append(ask_user)
+
+    if is_builtin_tool_enabled('agentic_forms', True):
+        builtin_functions.extend([create_job, schedule_interview])
 
     metadata = extra_params.get('__metadata__') or {}
     chat_files = metadata.get('files') or extra_params.get('__files__') or []

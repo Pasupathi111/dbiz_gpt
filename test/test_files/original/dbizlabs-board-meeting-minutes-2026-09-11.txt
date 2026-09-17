@@ -1,0 +1,1050 @@
+================================================================================
+                    DBIZLABS PRIVATE LIMITED
+              MEETING OF THE BOARD OF DIRECTORS
+             MINUTES OF THE 48TH REGULAR BOARD MEETING
+
+Date:        FRIDAY, 11 SEPTEMBER 2026
+Time:        09:00 HOURS SINGAPORE TIME (GMT +08:00)
+Venue:       GREAT ROOM, LEVEL 22, MARINA ONE WEST TOWER
+             10 MARINA BOULEVARD, SINGAPORE 018961
+Secretary:   MS. SANGEETHA MURALI, COMPANY SECRETARY
+================================================================================
+
+PRESENT AND IN ATTENDANCE:
+
+MEMBERS OF THE BOARD OF DIRECTORS (Voting Members, Quorum):
+  1. Dr. Lingeswaran Arunasalam     Chairman of the Board (Independent Director)    Chair
+  2. Mr. Siva Pasupathi             Chief Executive Officer & Executive Director    Present In-Person
+  3. Ms. Amala Appathurai           Chief Technology Officer & Executive Director   Present In-Person
+  4. Ms. Karthiga Rajoo             Chief Financial Officer & Executive Director    Present In-Person
+  5. Ms. Divya Muthu                Chief Operating Officer & Executive Director    Present In-Person
+  6. Ms. Narmadha Sivakumar         Chief Product Officer & Executive Director      Present In-Person
+  7. Ms. Nandhini Sivakumar         Independent Director                             Present In-Person
+
+OBSERVERS IN ATTENDANCE (Non-Voting, Invited):
+  - Mr. Santhana Krishnan          Head of Legal & Data Protection Officer          Present In-Person
+  - Ms. Priya Venkatesh            Head of Internal Audit & Risk Compliance         Present In-Person
+
+IN ATTENDANCE BY INVITATION FOR SPECIFIC AGENDA ITEMS:
+  - (Not applicable for this meeting; all observers present throughout)
+
+SECRETARY:
+  - Ms. Sangeetha Murali            Company Secretary, Rajah & Tann LLP              Present In-Person
+
+APOLOGIES FOR ABSENCE:
+  - Nil. All seven Directors confirmed attendance.
+
+QUORUM: 7 out of 7 Directors are present. QUORUM IS DULY CONSTITUTED (quorum
+required = majority of Directors, minimum 4 per Article 63 of the Company's
+Constitution).
+
+================================================================================
+AGENDA AND TIMELINE
+================================================================================
+
+Time        Item                                                        Presenter
+09:00–09:03 1. Call to Order, Quorum Confirmation, and Approval of
+            Meeting Agenda                                              Chairman
+09:03–09:10 2. Approval of Minutes of Previous Board Meeting dated
+            12 June 2026 and Status of Outstanding Action Items         Secretary
+09:10–09:35 3. Chief Executive Officer: Strategic Update and Q3
+            FY2026 Business Performance Review                         CEO
+09:35–09:55 4. Chief Financial Officer: Q3 FY2026 Financial Report,
+            Cash and Liquidity Position, Audit & Tax Matters           CFO
+09:55–10:20 5. Chief Technology Officer: R&D Update, AI Platform
+            Roadmap, SOC 2 and Data Residency Programme                CTO
+10:20–10:40 6. Chief Product Officer: Product KPIs, NPS Results,
+            Customer Wins and Roadmap Review                           CPO
+10:40–10:55 7. Chief Operating Officer: People & Organisation Update,
+            Attrition, D&I Metrics, Hiring Progress                    COO
+10:55–11:15 8. Head of Internal Audit & Risk: Risk & Compliance
+            Update — AI Governance Act, DP Audit, Cyber Drill, FX      Head of IA
+11:15–11:25 9. Any Other Business (AOB)                                All Directors
+11:25–11:27 10. Confirmation of Date of Next Board Meeting             Chairman
+11:27–11:28 11. Adjournment                                            Chairman
+
+================================================================================
+ITEM 1: CALL TO ORDER, QUORUM AND AGENDA APPROVAL (09:00–09:03)
+================================================================================
+
+The Chairman, Dr. Lingeswaran Arunasalam, called the 48th Regular Meeting of
+the Board of Directors of DBizLabs Private Limited to order at 09:00 hours
+SGT on Friday, 11 September 2026 in the Great Room, Level 22, Marina One
+West Tower.
+
+The Chairman welcomed all Directors, the invited observers, and the
+Company Secretary. He noted that this was the first Board meeting since the
+successful close of Q3 FY2026, which had been an exceptionally strong
+quarter across all metrics, and thanked the Executive team and every
+DBizLabs employee for delivering the results.
+
+Quorum: The Secretary confirmed that seven (7) out of seven (7) Directors
+were in attendance, exceeding the quorum of four (4) Directors required by
+the Company Constitution. The quorum was declared by the Chairman as duly
+constituted and valid.
+
+The Chairman proposed the circulated meeting agenda for formal approval by
+the Board.
+
+UNANIMOUS BOARD RESOLUTION B-48-01:
+  RESOLVED THAT the agenda for the 48th Regular Board Meeting, circulated
+  under cover of the Secretary's memorandum dated 28 August 2026, be and is
+  hereby approved, with no additions, amendments, or deletions.
+
+Voting on Resolution B-48-01: 7 in favour, 0 against, 0 abstentions.
+CARRIED UNANIMOUSLY.
+
+Conflict of Interest Declarations: The Chairman asked all Directors to
+declare any direct or indirect interest in any of the business to be
+transacted at this meeting. After a short pause, the following declarations
+were noted and recorded in the Register of Directors' Interests maintained
+by the Secretary:
+  - Dr. Lingeswaran Arunasalam declared a non-material indirect interest
+    in Item 9 (Temasek Holdings meeting) in his capacity as an external
+    advisor to a Temasek portfolio company in the medtech space; confirmed
+    that the interest was sufficiently remote that he would not recuse
+    himself from discussion or voting.
+  - Ms. Nandhini Sivakumar declared that her sister is an employee of
+    KPMG Singapore; the KPMG audit rotation matter was noted under Item 4
+    and she confirmed she would recuse herself from voting on Resolution
+    B-48-05 (auditor appointment) to avoid appearance of conflict.
+
+All other Directors declared no interest in any item of business.
+
+================================================================================
+ITEM 2: APPROVAL OF MINUTES OF PREVIOUS MEETING AND ACTION ITEM STATUS
+(09:03–09:10)
+================================================================================
+
+The Secretary, Ms. Sangeetha Murali, tabled the draft Minutes of the 47th
+Regular Board Meeting held on Thursday, 12 June 2026, which had previously
+been circulated to all Directors under cover of the Board Pack (Tab B).
+
+Directors were asked to raise any corrections, amendments, or queries.
+Director Narmadha Sivakumar noted that Action Item 47-07 (Product roadmap
+prioritisation workshop with Engineering) had been incorrectly recorded as
+led by the CTO; she clarified that the workshop had been co-chaired by
+herself (CPO) and the CTO. The correction was accepted by the Secretary.
+No other amendments were proposed.
+
+UNANIMOUS BOARD RESOLUTION B-48-02:
+  RESOLVED THAT the Minutes of the 47th Regular Board Meeting dated 12 June
+  2026, as amended with the correction to Action Item 47-07 ownership, be
+  and are hereby approved as a true and correct record of the proceedings
+  at that meeting, and the Chairman is hereby authorised to sign the final
+  Minutes accordingly.
+
+Voting: 7 in favour, 0 against, 0 abstentions. CARRIED UNANIMOUSLY (7-0).
+
+Status of Action Items from the 12 June 2026 Meeting (Tab B, Annex 1):
+
+The Secretary tabled the status of the 11 outstanding action items from the
+previous meeting. Summary status:
+
+  47-01   CFO   Finalise Series B investment agreement documentation.
+                CLOSED 3 Jul 2026. All documents executed; funds drawn.
+  47-02   CTO   Complete Playwright web-loader beta rollout across all
+                ingestion pipelines.
+                CLOSED 23 Aug 2026. Rollout completed 100%.
+  47-03   CEO   Sign non-binding term sheet with Meiji Japan joint
+                venture counterparty.
+                CLOSED 3 Sep 2026. Term sheet signed 3 September.
+  47-04   CPO   Launch G2 Crowd Q3 submission for all three product lines.
+                CLOSED 15 Aug 2026. Submitted. Leader results received.
+  47-05   CFO   Establish S$50 million commercial paper shelf programme
+                with DBS, OCBC, UOB.
+                CLOSED 29 Jul 2026. Shelf fully executed, undrawn.
+  47-06   COO   Complete FY2026 Q2 attrition root-cause analysis report.
+                CLOSED 22 Jul 2026. Report distributed to RemCo on 23 Jul.
+  47-07   CPO/  Conduct product roadmap prioritisation workshop with
+        CTO     Engineering and Sales leadership.
+                CLOSED 8 Aug 2026. Output: Q4 roadmap finalised and
+                published internally 11 Aug 2026.
+  47-08   LEGAL Submit R&D tax incentive claim for FY2025 basis period to
+                IRAS.
+                IN PROGRESS. Deadline 30 Sep 2026. 95% complete. Final
+                QC review with EY advisor scheduled for 24 Sep 2026.
+                Owner confirms on track.
+  47-09   IA    Conduct SG AI Governance Act gap analysis and initial
+                impact assessment.
+                IN PROGRESS. Phase 1 report tabled under Item 8 today.
+                Phase 2 remediation plan target: 31 Oct 2026.
+  47-10   CTO   Kick-off SOC 2 Type II readiness project with Schellman
+                assessors.
+                IN PROGRESS. Kick-off meeting confirmed 14 Oct 2026.
+                Pre-readiness questionnaire 80% complete.
+  47-11   CEO   Initiate FY2027 budget and long-range planning process.
+                ON TRACK. Kick-off memo distributed to ELT 1 Sep 2026.
+                First budget reviews: 25 Sep and 2 Oct 2026.
+
+Summary: 8 of 11 action items from 12 June 2026 meeting are CLOSED. The 3
+remaining items are ON TRACK and within their respective deadlines. No
+action items are at risk or overdue. The Board expressed satisfaction with
+the close-out rate.
+
+================================================================================
+ITEM 3: CHIEF EXECUTIVE OFFICER STRATEGIC UPDATE (09:10–09:35)
+================================================================================
+
+Mr. Siva Pasupathi, Chief Executive Officer, delivered the strategic
+update, referencing Board Pack Tab C (CEO Q3 FY2026 Strategy Deck, 38
+slides). The full slide deck is appended to the minutes as Annex C and
+maintained with the Company's statutory records.
+
+3.1 Q3 FY2026 Performance Headlines
+The CEO began by reiterating the headline Q3 performance. Total revenue for
+the quarter ended 30 September 2026 was S$18.42 million, representing
+28.6% year-over-year growth, exceeding the mid-point of the Board-approved
+Q3 guidance range of S$17.6–18.6 million. Year-to-date 9M FY2026 revenue
+was S$50.81 million (+26.7% YoY), tracking 102.3% of internal plan.
+
+The CEO noted that all three product lines had delivered or exceeded
+targets: Meiji MES at 103% of quarterly quota, Bond Copilot at 112%, and
+Hirethm at 105%. Net new ARR of S$6.34 million was the second highest in
+the company's history, behind only Q4 FY2025's record S$7.08 million.
+
+3.2 Meiji Japan Joint Venture — Term Sheet Signed
+The CEO highlighted that the Meiji Japan joint venture non-binding term
+sheet was signed on 3 September 2026, closing out Action Item 47-03.
+Under the proposed terms (Tab C, Slide 16), DBizLabs will contribute
+intellectual property license to the Meiji MES platform and its local
+Japan go-to-market team, while Meiji Seika Kaisha (the counterparty) will
+contribute manufacturing domain expertise, existing customer relationships
+across the Meiji group of companies, and a 60/40 equity split favouring
+DBizLabs at 60%. The JV will be domiciled in Tokyo with a JPY 500 million
+initial capitalisation.
+
+Key next steps outlined:
+  - Definitive agreements drafting (led by Santhana Krishnan, with
+    Nishimura & Asahi as Japanese counsel) — target execution 30 Nov 2026
+  - JV Board composition: 3 DBizLabs nominees + 2 Meiji nominees, with
+    Dr. Lingeswaran Arunasalam proposed as non-executive Chairman of JV
+  - Commercial go-live of JV operations: 1 February 2027 (FY2027 Q3)
+
+The CEO noted that the JV was expected to contribute approximately S$2.0–
+2.5 million of consolidated revenue in FY2027, growing to S$8–10 million
+run-rate by FY2028. This was, however, NOT included in the current Q4
+FY2026 guidance; guidance conservatively assumed no JV contribution.
+
+Independent Director Nandhini Sivakumar asked whether any competing
+industrial MES AI vendors were actively pursuing the Japan market with
+local partners. CEO confirmed that two US-based competitors had announced
+distributor partnerships but not a full equity JV; the DBizLabs–Meiji
+structure was unique in depth of domain integration and commitment of
+manufacturing data.
+
+3.3 Bond Copilot Enterprise Momentum
+Bond Copilot closed Q3 with 8 identifiable enterprise logos with >S$500k
+ACV, including three global tier-1 banks headquartered in Singapore,
+London, and New York. The CEO highlighted the 18 September 2026 go-live
+of a Fortune 500 US pension fund (ACV S$1.96 million) as a notable win,
+with the customer having replaced a competing generative-AI solution from
+Microsoft after a 6-month side-by-side bake-off. The key differentiators
+cited by the customer in their post-win debrief were: Bond Copilot's
+citation-grounded answers (faithfulness >92%), the depth of fixed-income
+domain-specific RAG training data, and the maturity of the Audit &
+Compliance Pack.
+
+3.4 Hirethm Public Sector RFP Pipeline
+The CEO reported three Hirethm public sector RFPs currently in the final
+evaluation stage:
+  (1) Singapore Public Service Division (PSD), whole-of-government HR
+      shared services — contract value est. S$4.2 million over 3 years.
+      Hirethm shortlisted (2 of 6 vendors). Final oral presentation:
+      22 September 2026.
+  (2) State Government of Tamil Nadu, Public Service Commission — 2-year
+      implementation + 3 years operations, S$1.74 million ACV referenced
+      in the financial report. Award date: 15 October 2026.
+  (3) Abu Dhabi Department of Health — Healthcare Workforce Management
+      Platform, est. contract value US$3.4 million over 5 years.
+      Shortlisted; technical Q&A response submitted late August.
+
+3.5 FY2027 Targets — 25% Growth
+Finally, the CEO previewed the initial FY2027 targets that would be
+further developed in the budget process (Action Item 47-11):
+  - Revenue growth: 25%+ YoY (full year basis)
+  - Gross margin band: 72–74%
+  - Adjusted EBITDA margin: 22–25%
+  - Headcount exit target: 415 FTEs (from 317 at end of Q3 FY2026)
+  - AI-attributed ACV share: 25% of total new ACV
+
+The Chairman thanked the CEO for a comprehensive and encouraging update and
+opened the floor for brief Director questions before moving to the CFO
+report. Dr. Lingeswaran asked specifically about the quality of the Q3
+pipeline going into Q4; CEO confirmed that Q4 pipeline coverage was
+currently running at 3.4x the mid-point of the S$21.2–22.3m guidance,
+which compared favourably to the historical 2.9x coverage at the same
+stage of prior Q4s.
+
+================================================================================
+ITEM 4: CHIEF FINANCIAL OFFICER REPORT (09:35–09:55)
+================================================================================
+
+Ms. Karthiga Rajoo, Chief Financial Officer, presented the Q3 FY2026
+Financial Report (Tab D, 44 pages), Income Statement, Balance Sheet, Cash
+Flow Statement, and supporting schedules. The audited Q3 figures and
+detailed analysis were also published on 10 October 2026 in the
+shareholder Q3 Financial Report (File 1 of this document set).
+
+4.1 EBITDA and Profitability
+CFO reported EBITDA of S$3.81 million (20.7% margin) versus S$2.52 million
+in Q3 FY2025, a 51.2% YoY increase in absolute EBITDA. This significantly
+exceeded the Board-approved internal plan for the quarter (EBITDA target
+S$3.40 million, 18.5% margin). She credited:
+  - The 180 basis point gross margin expansion to 71.4%
+  - OpEx discipline with opex growing 25.2% vs. revenue growing 28.6%
+  - S$0.34 million of government R&D grants recognised during the quarter
+    under the SG Tech@DTS scheme
+
+Adjusted EBITDA (adding back one-time JV advisory fees of S$0.18 million
+and a S$0.09 million legal settlement from a Q2 vendor dispute) was S$4.08
+million, or 22.1% of revenue.
+
+4.2 Working Capital and DSO
+Days Sales Outstanding (DSO) stood at 68 days as of 30 September 2026,
+down from 74 days on 30 June 2026 and 79 days on 30 September 2025. The
+CFO attributed the improvement to a dedicated collections task force
+established under the COO in June, and to increasingly favouring
+prepayment terms (0–30 days) for deals in negotiation wherever possible.
+She also noted that 5 of the 5 customers who exceeded S$1m ACV in the
+quarter had prepaid at least 50% of their annual contract value.
+
+Target for Q4 FY2026 was 63–65 days DSO, which would represent a 16-day
+YoY reduction. This would translate into approximately S$1.2–1.5 million
+of additional operating cash flow in Q4 if achieved.
+
+4.3 Cash Position and Series B Runway
+Cash and cash equivalents stood at S$23.6 million on 30 September 2026,
+up from S$19.4 million at the end of Q2 FY2026.
+
+The CFO presented the current "Series B Runway" model (Tab D, Page 39).
+Assuming current burn rates, the S$23.6 million of cash plus undrawn
+S$50.0 million commercial paper shelf implied a total liquidity runway of
+approximately 22 months to 31 July 2028 at the downside case, or 27
+months to 31 December 2028 at the base case (25% revenue growth, 22%
+EBITDA margin FY2027 onwards). The Board noted that the company was well
+capitalised and no further equity fundraising was contemplated in the
+next 18 months, barring unforeseen circumstances.
+
+4.4 FX Hedging — SGD/USD
+The CFO reported that during the quarter the Singapore Dollar had
+strengthened +2.3% against the US Dollar (from 0.729 to 0.746), which was
+a small net positive of approximately S$0.12 million on reported Q3
+revenue. SGD/USD movements were the largest single FX exposure, followed
+by EUR/SGD (S$18k/1%).
+
+Currently 55% of forecast USD receivables on a rolling 6-month horizon are
+hedged via forward contracts, plus S$10 million of option-based collars
+protecting below SGD/USD 0.715 or above 0.765. The CFO proposed a modest
+increase of the hedge ratio from 55% to 60% effective October 2026, given
+the increased USD pipeline in the Americas region. She noted that this
+remained well below the Board's authorised maximum hedge ratio of 80% and
+was purely risk reduction, not directional positioning.
+
+The Board approved, by way of Resolution B-48-03 (taken on a show of
+hands), the increase of the FX hedge ratio to 60%.
+
+4.5 Commercial Paper Shelf Programme
+The CFO confirmed that the S$50.0 million multi-currency commercial paper
+shelf programme (Action Item 47-05) had been successfully established on
+29 July 2026 with DBS Bank, OCBC Bank, and United Overseas Bank acting as
+joint arrangers and dealers. The programme is:
+  - 3-year revolving shelf (maturity 29 Jul 2029)
+  - Tenor of individual CP issues: 1 month to 12 months
+  - Borrowing cost: SORA + 78 to 135 bps depending on tenor, credit tier,
+    and market conditions at issue
+  - Fully undrawn as at 11 September 2026
+  - Covenants: Net gearing < 1.0x, minimum liquidity S$10.0m, interest
+    cover > 5.0x (all comfortably within current levels)
+
+The CFO stated that there were no current plans to draw on the shelf; it
+was maintained as a strategic liquidity buffer.
+
+4.6 Audit Rotation: KPMG → PwC
+As required by the Singapore Companies Act Section 392CA (mandatory audit
+firm rotation after 5 consecutive financial years), the term of the
+current external auditor KPMG LLP will conclude at the end of the current
+financial year ending 30 June 2027 (FY2026).
+
+The CFO, on recommendation of the Audit & Risk Committee (which met on
+21 August 2026 and again on 5 September 2026), proposed the appointment
+of PricewaterhouseCoopers LLP (PwC Singapore) as external auditor for the
+financial year ending 30 June 2027 (FY2027), the year ending 30 June 2028
+(FY2028), and the year ending 30 June 2029 (FY2029), with the 3 terms to
+run consecutively subject to annual reappointment by shareholders at the
+AGM.
+
+The competitive tender process had shortlisted 3 Big-4 firms (Deloitte,
+EY, and PwC). Evaluation criteria and scoring (maximum 100 points):
+  - Technical competence of proposed audit team: 40 points (PwC 37/40)
+  - Industry experience (SaaS, AI, software): 25 points (PwC 23/25)
+  - Proposed fee structure and commercial terms: 20 points (PwC 17/20)
+  - Chemistry with ELT, quality of insights, innovation: 15 points
+    (PwC 14/15)
+  - Total score: PwC 91, Deloitte 84, EY 78.
+
+Estimated FY2027 audit fee: S$485,000 (vs. KPMG FY2026 fee of S$420,000),
+which represents a 15.5% increase, reflecting the larger scale and
+complexity of the audit (subsidiaries in 7 jurisdictions, AI Act
+compliance work, SOC 2 Type II controls integrated audit).
+
+UNANIMOUS BOARD RESOLUTION B-48-04:
+  RESOLVED THAT, pursuant to Section 392CA of the Companies Act 1967, the
+  retirement of KPMG LLP as the external auditors of the Company at the
+  conclusion of the FY2026 audit (30 June 2027) is hereby NOTED, and the
+  Company's Audit & Risk Committee be and is hereby authorised to manage
+  the smooth handover and transition from KPMG to the incoming auditors.
+
+Voting: 7 in favour, 0 against, 0 abstentions. CARRIED 7-0.
+
+BOARD RESOLUTION B-48-05:
+  RESOLVED THAT the Board, on the recommendation of the Audit & Risk
+  Committee, nominates PricewaterhouseCoopers LLP ("PwC Singapore") for
+  appointment as external auditors of DBizLabs Private Limited for the
+  financial years ending 30 June 2027, 30 June 2028, and 30 June 2029,
+  at such remuneration as shall be agreed between PwC and the Audit &
+  Risk Committee, and FURTHER RESOLVED THAT this nomination be put to the
+  shareholders for formal approval at the forthcoming Annual General
+  Meeting to be held on 20 February 2027.
+
+Voting on Resolution B-48-05: Ms. Nandhini Sivakumar recused herself
+(declared interest under Item 1). Of the remaining 6 Directors: 6 in
+favour, 0 against, 0 abstentions. CARRIED UNANIMOUSLY (6-0-1 recusal).
+
+4.7 R&D Tax Claims Submission
+The CFO reported that the FY2025 basis period R&D tax incentive claims
+under IRAS Productivity Solutions Grant (PSG) and the Tech@DTS double
+deduction scheme were currently with external advisor EY for final
+verification and would be submitted to IRAS on 30 September 2026. The
+total value of claims (cash payout plus additional tax deductions) was
+estimated at S$2.84 million, of which S$1.62 million was expected to be
+received as cash refund in Q2 FY2027. Independent Director Nandhini
+Sivakumar requested that the CFO provide the Remuneration Committee with
+a summary of R&D tax claims history vs. actual R&D spend by programme,
+for use as one input in the FY2026 annual bonus calculation, and the CFO
+undertook to provide this by 25 September.
+
+================================================================================
+ITEM 5: CTO AND R&D UPDATE (09:55–10:20)
+================================================================================
+
+Ms. Amala Appathurai, Chief Technology Officer, presented the R&D and
+Technology Platform update (Board Pack Tab E, 46 slides with engineering
+metrics and dashboards).
+
+5.1 DBiz GPT Platform — Ingestion and Vector Stack Update
+The CTO began with the completion of the Playwright web-loader rollout
+(Action Item 47-02, closed 23 Aug). The CTO reported that Playwright
+v1.60 had now replaced the legacy Cheerio + pdf.js based HTML ingestion
+pipeline for all 12 document source types, with a measured improvement of:
+  - 21.4% reduction in document processing time per 1,000 pages (from
+    74 seconds to 58 seconds)
+  - 37% reduction in chunking errors for JavaScript-rendered content
+  - 14.2% improvement in RAG answer faithfulness scores for web-sourced
+    documents in the internal dev QA harness
+
+Environment variable PLAYWRIGHT_WS_URL=ws://playwright:3000 is now the
+standard deployment configuration for all clusters, with 8 Playwright
+worker pods in the primary SG cluster and 4 workers each in EU and US
+standby clusters.
+
+Vector database stack architecture (finalised after 4 months of testing
+against Pinecone, Weaviate, and Qdrant alternatives):
+  - PRIMARY: pgvector running on PostgreSQL 16 with IVFFlat indexes on
+    2048-dimension BGE-M3 embeddings, as part of the primary OLTP
+    database on AWS RDS Aurora Serverless v2 (PostgreSQL-compatible)
+  - FALLBACK / EDGE: Chroma open-source vector store deployed on regional
+    edge Kubernetes clusters, for low-latency EU and US queries
+  - Approximately 200,000 chunks indexed across all tenants as of 11
+    September 2026, growing at approximately 32,000 chunks/month
+  - Hybrid search combining BM25 keyword matching with ANN approximate
+    nearest-neighbour embedding search, weighted 0.35 BM25 / 0.65 ANN on
+    general queries and adaptive weights per-query
+
+5.2 Embeddings, Chunking and Reranking Stack
+  - Embeddings Model: BAAI/bge-m3 (multilingual BGE-M3). This model was
+    selected over alternatives (text-embedding-3-large, Voyage-Law-2,
+    Cohere-embed-multilingual-v3) after a 6-week evaluation on the
+    DBizLabs internal 12-document-type QA golden set. BGE-M3 scored
+    highest on SG English + Tamil + Mandarin multilingual retrieval tasks
+    and on cross-domain retrieval (Bond pricing + manufacturing SOPs).
+    Deployed self-hosted on 2x g5.xlarge instances per region to avoid
+    API-call latency and for data residency compliance.
+
+  - Chunking strategy (now formalised in the internal Chunking Policy
+    version 3.1):
+      * Unstructured.io pre-processing for PDFs, DOCX, XLSX, HTML, MSG,
+        PPTX
+      * Primary strategy: Recursive character chunking with chunk_size =
+        900 tokens, chunk_overlap = 120 tokens.
+      * Secondary (domain-aware): Semantic chunking based on BGE-M3
+        similarity boundary detection, applied only to long-form technical
+        manuals (Meiji MES SOPs) and Bond pricing research notes where
+        structural integrity matters more than uniformity.
+      * CSV and tabular data: Hierarchical table-recognising chunker from
+        the Unstructured.io library, preserving row-group semantics.
+
+  - Reranker: ColBERT-IR v2 (colbert-ir-v2) deployed as the primary
+    reranker in Q4 FY2026, replacing the current interim reranker based
+    on cross-encoder/ms-marco-MiniLM-L-12-v2. Expected to deliver a
+    measured 6–9% improvement in RAG faithfulness on adversarial QA.
+    Currently under load testing; target GA: 1 December 2026.
+
+5.3 RAG Faithfulness and Evaluation Results
+The CTO presented Q3 2026 RAG evaluation results (Tab E, Pages 21–27).
+Across the internal development QA harness of 1,800 golden Q&A pairs
+spanning 12 document types:
+  - RAG faithfulness score (Ragas v0.1.22 "faithfulness" metric): 91.3%
+    (Q2 FY2026: 87.4%, Q1 FY2026: 83.8%)
+  - Answer relevancy: 94.1% (Q2: 90.2%)
+  - Context precision: 92.7% (Q2: 88.4%)
+  - Context recall: 90.8% (Q2: 86.1%)
+  - Hallucination rate (human-checked 5%-subsample): 3.2% of answers
+    contained any material unsupported claim, down from 7.1% in Q2.
+
+CTO emphasised that the 92% faithfulness target referenced in the AI
+Strategy Whitepaper (Item 8, Appendix KPIs) was now within reach for Q4
+FY2026, after the ColBERT v2 reranker and additional BGE-M3 fine-tuning
+on DBizLabs domain data went live.
+
+5.4 MCP (Model Context Protocol) Server Rollout
+The CTO reported that the MCP-based agent tool ecosystem was now in
+active production. 11 MCP servers were live and registered with the
+central MCP registry as at 11 September 2026:
+  1. Jira Cloud (ticket creation, status updates, sprint queries)
+  2. Gmail & Google Workspace Calendar (email search, calendar CRUD)
+  3. Slack Enterprise (post messages, search history, user lookup)
+  4. Finance-ERP (NetSuite; invoice status, AP/AR, budget vs actual)
+  5. Meiji-MES (OEE readings, quality alerts, production schedule feed)
+  6. Hirethm-ATS (candidate search, interview booking, offer approvals)
+  7. Bond-Pricing (yield curve lookups, scenario simulation trigger,
+     bond analytics calculations)
+  8. Calendar v2 (cross-Microsoft 365 + Google unified)
+  9. Google Drive v3 (search Drive items, read/write docs/sheets)
+  10. Notion API (pages, databases, comments)
+  11. Internal Wiki (Confluence DC 8.5 read-only + search)
+
+Each MCP server implements 12–38 tools, bringing the total registered
+tools available to agents to 243 as of the meeting date. Tool-use success
+rate (measured by correct parameter validation and no exception on tool
+call execution) was 88.6% in Q3, target 90% for Q4.
+
+5.5 Agentic Copilot 1.1 — Planning Module
+The CTO reported that Agentic Copilot v1.1, which introduces a dedicated
+planning module combining ReAct prompting with Tree of Thoughts (ToT)
+branch-and-prune exploration for complex multi-step tasks, was currently
+in final QA stage. She shared benchmark results on the 300-task DBizLabs
+internal agent benchmark:
+  - Task completion rate (v1.0 baseline): 68.3%
+  - Task completion rate (v1.1, QA build 58): 79.6% (+11.3 percentage
+    points absolute)
+  - Average end-to-end latency reduction: 15.2% lower than v1.0 on
+    matched tasks
+  - Cost per task (LLM tokens): -4.3% compared to v1.0 (due to better
+    pruning in ToT reducing wasted tokens on dead-end paths)
+
+Director Nandhini Sivakumar asked about guardrails around the ToT module
+to prevent unbounded token consumption. CTO confirmed that per-query
+token budgets and per-agent execution-time budgets were enforced at the
+LangGraph orchestration layer:
+  - "Sensible default" budget: 25,000 input tokens, 12,000 output tokens,
+    5 minutes wall-clock time
+  - "Complex task" budget (triggered by user request and auto-approve
+    threshold): 100,000 input tokens, 50,000 output tokens, 20 minutes
+  - "Executive override" budget: Requires CTO or her deputy to sign a
+    manual budget ticket; no hard upper bound but tracked and billed to
+    the requestor's department for cost transparency.
+
+5.6 Data Residency, SOC 2 Type II, and Multi-Region Deployment
+The CTO outlined the three-region deployment architecture:
+  - PRIMARY CLUSTER: ap-southeast-1 (Singapore). All SG and APAC tenant
+    data exclusively resident here. Production workloads, 14 Kubernetes
+    nodes, RDS Aurora primary.
+  - EU CLUSTER: eu-west-1 (Ireland). EEA tenant data exclusively
+    resident here, activated 14 August 2026. Currently 4 customers on
+    the EU cluster.
+  - US CLUSTER: us-east-1 (North Virginia). US and Americas tenant data
+    exclusively resident. Activated 1 September 2026; 2 customers in
+    migration with go-live dates 2 October and 13 November 2026.
+
+SOC 2 Type II audit readiness: The formal kick-off meeting with Schellman
+(third-party assessor) is scheduled for Tuesday, 14 October 2026 at 09:30
+SGT. Pre-readiness self-assessment questionnaire is 80% complete. The
+Scope of the audit includes all three AWS regions, the DBiz GPT platform,
+Bond Copilot, and Meiji MES SaaS tenant environments (Hirethm to be
+added in a Phase 2 supplementary audit in Q2 FY2027). Expected period of
+audit: 1 October 2026 through 31 March 2027. Final SOC 2 Type II report
+delivery target: mid-May 2027.
+
+================================================================================
+ITEM 6: CHIEF PRODUCT OFFICER — PRODUCT & CUSTOMERS (10:20–10:40)
+================================================================================
+
+Ms. Narmadha Sivakumar, Chief Product Officer, presented the Product and
+Customer KPIs update (Board Pack Tab F, 32 slides including the customer
+win/loss analysis).
+
+6.1 Net Promoter Score (NPS)
+Q3 FY2026 NPS (surveyed 15–30 September 2026, n=218 responses across all
+product lines, 49.7% response rate):
+
+  - Meiji MES:        NPS = 58 (Q2 FY2026 = 52; Q1 FY2026 = 47)
+  - Bond Copilot:     NPS = 52 (Q2 = 48; Q1 = 44)
+  - Hirethm HR SaaS:  NPS = 47 (Q2 = 44; Q1 = 40)
+  - Weighted average: NPS = 53 (Q2 = 48; Q1 = 44)
+
+Industry benchmarks from the Blissfully 2026 SaaS NPS Report:
+  - Enterprise HR SaaS median NPS: 34
+  - Fixed-Income Financial Technology median NPS: 31
+  - Industrial / MES Software median NPS: 28
+
+The CPO noted that all three products were tracking significantly above
+their respective industry medians. Comments tagged "AI" or "Copilot"
+features as the top positive driver in 61% of promoter comments — a
+significant increase from 39% in Q2.
+
+6.2 Churn and Retention Metrics
+Gross revenue churn rate (weighted, trailing 3 months annualised):
+4.1% across all products, down from 4.6% in Q2 FY2026 and 5.3% in Q3
+FY2025.
+
+By product:
+  - Meiji MES: 3.2% gross revenue churn (enterprise manufacturing
+    accounts historically "sticky"; one downgrade in the quarter from a
+    German chemical manufacturer who divested a plant)
+  - Bond Copilot: 5.1% gross revenue churn (two non-renewals from
+    mid-tier hedge funds that consolidated AI tools post-acquisition;
+    replaced in the same month by new ACV of 2.8x the lost revenue)
+  - Hirethm: 4.4% gross revenue churn (one mid-market customer moved to
+    Workday after an ERP consolidation; net-negative churn offset by
+    upsells)
+
+Net Revenue Retention (NRR) on trailing 12-month basis: 121% overall.
+Meiji MES led at 126%, Bond Copilot 118%, Hirethm 117%. All comfortably
+above the Board-approved minimum 110% NRR target.
+
+6.3 G2 Crowd and Analyst Recognition
+The CPO announced that G2 Crowd, the peer-to-peer business software
+review platform, had recognised DBizLabs in the Q3 2026 reports (released
+1 September 2026) as:
+  - LEADER in the "Industrial RAG (Manufacturing)" category (Meiji MES,
+    ranked #1 in both Implementation ROI and Usability)
+  - LEADER in the "HR Chatbots & Virtual Assistants" category (Hirethm,
+    for the second consecutive quarter)
+  - HIGH PERFORMER in "Generative AI for Financial Services" (Bond
+    Copilot — missed Leader by 2 review points; targeted Q4 Leader)
+
+Additionally, DBizLabs won 6 competitive deals specifically identified by
+the customer as having used a Gartner-designed RFP evaluation framework
+for enterprise AI platform shortlisting. The CPO noted that the Gartner
+"AI Trust, Risk and Security Management (AI TRiSM)" reference
+architecture was increasingly referenced in enterprise RFPs, and the
+Governance Pillar of the AI Strategy (File 5) was the strongest
+differentiator against competitors on those evaluation criteria.
+
+6.4 Near-Term Product Roadmap Releases
+The CPO presented the confirmed and committed near-term roadmap:
+  - 20 October 2026: Bond Copilot 2.0 General Availability. Major
+    features: Complete yield curve modelling module, bond price scenario
+    simulator (15 concurrent stress scenarios per portfolio), MAS Notice
+    SFA 04-N16 regulatory reporting export, support for 9 additional
+    local currency government bond markets.
+  - 3 November 2026: Hirethm Applicant Tracking System v3 General
+    Availability. Major features: AI-powered interview copilot,
+    structured de-biased candidate shortlisting (blind to name, age,
+    gender, university), native integration with LinkedIn Recruiter
+    System Connect, multi-language job descriptions in 14 languages.
+  - 10 November 2026: Meiji MES OEE Live Wallboards General
+    Availability. Major features: Plant-floor 55" touch wallboard UI,
+    real-time OEE streaming with 2-second update cadence, AI-driven OEE
+    root-cause alerts (42 alert playbooks pre-configured for the 12
+    highest-frequency downtime causes), mobile iOS/Android companion
+    app for line supervisors.
+
+The CPO confirmed that all three release dates had been re-baselined in
+the Q4 roadmap prioritisation workshop (Action Item 47-07) and were
+currently tracking at 96% confidence in the internal release risk model.
+
+================================================================================
+ITEM 7: PEOPLE & ORGANISATION UPDATE (10:40–10:55)
+================================================================================
+
+Ms. Divya Muthu, Chief Operating Officer, presented the People &
+Organisation update (Board Pack Tab G, 18 slides).
+
+7.1 Headcount and Hiring Statistics
+Total headcount (FTE, full-time permanent, excluding contractors and
+interns) as at 30 September 2026: 317, compared to 260 FTEs at 30 June
+2026 (end Q2 FY2026) and 225 FTEs at 30 September 2025.
+
+Net new hires year-to-date (FY2026, 1 Jul 2025 – 30 Sep 2026): 58 net
+hires (92 gross hires less 34 departures = net 58).
+
+Functional breakdown of the 317 FTEs:
+  Engineering + R&D:          135   42.6%
+  Sales + Marketing:           71   22.4%
+  ProServe + Customer Success: 60   18.9%
+  General & Administrative:    51   16.1%
+
+Time-to-fill (average days from requisition approval to accepted offer):
+  - Engineering roles: 58 days (target <60 days — GREEN)
+  - Sales roles: 72 days (target <65 days — AMBER; COO to review GTM
+    recruitment sourcing channels; 2 additional search firms on-boarded
+    15 Sep)
+  - G&A / People / Finance roles: 41 days (target <45 days — GREEN)
+  - ProServe / CSM roles: 47 days (target <50 days — GREEN)
+
+Hiring manager satisfaction scores (5-point scale, exit survey for each
+filled requisition):
+  Engineering hiring managers: 4.2 / 5.0
+  Sales hiring managers: 3.8 / 5.0 (below 4.0 target; AMBER)
+  Overall: 4.0 / 5.0
+
+7.2 Attrition
+Trailing 12-month voluntary attrition: 11.2%, down from 14.5% at end of
+FY2025 (30 Jun 2025) and below the FY2026 Board-approved attrition
+target of 13.5%.
+
+By function (TTM voluntary attrition):
+  R&D / Engineering: 9.4%
+  ProServe / CSM: 11.7%
+  G&A: 12.1%
+  Sales & Marketing: 14.2% (highest; driven primarily by two mid-level
+    SDR managers leaving for competitor roles in late Q2. Exit interviews
+    cited base-salary market positioning; RemCo approved in its 8 Sep
+    2026 meeting a mid-cycle targeted adjustment for 18 sales roles to
+    address the gap, effective 1 October 2026 payroll.)
+
+By gender (TTM voluntary): Women 10.8%, Men 11.7%. No material gap.
+By tenure: 0-12 months attrition 16.4%, 1-3 years 13.1%, 3+ years 5.6%.
+This profile is consistent with the high-tech SaaS sector.
+
+7.3 Diversity and Inclusion (D&I) Metrics
+The COO reviewed the Q3 FY2026 D&I dashboard, which feeds into the
+annual D&I report prepared for the Board's Remuneration and Nominating
+Committee:
+
+  (a) Gender diversity:
+      - Overall workforce: 51% women, 49% men (vs. 47% / 53% in Q3 FY25)
+      - Engineering function (commonly lagging): 42% women engineers,
+        up from 36% in Q3 FY25, against 2027 target 45%
+      - Executive team (CxOs + VPs reporting directly to CEO): 4 of 9
+        (44.4%) are women
+      - Board of Directors: 5 of 7 (71.4%) are women and/or independent
+        directors (specifically: 3 women + 2 independent men = 5/7
+        independent or women). Meets the mandatory 50% threshold under
+        the upcoming SGX listing diversity rules, should the company
+        proceed with IPO at a future date.
+
+  (b) Ethnicity / Nationality: 26 nationalities represented in the 317
+      FTE workforce. Top 5: Singaporean (34%), Indian (23%), Japanese
+      (11%), UK/Ireland (8%), US/Canadian (7%).
+  (c) Age profile: 22–30 41%, 31–40 38%, 41–50 14%, 51+ 7%. Median age
+      31.8 years.
+  (d) LGBTQ+ self-identification: 8.4% (voluntary self-declaration rate
+      on the self-ID form: 92.1%).
+
+7.4 Job Architecture Refresh Completion
+The COO confirmed that the company-wide job architecture refresh
+(commenced in April 2026, conducted with external consultant Aon
+Hewitt) was on schedule for completion by 31 October 2026. Deliverables
+to date:
+  - Grade and level definitions for all 9 function families (38 job
+    families total) finalised and signed off by all ELT members
+  - Pay matrix v4.1 (Appendix A of Employee Handbook v4.2) implemented
+    on 1 August 2026, with pay-band corrections to 37 employees below
+    the minimum of their new band (cost: S$285,000 per annum, fully
+    absorbed in FY2027 payroll budget baseline)
+  - Remaining deliverables: Final mapping of all 317 FTEs to new job
+    titles, publication of career ladders on the internal People Hub,
+    and organisation-wide rollout session (target: 22 October 2026,
+    full-day "Career Growth at DBizLabs" Town Hall at Marina One Great
+    Room + virtual stream for regional offices).
+
+================================================================================
+ITEM 8: RISK & COMPLIANCE UPDATE (10:55–11:15)
+================================================================================
+
+Ms. Priya Venkatesh, Head of Internal Audit & Risk, presented the Risk
+and Compliance update (Board Pack Tab H, 31 slides including the Q3
+updated Risk Register heatmap).
+
+8.1 Singapore AI Governance Act — Impact Assessment (Phase 1)
+Ms. Venkatesh tabled the Phase 1 report of the Singapore AI Governance
+Act impact assessment (Action Item 47-09, status In Progress — 9 Sep
+2026 version distributed under separate cover to all Board members).
+
+Key summary:
+  - Systems classification: 24 individual AI deployments identified
+    across the 3 product lines. Tiering per the First Schedule of the
+    Act (passed by Parliament 20 Nov 2025, in force 1 Feb 2027, with
+    12-month transition period):
+        * Tier 3 (High Risk — mandatory conformity assessment): 3
+          systems: (i) Hirethm Candidate Shortlisting and Ranking
+          module, (ii) Meiji MES Predictive Quality AI (when used as
+          basis for release-to-customer decisions), (iii) Bond Copilot
+          pre-trade compliance check engine.
+        * Tier 2 (Moderate Risk — transparency and record-keeping): 11
+          systems, including general Agentic Copilot, OEE root cause
+          alerts, Bond yield curve scenario simulations.
+        * Tier 1 (Low Risk): 10 consumer-facing chat and FAQ assistants.
+  - Action items identified to date: 47 individual remediation items.
+    Priority 1 (before 1 Feb 2027): 22 items.
+  - Estimated cost of compliance programme (technology, process,
+    people, external conformity assessments for Tier 3 systems): S$1.98
+    million over the 12 months to 30 September 2027.
+
+  UNANIMOUS BOARD RESOLUTION B-48-06:
+    RESOLVED THAT the Phase 1 SG AI Governance Act Impact Assessment
+    report dated 9 September 2026 (Tab H, Annex 2) be and is hereby
+    NOTED AND APPROVED, and the proposed remediation budget of up to
+    S$2.0 million over the period 1 Oct 2026 to 30 Sep 2027 is hereby
+    authorised for expenditure, with monthly progress reporting to the
+    Audit & Risk Committee and a further substantive update to the
+    Board at the 11 December 2026 meeting.
+
+  Voting: 7-0-0. CARRIED UNANIMOUSLY.
+
+8.2 Data Protection Audit (PDPA) — Findings
+The semi-annual PDPA compliance audit (conducted by external consultant
+CS Privacy Consulting Pte. Ltd., 12–23 August 2026) identified 12
+findings in total:
+
+  Severity breakdown: 0 CRITICAL, 2 HIGH, 6 MEDIUM, 4 LOW.
+
+  Status of findings as at 11 September 2026:
+  - 8 of 12 findings: CLOSED and remediated
+  - 4 of 12 findings: IN PROGRESS, with committed remediation dates on
+    or before 30 September 2026
+
+  The 4 open findings were (all Medium severity):
+    (a) Insufficient redaction of free-text resume fields in Hirethm
+        staging DB — PII (NRIC, passport numbers) visible to QA
+        engineers not under production access policy. Owner: Head of
+        Engineering, Hirethm. Remediation: Automated PII-scrubbing
+        pipeline deployed to staging environments by 27 Sep 2026.
+    (b) Vendor HR background-check provider (SwiftCheck) did not yet
+        have a signed 2026 Data Processing Agreement (DPA) annex
+        updated to reflect the new PDPA transfer impact assessment for
+        cross-border transfer to Malaysia data centre. Owner: Head of
+        People Ops. Remediation: Signed DPA by 29 Sep 2026.
+    (c) 7 of 92 employee laptops reviewed had stale personal data of
+        former employees on local drives in violation of retention
+        schedule. Owner: Head of IT Ops. Remediation: Automated device
+        scan + purging policy + 7 device rebuilds by 30 Sep 2026.
+    (d) Bond Copilot customer data export logging for one EU tenant
+        missed 3 audit events during the 22 Jul EU cluster migration
+        window. Owner: Head of SecOps. Remediation: Manual log
+        recreation + permanent enhanced export alerting by 26 Sep 2026.
+
+  Head of Legal (Santhana Krishnan) confirmed that none of the 12
+  findings individually or collectively gave rise to a notifiable data
+  breach under PDPA Section 26, and no notification to PDPC was or is
+  required.
+
+8.3 Cyber Security Ransomware Drill — 26 August 2026
+Head of IA presented the post-incident report of the full tabletop +
+technical ransomware recovery drill conducted on 26 August 2026, between
+14:00 and 17:12 SGT.
+
+Summary of drill:
+  - Scenario: Sophisticated "double extortion" ransomware (modelled on
+    the BlackCat/ALPHV variant) encrypted the primary ap-southeast-1
+    PostgreSQL volume, with simulated threat actor exfiltrating 120 GB
+    of sample non-production test data before encryption and posting a
+    S$4.8 million ransom demand.
+  - Crisis response activation: CTO declared P1 incident at 14:03. CMT
+    fully assembled by 14:09 (exceeded 15-minute target by 6 seconds).
+  - Recovery actions:
+    (a) Isolated affected Kubernetes namespaces at 14:12
+    (b) Failover to eu-west-1 standby cluster (regional DNS cutover)
+        completed at 15:38 — customer-facing tenant dashboards back
+        online read-only by 15:47
+    (c) Full primary restore from immutable AWS S3 Glacier backups
+        (30 Aug 2026 01:45 snapshot) completed at 17:08
+    (d) Validation of all 142 production tenant schemas complete, zero
+        data loss, integrity verified.
+  - Drill official recovery time: 3 hours 12 minutes (from initial
+    encryption declaration to full primary-cluster validated
+    production availability). Target: < 4 hours — PASSED.
+  - Lessons identified (8 items, all non-critical, owners and dates
+    assigned, latest 31 Oct 2026). Most notable: Immutable backup
+    snapshots should be increased from 24-hour cadence to 6-hour
+    cadence for the most critical Tier 3 tenant datasets; cost impact
+    S$7,200 per annum approved by CFO verbally during the meeting.
+
+8.4 Vendor Due Diligence — High-Risk Re-bidding
+The Q3 vendor tiering review reclassified 3 existing vendors as HIGH
+RISK under the DBizLabs Third-Party Risk Management Framework (v2.1):
+  - Vendor V-0147: Third-party customer support BPO (Philippines).
+    Re-bid tender issued 4 Sep; proposals due 25 Sep. Shortlist 4.
+  - Vendor V-0208: Background screening provider (SwiftCheck).
+    Partially addressed under open finding 8.2(b) with renewed DPA;
+    re-tendering this vendor in parallel.
+  - Vendor V-0233: Cloud-based payroll services vendor for India
+    entity. Re-bid underway; contract expires 31 Dec 2026.
+
+All 3 re-bids will complete evaluation and award recommendation by the
+31 October 2026 Board Audit & Risk Committee meeting.
+
+8.5 Foreign Exchange Exposure Sensitivity
+Head of IA reported that the updated Q3 FX sensitivity analysis (also
+referenced by CFO under Item 4) showed:
+  - Outstanding unhedged USD-denominated exposure: S$4.2 million (net
+    6-month forward view, revenue less cost hedges)
+  - Sensitivity per 1% adverse SGD/USD movement (SGD weakening):
+    S$42,000 negative impact on quarterly EBITDA
+  - Current 1-year Value-at-Risk (95th percentile, parametric VaR) for
+    the total FX book: S$186,000 — unchanged from Q2 and within the
+    Board-approved S$500,000 quarterly FX VaR appetite.
+
+The Board expressed satisfaction with all Item 8 updates and thanked
+Head of IA and Head of Legal for their thorough work in the quarter.
+
+================================================================================
+ITEM 9: ANY OTHER BUSINESS (AOB) (11:15–11:25)
+================================================================================
+
+9.1 CEO Dinner with Temasek Holdings CTO
+The CEO requested and received Board concurrence to host a private
+working dinner with Mr. Chia Song Hwee, Chief Technology Officer of
+Temasek Holdings (Private) Limited, on Thursday, 24 September 2026,
+19:00 at Odette Restaurant, National Gallery Singapore. Expected
+attendees: Temasek CTO + 2 of his investment team, DBizLabs CEO + CTO +
+Chairman. Estimated cost S$4,800 (well within the S$10k limit approved
+per single senior stakeholder engagement). Discussion topics expected:
+AI investment landscape in SG, potential commercial pilots of Bond
+Copilot within Temasek portfolio companies, and broad general exchange
+on AI safety/governance. No shareholder-specific matters.
+
+9.2 CTO Speaking at Singapore FinTech Festival 2026
+The CTO informed the Board that she had accepted an invitation to speak
+at the Singapore FinTech Festival 2026, 13 November 2026, on a panel
+entitled "Agentic AI in the Capital Markets: From RAG to Reasoning."
+The festival is organised by the Monetary Authority of Singapore and
+is one of the largest financial services conferences globally.
+Speaking slot: 45-minute panel at the AI in Finance Summit, 11:30 SGT.
+No remuneration; standard FOC pass + travel within SG. PR/marketing
+benefit for Bond Copilot and DBiz GPT estimated at S$120k+ equivalent
+ad value. Board thanked her in advance and wished her well.
+
+9.3 Annual General Meeting (AGM) FY2026 Date
+The Company Secretary, on behalf of the Chairman, circulated the
+proposed date for the FY2026 Annual General Meeting (covering the
+financial year 1 July 2025 – 30 June 2026, which is the statutory FY)
+as SATURDAY, 20 FEBRUARY 2027, 10:00 SGT, Level 22 Great Room, Marina
+One West Tower. Statutory deadline for holding the AGM is 4 months
+after the financial year-end (i.e. by 31 October 2026 for a 30 June
+FY-end), but the Company as a private exempt company with fewer than
+50 members and wholly owned by private investors had elected at last
+AGM to follow the Board-approved 20 Feb 2027 schedule for FY2026 with
+all member consents filed. Shareholder notifications will be despatched
+no later than 23 January 2027 in compliance with the Constitution.
+Directors were asked to hold the date.
+
+9.4 Investor Day — 18 March 2027
+The CEO proposed that the company host its first formal Investor Day
+for Series B investors, potential Series C candidates (should the
+company choose to raise), and selected analysts / strategic partners
+on THURSDAY, 18 MARCH 2027, at the Capella Singapore, Sentosa.
+Estimated attendance: 60–80 invitees. Agenda: 08:30 – 17:00 followed
+by cocktail reception. Board endorsed the concept in principle;
+detailed budget and agenda to be approved at the 11 December 2026
+Board meeting.
+
+9.5 Correspondence
+A letter from IRAS (dated 29 August 2026) regarding the FY2024 corporate
+income tax assessment, which had been resolved with no additional tax
+payable, was tabled by the CFO for information. No Board action required.
+
+No further items of AOB were raised.
+
+================================================================================
+ITEM 10: CONFIRMATION OF DATE OF NEXT MEETING (11:25–11:27)
+================================================================================
+
+The Chairman, on the recommendation of the Company Secretary, proposed
+the date of the 49th Regular Board Meeting as:
+
+  DATE:        FRIDAY, 11 DECEMBER 2026
+  TIME:        09:00 HOURS SGT
+  VENUE:       GREAT ROOM, LEVEL 22, MARINA ONE WEST TOWER,
+               SINGAPORE 018961.
+
+UNANIMOUS BOARD RESOLUTION B-48-07:
+  RESOLVED THAT the date, time, and venue for the 49th Regular Board
+  Meeting of DBizLabs Private Limited be fixed at Friday, 11 December
+  2026 at 09:00 hours SGT, at the Great Room, Level 22, Marina One West
+  Tower, 10 Marina Boulevard, Singapore 018961.
+
+Voting: 7-0-0. CARRIED UNANIMOUSLY.
+
+================================================================================
+ITEM 11: ADJOURNMENT (11:27–11:28)
+================================================================================
+
+There being no further business, the Chairman declared the 48th Regular
+Board Meeting of DBizLabs Private Limited adjourned at 11:28 hours SGT
+on Friday, 11 September 2026. The next meeting shall convene on 11
+December 2026 at 09:00 hours.
+
+Minutes prepared and circulated for review by the Company Secretary
+within 14 days of the meeting (by 25 September 2026). Directors to
+submit any corrections or confirm approval within 7 working days of
+circulation, failing which approval of Minutes is deemed to have been
+given.
+
+Signed:
+_____________________________     Date: ____________________
+Dr. Lingeswaran Arunasalam         Chairman of the Board
+
+_____________________________     Date: ____________________
+Ms. Sangeetha Murali               Company Secretary
+Rajah & Tann LLP
+
+================================================================================
+ACTION ITEM REGISTER
+(Items arising from or continuing through the 11 September 2026 Meeting)
+================================================================================
+
+ID       Owner              Description                                                    Deadline         Status
+-------- ------------------ ------------------------------------------------------------- ---------------- ----------
+48-01    CFO                Implement FX hedge ratio increase to 60% of rolling 6-mo     31-Oct-2026      IN PROGRESS
+                        USD forecast receivables.
+48-02    LEGAL / CFO        Finalise Meiji Japan JV definitive agreements with           30-Nov-2026      NOT STARTED
+                        Nishimura & Asahi (Japanese counsel) and Meiji Seika;
+                        submit signed draft JV Shareholders' Agreement to Board
+                        for approval before execution.
+48-03    CEO                Present Q4 FY2026 revenue, EBITDA, and cash guidance;        11-Dec-2026      NOT STARTED
+                        provide 9M FY2026 actuals + Q4 reforecast to Board.
+48-04    CFO                Submit R&D tax claims (FY2025 basis period, S$2.84m) to      30-Sep-2026      ON TRACK
+                        IRAS via EY advisors; update RemCo with R&D claims vs
+                        R&D spend history by 25 Sep 2026.
+48-05    CTO                Lead SOC 2 Type II kick-off with Schellman on 14 Oct 2026;   14-May-2027      NOT STARTED
+                        deliver final report to Audit & Risk Committee within
+                        10 working days of assessor draft.
+48-06    CTO + LEGAL        Complete SG AI Governance Act Phase 2 remediation plan        31-Oct-2026      NOT STARTED
+                        (22 Priority-1 items by 1 Feb 2027). Monthly reporting
+                        to A&R Committee.
+48-07    COO                Deliver job architecture full company rollout and Town       31-Oct-2026      IN PROGRESS
+                        Hall by 31 Oct 2026; close all 37 below-minimum pay
+                        corrections in October payroll.
+48-08    IA                 Close all 4 remaining open PDPA audit findings by            30-Sep-2026      IN PROGRESS
+                        30 Sep 2026. Issue 1-page memo of closure to Board.
+48-09    IA / Procurement   Complete re-bidding of 3 high-risk vendors (V-0147,          31-Oct-2026      NOT STARTED
+                        V-0208, V-0233) and present award recommendations to
+                        Audit & Risk Committee by 31 Oct 2026.
+48-10    CEO / CFO          Lead FY2027 budget process; present draft budget +           11-Dec-2026      NOT STARTED
+                        long-range plan (FY2027–FY2029) for Board approval at
+                        11 December 2026 meeting.
+48-11    CEO                Finalise FY2026 AGM Notice of Meeting, Directors'           23-Jan-2027      NOT STARTED
+                        Report, and Auditor's Report with Company Secretary;
+                        circulate to shareholders by 23 January 2027 in
+                        accordance with Constitution.
+
+Total action items as at close of 48th Board meeting: 11 items.
+Status breakdown: 0 Closed, 4 In Progress / On Track, 7 Not Started.
+No overdue items. Next action item review: Audit & Risk Committee 6 Oct 2026
+and ELT Weekly Operations 21 Sep 2026.
+
+================================= END OF MINUTES ============================
