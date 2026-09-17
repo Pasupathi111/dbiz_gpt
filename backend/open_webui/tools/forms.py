@@ -119,6 +119,130 @@ FORM_REGISTRY: dict[str, dict] = {
             'checks': ['logs', 'service_health', 'gateway'],
         },
     },
+    'car_booking': {
+        'formId': 'car_booking',
+        'version': 1,
+        'title': 'Book a Ride',
+        'description': 'Provide your ride details',
+        'submitLabel': 'Book Ride',
+        'submitAction': 'book_ride',
+        'schema': {
+            'type': 'object',
+            'required': ['pickupLocation', 'dropLocation', 'carType'],
+            'properties': {
+                'pickupLocation': {'type': 'string', 'title': 'Pickup Location'},
+                'dropLocation': {'type': 'string', 'title': 'Drop Location'},
+                'carType': {
+                    'type': 'string',
+                    'title': 'Car Type',
+                    'enum': ['mini', 'sedan', 'suv', 'luxury'],
+                },
+                'pickupTime': {
+                    'type': 'string',
+                    'title': 'Pickup Time',
+                    'enum': ['now', '15_minutes', '30_minutes', 'schedule_later'],
+                },
+                'passengers': {'type': 'integer', 'title': 'Passengers'},
+                'paymentMethod': {
+                    'type': 'string',
+                    'title': 'Payment Method',
+                    'enum': ['cash', 'card', 'wallet'],
+                },
+            },
+        },
+        'uiSchema': {
+            'order': ['pickupLocation', 'dropLocation', 'carType', 'pickupTime', 'passengers', 'paymentMethod'],
+            'widgets': {
+                'pickupLocation': 'text',
+                'dropLocation': 'text',
+                'carType': 'select',
+                'pickupTime': 'select',
+                'passengers': 'number',
+                'paymentMethod': 'select',
+            },
+            'enumLabels': {
+                'carType': {
+                    'mini': 'Mini',
+                    'sedan': 'Sedan',
+                    'suv': 'SUV',
+                    'luxury': 'Luxury',
+                },
+                'pickupTime': {
+                    'now': 'Right now',
+                    '15_minutes': 'In 15 minutes',
+                    '30_minutes': 'In 30 minutes',
+                    'schedule_later': 'Schedule for later',
+                },
+                'paymentMethod': {
+                    'cash': 'Cash',
+                    'card': 'Card',
+                    'wallet': 'Wallet',
+                },
+            },
+        },
+        'defaultData': {
+            'carType': 'sedan',
+            'pickupTime': 'now',
+            'passengers': 1,
+            'paymentMethod': 'card',
+        },
+    },
+    'food_order': {
+        'formId': 'food_order',
+        'version': 1,
+        'title': 'Order Food',
+        'description': "Tell us what you'd like to order",
+        'submitLabel': 'Place Order',
+        'submitAction': 'place_food_order',
+        'schema': {
+            'type': 'object',
+            'required': ['restaurant', 'items', 'deliveryAddress'],
+            'properties': {
+                'restaurant': {
+                    'type': 'string',
+                    'title': 'Restaurant',
+                    'enum': ['pizza_palace', 'sushi_spot', 'burger_barn', 'curry_house'],
+                },
+                'items': {'type': 'string', 'title': 'Items'},
+                'quantity': {'type': 'integer', 'title': 'Quantity'},
+                'deliveryAddress': {'type': 'string', 'title': 'Delivery Address'},
+                'paymentMethod': {
+                    'type': 'string',
+                    'title': 'Payment Method',
+                    'enum': ['cash_on_delivery', 'card', 'upi'],
+                },
+                'instructions': {'type': 'string', 'title': 'Delivery Instructions'},
+            },
+        },
+        'uiSchema': {
+            'order': ['restaurant', 'items', 'quantity', 'deliveryAddress', 'paymentMethod', 'instructions'],
+            'widgets': {
+                'restaurant': 'select',
+                'items': 'text',
+                'quantity': 'number',
+                'deliveryAddress': 'text',
+                'paymentMethod': 'select',
+                'instructions': 'text',
+            },
+            'enumLabels': {
+                'restaurant': {
+                    'pizza_palace': 'Pizza Palace',
+                    'sushi_spot': 'Sushi Spot',
+                    'burger_barn': 'Burger Barn',
+                    'curry_house': 'Curry House',
+                },
+                'paymentMethod': {
+                    'cash_on_delivery': 'Cash on Delivery',
+                    'card': 'Card',
+                    'upi': 'UPI',
+                },
+            },
+        },
+        'defaultData': {
+            'quantity': 1,
+            'paymentMethod': 'cash_on_delivery',
+        },
+    },
 }
 
 # In-memory instance + "active form per chat" tracking -- a POC substitute for
@@ -130,6 +254,23 @@ _ACTIVE_FORM_BY_CHAT: dict[str, str] = {}
 
 def _new_instance_id(form_id: str) -> str:
     return f'{form_id}-{uuid.uuid4().hex[:8]}'
+
+
+def _require_active_form(chat_id: Optional[str], expected_form_id: str) -> tuple[Optional[dict], Optional[str]]:
+    """Look up the form instance currently open in this chat and make sure it's the expected type.
+
+    Returns (instance, None) on success, or (None, error_message) if no form is open or a
+    different form is open (relevant now that multiple form types can be active over time).
+    """
+    instance_id = _ACTIVE_FORM_BY_CHAT.get(chat_id)
+    instance = _FORM_INSTANCES.get(instance_id) if instance_id else None
+    if not instance or instance.get('formId') != expected_form_id:
+        return None, (
+            f'No "{expected_form_id}" form has been shown in this chat yet, or a different form is '
+            f'currently open. Call show_form("{expected_form_id}") first and wait for the user to '
+            f'submit it before calling this tool.'
+        )
+    return instance, None
 
 
 async def _persist_message_data(chat_id: Optional[str], message_id: Optional[str], data: dict) -> None:
@@ -171,11 +312,12 @@ async def show_form(
     Render an interactive structured form inside the chat for the user to fill in, based on a
     registered form definition. Call this FIRST, before any diagnostic/business tool, whenever the
     user reports a problem or request that this system has a matching form for (e.g. an application
-    error, outage, or 5xx/4xx error -> form_id "diagnose_application") -- even if they already gave
-    some details in their message; prefill what you know and let the form collect the rest. Do not
-    ask the required fields one by one in chat, and do not skip straight to running a diagnostic or
-    business tool without showing this form first.
-    Currently supported form_id values: "diagnose_application".
+    error, outage, or 5xx/4xx error -> form_id "diagnose_application"; wanting a ride/cab/taxi ->
+    form_id "car_booking"; wanting to order food/a meal/delivery -> form_id "food_order") -- even if
+    they already gave some details in their message; prefill what you know and let the form collect
+    the rest. Do not ask the required fields one by one in chat, and do not skip straight to running
+    a diagnostic or business tool without showing this form first.
+    Currently supported form_id values: "diagnose_application", "car_booking", "food_order".
 
     :param form_id: The registered form id to render.
     :param prefill: Any field values already known from the conversation, to pre-fill the form. Omit unknown fields.
@@ -336,20 +478,9 @@ async def run_diagnostics(
     :return: JSON with mocked diagnostic findings, or an error asking you to show the form first.
     """
     try:
-        instance_id = _ACTIVE_FORM_BY_CHAT.get(__chat_id__)
-        instance = _FORM_INSTANCES.get(instance_id) if instance_id else None
-        if not instance:
-            return JSONCodec.dumps(
-                {
-                    'status': 'error',
-                    'error': (
-                        'No "diagnose_application" form has been shown in this chat yet. '
-                        'Call show_form("diagnose_application") first and wait for the user to submit it '
-                        'before calling run_diagnostics.'
-                    ),
-                },
-                ensure_ascii=False,
-            )
+        instance, error = _require_active_form(__chat_id__, 'diagnose_application')
+        if error:
+            return JSONCodec.dumps({'status': 'error', 'error': error}, ensure_ascii=False)
         stored = instance['data']
 
         environment = environment or stored.get('environment')
@@ -370,4 +501,129 @@ async def run_diagnostics(
         return JSONCodec.dumps(findings, ensure_ascii=False)
     except Exception as e:
         log.exception(f'run_diagnostics error: {e}')
+        return JSONCodec.dumps({'status': 'error', 'error': str(e)}, ensure_ascii=False)
+
+
+async def book_ride(
+    pickup_location: Optional[str] = None,
+    drop_location: Optional[str] = None,
+    car_type: Optional[str] = None,
+    pickup_time: Optional[str] = None,
+    passengers: Optional[int] = None,
+    payment_method: Optional[str] = None,
+    __chat_id__: str = None,
+) -> str:
+    """
+    Confirm a (mocked) ride booking with a driver, ETA and fare estimate. Do NOT call this directly
+    from the user's initial request -- you must call show_form("car_booking") first and wait for the
+    user's submission message. Calling this before the form has been shown in this chat will fail.
+    After you get the booking confirmation back, call show_result to present it as a result card --
+    do not just describe it in a plain text reply.
+
+    :param pickup_location: Where to pick the rider up.
+    :param drop_location: Where to drop the rider off.
+    :param car_type: The vehicle tier, e.g. "sedan", "suv".
+    :param pickup_time: When to pick up, e.g. "now", "15_minutes".
+    :param passengers: Number of passengers.
+    :param payment_method: How the ride will be paid for, e.g. "card".
+    :return: JSON with a mocked booking confirmation, or an error asking you to show the form first.
+    """
+    try:
+        instance, error = _require_active_form(__chat_id__, 'car_booking')
+        if error:
+            return JSONCodec.dumps({'status': 'error', 'error': error}, ensure_ascii=False)
+        stored = instance['data']
+
+        pickup_location = pickup_location or stored.get('pickupLocation')
+        drop_location = drop_location or stored.get('dropLocation')
+        car_type = car_type or stored.get('carType', 'sedan')
+        pickup_time = pickup_time or stored.get('pickupTime', 'now')
+        passengers = passengers if passengers is not None else stored.get('passengers', 1)
+        payment_method = payment_method or stored.get('paymentMethod', 'card')
+
+        # Mocked booking -- a real implementation would call a dispatch/ride-hailing API here.
+        fare_per_km = {'mini': 8, 'sedan': 11, 'suv': 15, 'luxury': 25}.get(car_type, 11)
+        estimated_km = 7
+        booking = {
+            'status': 'confirmed',
+            'bookingId': f'RIDE-{uuid.uuid4().hex[:6].upper()}',
+            'pickupLocation': pickup_location,
+            'dropLocation': drop_location,
+            'carType': car_type,
+            'pickupTime': pickup_time,
+            'passengers': passengers,
+            'paymentMethod': payment_method,
+            'driverName': 'Alex Morgan',
+            'driverEtaMinutes': 4,
+            'estimatedFare': fare_per_km * estimated_km,
+            'summary': f'{car_type.title()} booked from {pickup_location} to {drop_location}, driver arriving in 4 minutes.',
+        }
+
+        return JSONCodec.dumps(booking, ensure_ascii=False)
+    except Exception as e:
+        log.exception(f'book_ride error: {e}')
+        return JSONCodec.dumps({'status': 'error', 'error': str(e)}, ensure_ascii=False)
+
+
+async def place_food_order(
+    restaurant: Optional[str] = None,
+    items: Optional[str] = None,
+    quantity: Optional[int] = None,
+    delivery_address: Optional[str] = None,
+    payment_method: Optional[str] = None,
+    instructions: Optional[str] = None,
+    __chat_id__: str = None,
+) -> str:
+    """
+    Confirm a (mocked) food order with an order id and estimated delivery time. Do NOT call this
+    directly from the user's initial request -- you must call show_form("food_order") first and wait
+    for the user's submission message. Calling this before the form has been shown in this chat will
+    fail. After you get the order confirmation back, call show_result to present it as a result card
+    -- do not just describe it in a plain text reply.
+
+    :param restaurant: The restaurant to order from, e.g. "pizza_palace".
+    :param items: Free-text description of the items ordered.
+    :param quantity: Number of items/dishes ordered.
+    :param delivery_address: Where to deliver the order.
+    :param payment_method: How the order will be paid for, e.g. "cash_on_delivery".
+    :param instructions: Optional delivery instructions.
+    :return: JSON with a mocked order confirmation, or an error asking you to show the form first.
+    """
+    try:
+        instance, error = _require_active_form(__chat_id__, 'food_order')
+        if error:
+            return JSONCodec.dumps({'status': 'error', 'error': error}, ensure_ascii=False)
+        stored = instance['data']
+
+        restaurant = restaurant or stored.get('restaurant')
+        items = items or stored.get('items')
+        quantity = quantity if quantity is not None else stored.get('quantity', 1)
+        delivery_address = delivery_address or stored.get('deliveryAddress')
+        payment_method = payment_method or stored.get('paymentMethod', 'cash_on_delivery')
+        instructions = instructions or stored.get('instructions')
+
+        # Mocked order -- a real implementation would call a food delivery/POS API here.
+        price_per_item = {
+            'pizza_palace': 12,
+            'sushi_spot': 16,
+            'burger_barn': 9,
+            'curry_house': 13,
+        }.get(restaurant, 12)
+        order = {
+            'status': 'confirmed',
+            'orderId': f'ORD-{uuid.uuid4().hex[:6].upper()}',
+            'restaurant': restaurant,
+            'items': items,
+            'quantity': quantity,
+            'deliveryAddress': delivery_address,
+            'paymentMethod': payment_method,
+            'instructions': instructions,
+            'total': round(price_per_item * (quantity or 1), 2),
+            'estimatedDeliveryMinutes': 35,
+            'summary': f'Order placed at {restaurant} for delivery to {delivery_address}, arriving in ~35 minutes.',
+        }
+
+        return JSONCodec.dumps(order, ensure_ascii=False)
+    except Exception as e:
+        log.exception(f'place_food_order error: {e}')
         return JSONCodec.dumps({'status': 'error', 'error': str(e)}, ensure_ascii=False)
