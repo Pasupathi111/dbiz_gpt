@@ -329,8 +329,7 @@
 
 						<p class="text-blue-100/80 text-sm max-w-md mb-10">
 							{$i18n.t(
-								'{{WEBUI_NAME}} helps you work smarter with trusted AI, secure knowledge, and enterprise-ready tools — all in one place.',
-								{ WEBUI_NAME: $WEBUI_NAME }
+								'DBiz GPT brings powerful AI to your everyday work — helping you think, create, analyze, and automate faster.'
 							)}
 						</p>
 
@@ -355,9 +354,9 @@
 									</svg>
 								</div>
 								<div>
-									<div class="text-sm font-semibold">{$i18n.t('Chat & Collaborate')}</div>
+									<div class="text-sm font-semibold">{$i18n.t('Chat & Create')}</div>
 									<div class="text-xs text-blue-200/70">
-										{$i18n.t('Get instant answers, brainstorm ideas, and more')}
+										{$i18n.t('Ask questions, generate content, brainstorm, and summarize')}
 									</div>
 								</div>
 							</div>
@@ -382,9 +381,9 @@
 									</svg>
 								</div>
 								<div>
-									<div class="text-sm font-semibold">{$i18n.t('Work with Your Data')}</div>
+									<div class="text-sm font-semibold">{$i18n.t('Work With Your Data')}</div>
 									<div class="text-xs text-blue-200/70">
-										{$i18n.t('Summarize, analyze, and extract insights')}
+										{$i18n.t('Upload documents, analyze information, and uncover insights')}
 									</div>
 								</div>
 							</div>
@@ -411,7 +410,88 @@
 								<div>
 									<div class="text-sm font-semibold">{$i18n.t('Enterprise Ready')}</div>
 									<div class="text-xs text-blue-200/70">
-										{$i18n.t('Secure, compliant, and built for your team')}
+										{$i18n.t('Secure, controlled, and built for modern business teams')}
+									</div>
+								</div>
+							</div>
+
+							<div class="flex items-start gap-3">
+								<div
+									class="flex items-center justify-center size-10 shrink-0 rounded-xl bg-white/10"
+								>
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										stroke-width="1.5"
+										class="size-5"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182"
+										/>
+									</svg>
+								</div>
+								<div>
+									<div class="text-sm font-semibold">{$i18n.t('Automate Your Work')}</div>
+									<div class="text-xs text-blue-200/70">
+										{$i18n.t('Let AI handle repetitive tasks and multi-step workflows')}
+									</div>
+								</div>
+							</div>
+
+							<div class="flex items-start gap-3">
+								<div
+									class="flex items-center justify-center size-10 shrink-0 rounded-xl bg-white/10"
+								>
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										stroke-width="1.5"
+										class="size-5"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 0 0-2.455 2.456Z"
+										/>
+									</svg>
+								</div>
+								<div>
+									<div class="text-sm font-semibold">{$i18n.t('AI Agents')}</div>
+									<div class="text-xs text-blue-200/70">
+										{$i18n.t('Give AI tasks to plan, execute, and complete using connected tools')}
+									</div>
+								</div>
+							</div>
+
+							<div class="flex items-start gap-3">
+								<div
+									class="flex items-center justify-center size-10 shrink-0 rounded-xl bg-white/10"
+								>
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										stroke-width="1.5"
+										class="size-5"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25"
+										/>
+									</svg>
+								</div>
+								<div>
+									<div class="text-sm font-semibold">{$i18n.t('Your Knowledge, With AI')}</div>
+									<div class="text-xs text-blue-200/70">
+										{$i18n.t("Search and interact with your organization's trusted knowledge")}
 									</div>
 								</div>
 							</div>
@@ -420,7 +500,7 @@
 
 					<div class="relative z-10 border-l-2 border-orange-400 pl-4 text-left">
 						<p class="italic text-sm text-blue-100/80">
-							{$i18n.t('"AI doesn\'t replace people, it empowers them."')}
+							{$i18n.t('"AI that helps your people work smarter, faster, and better."')}
 						</p>
 					</div>
 				</div>

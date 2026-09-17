@@ -396,19 +396,19 @@
 				<div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
 					<!-- Table Header -->
 					<div class="overflow-x-auto">
-						<table class="w-full text-sm">
+						<table class="min-w-full text-sm">
 							<thead>
 								<tr class="border-b border-gray-100 dark:border-gray-800">
-									<th class="text-left px-4 py-3 text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">Bond ID</th>
-									<th class="text-left px-4 py-3 text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">ISIN</th>
-									<th class="text-left px-4 py-3 text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">Movement Type</th>
-									<th class="text-right px-4 py-3 text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">Previous Value</th>
-									<th class="text-right px-4 py-3 text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">Current Value</th>
-									<th class="text-right px-4 py-3 text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">Variance</th>
-									<th class="text-left px-4 py-3 text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">AI Explanation</th>
-									<th class="text-center px-4 py-3 text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">Confidence</th>
-									<th class="text-center px-4 py-3 text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">Approved</th>
-									<th class="text-center px-4 py-3 text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500">Actions</th>
+									<th class="text-left px-4 py-3 text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 whitespace-nowrap">Bond ID</th>
+									<th class="text-left px-4 py-3 text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 whitespace-nowrap">ISIN</th>
+									<th class="text-left px-4 py-3 text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 whitespace-nowrap">Movement Type</th>
+									<th class="text-right px-4 py-3 text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 whitespace-nowrap">Previous Value</th>
+									<th class="text-right px-4 py-3 text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 whitespace-nowrap">Current Value</th>
+									<th class="text-right px-4 py-3 text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 whitespace-nowrap">Variance</th>
+									<th class="text-left px-4 py-3 text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 whitespace-nowrap">AI Explanation</th>
+									<th class="text-center px-4 py-3 text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 whitespace-nowrap">Confidence</th>
+									<th class="text-center px-4 py-3 text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 whitespace-nowrap">Approved</th>
+									<th class="text-center px-4 py-3 text-[11px] font-medium uppercase tracking-wider text-gray-400 dark:text-gray-500 whitespace-nowrap">Actions</th>
 								</tr>
 							</thead>
 							<tbody>
