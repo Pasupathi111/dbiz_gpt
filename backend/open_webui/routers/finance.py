@@ -3,7 +3,9 @@ import hashlib
 import logging
 import os
 import uuid
+from pathlib import Path
 from typing import Optional
+from urllib.parse import quote
 
 from fastapi import (
     APIRouter,
@@ -17,6 +19,7 @@ from fastapi import (
     UploadFile,
     status,
 )
+from fastapi.responses import FileResponse
 from open_webui.constants import ERROR_MESSAGES
 from open_webui.models.config import Config
 from open_webui.services import finance_service
@@ -467,6 +470,50 @@ async def get_document(
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
     return result
+
+
+@router.get('/documents/{doc_id}/content')
+async def get_document_content(
+    doc_id: str,
+    attachment: bool = Query(False),
+    user=Depends(get_verified_user),
+):
+    doc = await finance_service.get_document(user.id, doc_id)
+    if not doc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ERROR_MESSAGES.NOT_FOUND,
+        )
+
+    try:
+        resolved_path = await asyncio.to_thread(Storage.get_file, doc['file_path'])
+        file_path = Path(resolved_path)
+    except Exception as e:
+        log.exception(e)
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ERROR_MESSAGES.NOT_FOUND,
+        )
+
+    if not file_path.is_file():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ERROR_MESSAGES.NOT_FOUND,
+        )
+
+    filename = doc.get('original_filename') or doc.get('filename') or file_path.name
+    encoded_filename = quote(filename)
+    content_type = doc.get('mime_type') or 'application/octet-stream'
+    headers = {}
+
+    if attachment:
+        headers['Content-Disposition'] = f"attachment; filename*=UTF-8''{encoded_filename}"
+    elif content_type == 'application/pdf' or filename.lower().endswith('.pdf'):
+        headers['Content-Disposition'] = f"inline; filename*=UTF-8''{encoded_filename}"
+    else:
+        headers['Content-Disposition'] = f"attachment; filename*=UTF-8''{encoded_filename}"
+
+    return FileResponse(file_path, headers=headers, media_type=content_type)
 
 
 @router.post('/documents/{doc_id}/process')

@@ -66,6 +66,20 @@ export const processDocument = (token: string, id: string) =>
 export const deleteFinanceDocument = (token: string, id: string) =>
 	request(token, `/documents/${id}`, { method: 'DELETE' });
 
+// Returns an in-memory object URL for the document's content, since the
+// endpoint requires the bearer token and can't be linked to directly.
+export const getFinanceDocumentPreviewUrl = async (token: string, id: string) => {
+	const res = await fetch(`${FINANCE_API}/documents/${id}/content`, {
+		headers: { Authorization: `Bearer ${token}` }
+	});
+	if (!res.ok) {
+		const err = await res.json().catch(() => ({ detail: res.statusText }));
+		throw new Error(err.detail || res.statusText);
+	}
+	const blob = await res.blob();
+	return { url: URL.createObjectURL(blob), contentType: blob.type };
+};
+
 // Bonds
 export const getBonds = (token: string, params?: Record<string, string>) => {
 	const qs = params ? '?' + new URLSearchParams(params).toString() : '';

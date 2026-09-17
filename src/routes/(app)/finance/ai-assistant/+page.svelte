@@ -7,6 +7,7 @@
 		getFinanceDashboard,
 		getAuditTrail
 	} from '$lib/apis/finance';
+	import LiveIndicator from '$lib/components/common/LiveIndicator.svelte';
 	import { registerAssistantContext } from '$lib/assistant/context';
 
 	const i18n = getContext('i18n');
@@ -273,7 +274,10 @@
 				</svg>
 			</div>
 			<div class="min-w-0">
-				<h1 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-white truncate">AI Bond Copilot</h1>
+				<div class="flex items-center gap-2">
+					<h1 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-white truncate">AI Bond Copilot</h1>
+					<LiveIndicator title="Assistant is connected to live portfolio data" />
+				</div>
 				<p class="text-xs text-gray-500 dark:text-gray-400 hidden sm:block">Full-featured AI assistant for bond portfolio management</p>
 			</div>
 		</div>

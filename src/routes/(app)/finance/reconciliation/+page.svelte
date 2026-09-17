@@ -10,6 +10,7 @@
 	} from '$lib/apis/finance';
 	import { toast } from 'svelte-sonner';
 	import Spinner from '$lib/components/common/Spinner.svelte';
+	import LiveIndicator from '$lib/components/common/LiveIndicator.svelte';
 	import { registerAssistantContext } from '$lib/assistant/context';
 
 	const i18n = getContext('i18n');
@@ -270,7 +271,10 @@
 		</div>
 		<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 			<div>
-				<h1 class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">Reconciliation Dashboard</h1>
+				<div class="flex items-center gap-2">
+					<h1 class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">Reconciliation Dashboard</h1>
+					<LiveIndicator title="Reconciliation runs against live source data" />
+				</div>
 				<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
 					Cross-source validation across UBS, LGI and prior-period schedules
 				</p>
