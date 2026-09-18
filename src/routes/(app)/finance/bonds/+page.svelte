@@ -211,8 +211,8 @@
 										class="border-b border-gray-50 dark:border-gray-800/50 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors cursor-pointer {idx % 2 ? 'bg-gray-50/30 dark:bg-gray-800/10' : ''}"
 										on:click={() => { selectedBond = bond; showDetail = true; drawerConfidenceExpanded = false; }}
 									>
-										<td class="px-4 py-3 font-mono text-xs font-medium text-gray-900 dark:text-white">{bond.bond_id}</td>
-										<td class="px-4 py-3 font-mono text-xs text-gray-600 dark:text-gray-400">{bond.isin}</td>
+										<td class="px-4 py-3 font-mono text-xs font-medium text-gray-900 dark:text-white whitespace-nowrap">{bond.bond_id}</td>
+										<td class="px-4 py-3 font-mono text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">{bond.isin}</td>
 										<td class="px-4 py-3 text-gray-700 dark:text-gray-300 max-w-[180px] truncate">{bond.issuer}</td>
 										<td class="px-4 py-3 text-gray-500">{bond.currency}</td>
 										<td class="px-4 py-3 text-right font-mono text-xs text-gray-700 dark:text-gray-300">{fmt(bond.face_value)}</td>
@@ -220,7 +220,7 @@
 										<td class="px-4 py-3 text-center text-gray-600 dark:text-gray-400">{bond.coupon_rate}%</td>
 										<td class="px-4 py-3 text-center text-xs text-gray-600 dark:text-gray-400">{bond.maturity_date}</td>
 										<td class="px-4 py-3 text-center">
-											<span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium {statusBadge(bond.status)}">{bond.status}</span>
+											<span class="inline-flex whitespace-nowrap px-2 py-0.5 rounded-full text-[10px] font-medium {statusBadge(bond.status)}">{bond.status}</span>
 										</td>
 										<td class="px-4 py-3 text-center text-xs text-gray-500">{bond.source_type}</td>
 										<td class="px-4 py-3 text-center text-xs font-mono {confidenceColor(bond.extraction_confidence)}">
@@ -228,7 +228,7 @@
 												<span>{confidencePct(bond.extraction_confidence)}</span>
 												{#if isLowConfidence(bond)}
 													<button
-														class="text-[10px] font-sans font-medium text-amber-600 dark:text-amber-400 underline decoration-dotted underline-offset-2 hover:text-amber-700 dark:hover:text-amber-300"
+														class="whitespace-nowrap text-[10px] font-sans font-medium text-amber-600 dark:text-amber-400 underline decoration-dotted underline-offset-2 hover:text-amber-700 dark:hover:text-amber-300"
 														on:click={(e) => toggleConfidenceExplanation(bond.id, e)}
 														title="Why is this confidence low?"
 													>
