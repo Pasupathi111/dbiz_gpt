@@ -794,7 +794,7 @@ async def run_reconciliation(user_id: str, period_id: str) -> dict:
                 bond_id=item_form.bond_id,
                 description=(
                     f"Bond {item_form.isin or item_form.bond_id} market value differs between "
-                    f"UBS ({item_form.ubs_value:,.2f}) and LGI ({item_form.lgi_value:,.2f}) "
+                    f"UBS ({item_form.ubs_value or 0.0:,.2f}) and LGI ({item_form.lgi_value or 0.0:,.2f}) "
                     f"by {item_form.variance_amount:,.2f} ({variance_pct:.1f}%)."
                 ),
                 source_reference=run.id,
